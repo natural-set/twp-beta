@@ -723,7 +723,7 @@
     <div class="page-header" style="padding-bottom: 0;">
       <button class="back-btn" onclick="goBack()">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5"/></svg>
-        Workout
+        <span id="back-btn-label">Back</span>
       </button>
     </div>
     <div id="detail-content"></div>
@@ -741,9 +741,12 @@
 
     <div id="ptab-overview">
       <div class="time-filters">
-        <button class="time-filter active" onclick="switchFilter(this,'3m')">3 Months</button>
-        <button class="time-filter" onclick="switchFilter(this,'6m')">6 Months</button>
-        <button class="time-filter" onclick="switchFilter(this,'ytd')">Year-to-Date</button>
+        <button class="time-filter active" onclick="switchFilter(this,'week')">Week</button>
+        <button class="time-filter" onclick="switchFilter(this,'month')">Month</button>
+        <button class="time-filter" onclick="switchFilter(this,'3m')">3M</button>
+        <button class="time-filter" onclick="switchFilter(this,'6m')">6M</button>
+        <button class="time-filter" onclick="switchFilter(this,'year')">Year</button>
+        <button class="time-filter" onclick="switchFilter(this,'all')">All</button>
       </div>
 
       <div class="chart-container">
@@ -765,6 +768,8 @@
           </button>
         </div>
       </div>
+
+      <div id="filter-stats"></div>
 
       <div class="section-title">Suggested Goal</div>
       <div class="goal-card">
@@ -927,7 +932,7 @@ let state = {
   timerSeconds: 0,
   userName: 'Athlete',
   currentMetric: 'duration',
-  currentFilter: '3m',
+  currentFilter: 'week',
   prevScreen: 'home',
 };
 
@@ -954,7 +959,6 @@ function saveState() {
 //  NAVIGATION
 // ═══════════════════════════════════════════
 function navigate(screenName, btn) {
-  if (screenName === state.prevScreen && screenName !== 'detail') return;
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('screen-' + screenName).classList.add('active');
@@ -962,13 +966,14 @@ function navigate(screenName, btn) {
   if (screenName === 'home') refreshHome();
   if (screenName === 'progress') refreshProgress();
   if (screenName === 'you') refreshYou();
-  state.prevScreen = screenName;
+  if (screenName !== 'detail') state.prevScreen = screenName;
 }
 
 function goBack() {
-  navigate(state.prevScreen === 'detail' ? 'home' : state.prevScreen,
-    document.querySelector('.nav-btn.active'));
-  navigate('home', document.querySelectorAll('.nav-btn')[0]);
+  const dest = state.prevScreen || 'home';
+  const navBtns = document.querySelectorAll('.nav-btn');
+  const btnMap = { home: navBtns[0], workout: navBtns[1], progress: navBtns[2], you: navBtns[3] };
+  navigate(dest, btnMap[dest] || navBtns[0]);
 }
 
 function goToWorkout() { navigate('workout', document.querySelectorAll('.nav-btn')[1]); startWorkout(); }
@@ -1254,75 +1259,182 @@ function renderFeedCard(w) {
 function openDetail(id) {
   const w = state.workouts.find(x => x.id === id);
   if (!w) return;
+
+  // Remember which screen triggered this detail view for correct back navigation
+  // state.prevScreen is already the screen we came from (set by navigate before calling openDetail)
+
   const d = new Date(w.date);
-  const dateStr = d.toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' }) +
-    ' at ' + d.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' });
+  const dateStr = d.toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric', year:'numeric' }) +
+    ' · ' + d.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' });
 
   const prColors = { '1RM':'gold', 'Volume':'silver', 'Reps':'bronze' };
 
-  const exercisesHTML = w.exercises.map(ex => {
+  // ── Intensity score (0-10 scale derived from volume, set count, soreness) ──
+  const workSets = w.exercises.reduce((s,e) => s + (e.sets||[]).filter(s=>!s.warmup).length, 0);
+  const totalReps = w.exercises.reduce((s,e) => s + (e.sets||[]).reduce((ss,set)=>ss+set.reps,0), 0);
+  const avgWeight = totalReps > 0 ? Math.round(w.volume / totalReps) : 0;
+  // Intensity 1-10: factor in sets (ideal ~15), duration (ideal ~60min), soreness feedback
+  let intensity = Math.min(10, Math.round((workSets / 15) * 4 + (w.duration / 60) * 3 + (w.sorenessRange ? w.sorenessRange[1] / 10 * 3 : 0)));
+  intensity = Math.max(1, intensity);
+  const intensityLabel = intensity <= 3 ? 'Light' : intensity <= 6 ? 'Moderate' : intensity <= 8 ? 'Hard' : 'Max Effort';
+  const intensityColor = intensity <= 3 ? 'var(--green)' : intensity <= 6 ? 'var(--accent-blue)' : intensity <= 8 ? 'var(--accent)' : 'var(--red)';
+
+  // ── Targeted muscles ──
+  const muscleMap = {}; // name → 'primary'|'secondary'
+  const EXERCISE_MUSCLES = {
+    'pullup': { p:['Lats','Back'], s:['Biceps'] },
+    'pull-up': { p:['Lats','Back'], s:['Biceps'] },
+    'pullups': { p:['Lats','Back'], s:['Biceps'] },
+    'dip': { p:['Chest','Triceps'], s:['Shoulders'] },
+    'dips': { p:['Chest','Triceps'], s:['Shoulders'] },
+    'squat': { p:['Quadriceps','Glutes'], s:['Hamstrings','Core'] },
+    'squats': { p:['Quadriceps','Glutes'], s:['Hamstrings','Core'] },
+    'stiff': { p:['Hamstrings','Glutes'], s:['Back'] },
+    'rdl': { p:['Hamstrings','Glutes'], s:['Back'] },
+    'deadlift': { p:['Back','Hamstrings'], s:['Glutes','Core'] },
+    'calf': { p:['Calves'], s:[] },
+    'calves': { p:['Calves'], s:[] },
+    'calfs': { p:['Calves'], s:[] },
+    'shoulder': { p:['Shoulders'], s:['Triceps'] },
+    'shoulders': { p:['Shoulders'], s:['Triceps'] },
+    'lateral': { p:['Shoulders'], s:[] },
+    'forarm': { p:['Forearms'], s:[] },
+    'forearm': { p:['Forearms'], s:[] },
+    'foarms': { p:['Forearms'], s:[] },
+    'forarmos': { p:['Forearms'], s:[] },
+    'row': { p:['Back'], s:['Biceps'] },
+    'bench': { p:['Chest'], s:['Triceps','Shoulders'] },
+    'press': { p:['Chest'], s:['Triceps'] },
+    'lunge': { p:['Quadriceps'], s:['Glutes'] },
+    'curl': { p:['Biceps'], s:[] },
+    'run': { p:['Cardiovascular'], s:['Calves','Quadriceps'] },
+    'goblet': { p:['Quadriceps','Glutes'], s:['Core'] },
+    'abductor': { p:['Glutes'], s:['Hips'] },
+    'swing': { p:['Glutes','Back'], s:['Core','Shoulders'] },
+    'plank': { p:['Core','Abs'], s:[] },
+    'extensor': { p:['Quadriceps'], s:[] },
+  };
+  w.exercises.forEach(ex => {
+    // Use existing primary/secondary if defined (from EXERCISES_DB)
+    if (ex.primary && ex.primary.length) {
+      ex.primary.forEach(m => { if (!muscleMap[m]) muscleMap[m] = 'primary'; });
+      (ex.secondary||[]).forEach(m => { if (!muscleMap[m]) muscleMap[m] = 'secondary'; });
+    } else {
+      // infer from name keywords
+      const exLow = ex.name.toLowerCase();
+      Object.entries(EXERCISE_MUSCLES).forEach(([key, val]) => {
+        if (exLow.includes(key)) {
+          val.p.forEach(m => { if (!muscleMap[m]) muscleMap[m] = 'primary'; });
+          val.s.forEach(m => { if (!muscleMap[m]) muscleMap[m] = 'secondary'; });
+        }
+      });
+    }
+  });
+  const primaryMuscles = Object.entries(muscleMap).filter(([,v])=>v==='primary').map(([k])=>k);
+  const secondaryMuscles = Object.entries(muscleMap).filter(([,v])=>v==='secondary').map(([k])=>k);
+
+  const musclesHTML = (primaryMuscles.length || secondaryMuscles.length) ? `
+    <div style="padding: 14px 20px; border-bottom: 1px solid var(--border);">
+      <div style="font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">Muscles Targeted</div>
+      ${primaryMuscles.length ? `<div style="margin-bottom:8px;"><span style="font-size:11px;color:var(--red);margin-right:6px;">● Primary</span>${primaryMuscles.map(m=>`<span style="background:var(--surface2);border-radius:20px;padding:3px 10px;font-size:12px;margin-right:4px;margin-bottom:4px;display:inline-block;">${m}</span>`).join('')}</div>` : ''}
+      ${secondaryMuscles.length ? `<div><span style="font-size:11px;color:var(--accent-blue);margin-right:6px;">● Secondary</span>${secondaryMuscles.map(m=>`<span style="background:var(--surface2);border-radius:20px;padding:3px 10px;font-size:12px;margin-right:4px;margin-bottom:4px;display:inline-block;">${m}</span>`).join('')}</div>` : ''}
+    </div>
+  ` : '';
+
+  // ── Exercise blocks ──
+  const exercisesHTML = w.exercises.map((ex, exIdx) => {
     if (ex.isCardio) {
       return `<div class="detail-ex-block">
         <div class="detail-ex-header">
-          <div class="ex-thumb" style="width:40px;height:40px;background:var(--surface2);border-radius:8px;display:flex;align-items:center;justify-content:center">${ex.icon}</div>
-          <div class="detail-ex-name">${ex.name}</div>
+          <div class="ex-thumb" style="width:40px;height:40px;background:var(--surface2);border-radius:8px;display:flex;align-items:center;justify-content:center;">${ex.icon}</div>
+          <div>
+            <div class="detail-ex-name">${ex.name}</div>
+            <div style="font-size:12px;color:var(--text-muted)">Cardio</div>
+          </div>
         </div>
-        <div class="detail-note">${ex.cardioMinutes} minute cardio session</div>
+        <div class="detail-note">🏃 ${ex.cardioMinutes} minute session</div>
       </div>`;
     }
     if (!ex.sets || !ex.sets.length) {
-      return `<div class="detail-ex-block" style="opacity:.6">
+      return `<div class="detail-ex-block" style="opacity:.55">
         <div class="detail-ex-header">
-          <div class="ex-thumb" style="width:40px;height:40px;background:var(--surface2);border-radius:8px;display:flex;align-items:center;justify-content:center">${ex.icon}</div>
-          <div class="detail-ex-name">${ex.name}</div>
+          <div class="ex-thumb" style="width:40px;height:40px;background:var(--surface2);border-radius:8px;display:flex;align-items:center;justify-content:center;">${ex.icon}</div>
+          <div>
+            <div class="detail-ex-name">${ex.name}</div>
+            <div style="font-size:12px;color:var(--text-dim)">Planned — not logged</div>
+          </div>
         </div>
-        <div class="detail-note">Not logged this session</div>
       </div>`;
     }
-    const setsHTML = ex.sets.map((s,i) => {
-      const badge = s.warmup
+
+    const workingSets = ex.sets.filter(s=>!s.warmup);
+    const warmupSets = ex.sets.filter(s=>s.warmup);
+    const exVolume = ex.sets.reduce((s,set)=>s+set.weight*set.reps,0);
+    const maxWeight = Math.max(...ex.sets.map(s=>s.weight),0);
+    const maxReps   = Math.max(...ex.sets.map(s=>s.reps),0);
+    const restNote  = ex.restSeconds ? `Rest ~${Math.round(ex.restSeconds/60)}min` : ex.note && ex.note.includes('Rest') ? ex.note : '';
+    const extraNote = ex.note && !ex.note.includes('Rest') ? ex.note : '';
+
+    let setIndex = 0;
+    const setsHTML = ex.sets.map((s) => {
+      const isWU = s.warmup;
+      if (!isWU) setIndex++;
+      const badge = isWU
         ? `<span class="set-badge warmup">W</span>`
-        : `<span class="set-badge numbered">${i+1}</span>`;
+        : `<span class="set-badge numbered">${setIndex}</span>`;
       const prs = (s.prs||[]).map(p => `<span class="pr-badge ${prColors[p]||'gold'}">🏅 ${p}</span>`).join('');
-      const weightLabel = ex.exId && ex.exId.startsWith('custom-') && s.weight === BODYWEIGHT_KG_LABEL ? 'BW' : `${s.weight}kg`;
-      return `<div class="detail-set-row">
+      const weightDisplay = s.weight === BODYWEIGHT_KG
+        ? `BW${s.weight > 0 ? '+0' : ''}` : `${s.weight}kg`;
+      const rirDisplay = s.rir > 0 ? ` · RIR ${s.rir}` : '';
+      return `<div class="detail-set-row ${s.prs&&s.prs.length?'pr-row':''}">
         ${badge}
-        <span>${s.weight}kg × ${s.reps} reps @ ${s.rir} RIR</span>
+        <span style="flex:1">${s.weight}kg × <strong>${s.reps}</strong> reps${rirDisplay}</span>
         <div class="pr-badges">${prs}</div>
       </div>`;
     }).join('');
+
     return `<div class="detail-ex-block">
       <div class="detail-ex-header">
-        <div class="ex-thumb" style="width:40px;height:40px;background:var(--surface2);border-radius:8px;display:flex;align-items:center;justify-content:center">${ex.icon}</div>
-        <div class="detail-ex-name">${ex.name}</div>
+        <div class="ex-thumb" style="width:40px;height:40px;background:var(--surface2);border-radius:8px;display:flex;align-items:center;justify-content:center;">${ex.icon}</div>
+        <div style="flex:1">
+          <div class="detail-ex-name">${ex.name}</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">${workingSets.length} working sets${warmupSets.length ? ` · ${warmupSets.length} warmup` : ''} · ${Math.round(exVolume)}kg volume</div>
+        </div>
       </div>
-      ${ex.note ? `<div class="detail-note">${ex.note}</div>` : ''}
+      ${extraNote ? `<div class="detail-note">${extraNote}</div>` : ''}
+      ${restNote ? `<div style="padding:6px 0 6px 0;font-size:11px;color:var(--accent-blue);display:flex;align-items:center;gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>${restNote}</div>` : ''}
       ${setsHTML}
     </div>`;
   }).join('');
 
-  const sorenessHTML = w.sorenessRange ? `<div class="detail-stat"><div class="lbl">Soreness (next day)</div><div class="val">${w.sorenessRange[0]}-${w.sorenessRange[1]}</div></div>` : '';
-  const bodyWeightHTML = w.bodyWeight ? `<div class="detail-stat"><div class="lbl">Body Weight</div><div class="val">${w.bodyWeight}kg</div></div>` : '';
-
   document.getElementById('detail-content').innerHTML = `
     <div class="detail-hero">
-      <div class="workout-name">${w.name}</div>
+      <div class="workout-name">${w.name}${w.imported ? ' <span style="font-size:14px;font-weight:400;color:var(--text-muted)">· imported</span>' : ''}</div>
       ${w.note ? `<div class="workout-note">${w.note}</div>` : ''}
       <div class="date">${dateStr}</div>
     </div>
     <div class="detail-stats">
-      <div class="detail-stat"><div class="lbl">Duration</div><div class="val">${w.duration}m</div></div>
+      <div class="detail-stat"><div class="lbl">Duration</div><div class="val">${w.duration ? w.duration+'m' : '—'}</div></div>
       <div class="detail-stat"><div class="lbl">Volume</div><div class="val">${Math.round(w.volume)}kg</div></div>
-      <div class="detail-stat"><div class="lbl">Records</div><div class="val">${w.records > 0 ? '🥇 '+w.records : '—'}</div></div>
-      <div class="detail-stat"><div class="lbl">Exercises</div><div class="val">${w.exercises.length}</div></div>
-      ${sorenessHTML}
-      ${bodyWeightHTML}
+      <div class="detail-stat"><div class="lbl">Sets</div><div class="val">${workSets}</div></div>
+      <div class="detail-stat"><div class="lbl">Avg weight</div><div class="val">${avgWeight}kg</div></div>
+      <div class="detail-stat">
+        <div class="lbl">Intensity</div>
+        <div class="val" style="color:${intensityColor}">${intensity}/10 <span style="font-size:11px;font-weight:500">${intensityLabel}</span></div>
+      </div>
+      ${w.sorenessRange ? `<div class="detail-stat"><div class="lbl">Soreness</div><div class="val">${w.sorenessRange[0]}-${w.sorenessRange[1]}/10</div></div>` : ''}
+      ${w.bodyWeight ? `<div class="detail-stat"><div class="lbl">Bodyweight</div><div class="val">${w.bodyWeight}kg</div></div>` : ''}
+      ${w.records > 0 ? `<div class="detail-stat"><div class="lbl">Records</div><div class="val">🥇 ${w.records}</div></div>` : ''}
     </div>
+    ${musclesHTML}
     ${exercisesHTML}
   `;
-  state.prevScreen = 'home';
+
+  // Show detail screen without changing prevScreen
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('screen-detail').classList.add('active');
+  const labelMap = { home: 'Home', progress: 'Progress', you: 'You', workout: 'Workout' };
+  document.getElementById('back-btn-label').textContent = labelMap[state.prevScreen] || 'Back';
 }
 
 // ═══════════════════════════════════════════
@@ -1344,52 +1456,70 @@ function switchFilter(btn, f) {
   renderChart();
 }
 
-function switchMetric(btn, m) {
-  document.querySelectorAll('.metric-tab').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  state.currentMetric = m;
-  renderChart();
-}
-
-function refreshProgress() {
-  renderChart();
-  renderGoal();
-  renderProgressMuscleMap();
-  renderExerciseHistory();
-}
-
 function getFilteredWorkouts() {
   const now = new Date();
   const cutoff = new Date();
-  if (state.currentFilter === '3m') cutoff.setMonth(now.getMonth()-3);
-  else if (state.currentFilter === '6m') cutoff.setMonth(now.getMonth()-6);
-  else cutoff.setFullYear(now.getFullYear(), 0, 1);
+  if (state.currentFilter === 'week') {
+    cutoff.setDate(now.getDate() - now.getDay());
+    cutoff.setHours(0,0,0,0);
+  } else if (state.currentFilter === 'month') {
+    cutoff.setDate(1); cutoff.setHours(0,0,0,0);
+  } else if (state.currentFilter === '3m') {
+    cutoff.setMonth(now.getMonth()-3);
+  } else if (state.currentFilter === '6m') {
+    cutoff.setMonth(now.getMonth()-6);
+  } else if (state.currentFilter === 'year') {
+    cutoff.setFullYear(now.getFullYear(), 0, 1); cutoff.setHours(0,0,0,0);
+  } else if (state.currentFilter === 'all') {
+    cutoff.setFullYear(2000);
+  } else {
+    cutoff.setMonth(now.getMonth()-3);
+  }
   return state.workouts.filter(w => new Date(w.date) >= cutoff);
 }
 
 function renderChart() {
   const workouts = getFilteredWorkouts();
-  // Build weekly buckets
-  const weeks = {};
+  const now = new Date();
+
+  // Decide bucket size based on filter
+  const useDays = state.currentFilter === 'week' || state.currentFilter === 'month';
+
+  const buckets = {};
   workouts.forEach(w => {
     const d = new Date(w.date);
-    d.setDate(d.getDate() - d.getDay());
-    const key = d.toISOString().slice(0,10);
-    if (!weeks[key]) weeks[key] = { duration:0, volume:0, workouts:0 };
-    weeks[key].duration += w.duration;
-    weeks[key].volume += w.volume;
-    weeks[key].workouts++;
+    let key;
+    if (useDays) {
+      key = d.toISOString().slice(0,10); // daily buckets
+    } else {
+      // weekly buckets
+      const tmp = new Date(d);
+      tmp.setDate(tmp.getDate() - tmp.getDay());
+      key = tmp.toISOString().slice(0,10);
+    }
+    if (!buckets[key]) buckets[key] = { duration:0, volume:0, workouts:0 };
+    buckets[key].duration += w.duration;
+    buckets[key].volume += w.volume;
+    buckets[key].workouts++;
   });
 
-  const labels = Object.keys(weeks).sort().slice(-12);
+  const labels = Object.keys(buckets).sort().slice(-24);
   const values = labels.map(k => {
-    if (state.currentMetric === 'duration') return weeks[k].duration;
-    if (state.currentMetric === 'volume') return Math.round(weeks[k].volume);
-    return weeks[k].workouts;
+    if (state.currentMetric === 'duration') return buckets[k].duration;
+    if (state.currentMetric === 'volume') return Math.round(buckets[k].volume);
+    return buckets[k].workouts;
   });
 
   const total = values.reduce((s,v) => s+v, 0);
   const unit = state.currentMetric==='duration' ? 'min' : state.currentMetric==='volume' ? 'kg' : '';
+
+  // Period label
+  const periodLabels = {
+    week: 'This week', month: 'This month',
+    '3m': 'Last 3 months', '6m': 'Last 6 months',
+    year: 'This year', all: 'All time'
+  };
+  document.getElementById('chart-period-label').textContent = periodLabels[state.currentFilter] || '';
   document.getElementById('chart-main-value').textContent = total + unit;
 
   const ctx = document.getElementById('progress-chart').getContext('2d');
@@ -1398,7 +1528,9 @@ function renderChart() {
     type: 'line',
     data: {
       labels: labels.length ? labels.map(l => {
-        const d = new Date(l); return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+        const d = new Date(l);
+        if (useDays) return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+        return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
       }) : ['No data'],
       datasets: [{
         data: values.length ? values : [0],
@@ -1417,11 +1549,53 @@ function renderChart() {
         label: ctx => ctx.parsed.y + unit
       }}},
       scales: {
-        x: { grid: { color: '#1e1e1e' }, ticks: { color: '#555', font: { size: 10 } } },
+        x: { grid: { color: '#1e1e1e' }, ticks: { color: '#555', font: { size: 10 }, maxTicksLimit: 8 } },
         y: { grid: { color: '#1e1e1e' }, ticks: { color: '#555', font: { size: 10 } }, beginAtZero: true },
       }
     }
   });
+
+  // Also update the summary stats below the chart
+  renderFilterStats(workouts);
+}
+
+function switchMetric(btn, m) {
+  document.querySelectorAll('.metric-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  state.currentMetric = m;
+  renderChart();
+}
+
+function renderFilterStats(workouts) {
+  const el = document.getElementById('filter-stats');
+  if (!el) return;
+  if (!workouts.length) { el.innerHTML = ''; return; }
+  const totalDur = workouts.reduce((s,w)=>s+w.duration,0);
+  const totalVol = workouts.reduce((s,w)=>s+w.volume,0);
+  const avgDur = Math.round(totalDur / workouts.length);
+  const totalSets = workouts.reduce((s,w)=>s+w.exercises.reduce((ss,e)=>ss+(e.sets||[]).filter(s=>!s.warmup).length,0),0);
+  const avgSoreness = (() => {
+    const withSoreness = workouts.filter(w=>w.sorenessRange);
+    if (!withSoreness.length) return null;
+    const avg = withSoreness.reduce((s,w)=>s+(w.sorenessRange[0]+w.sorenessRange[1])/2,0) / withSoreness.length;
+    return avg.toFixed(1);
+  })();
+  el.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--border);border-radius:var(--radius);overflow:hidden;margin:0 16px 20px;">
+      <div style="background:var(--surface);padding:14px 16px;"><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Workouts</div><div style="font-size:20px;font-weight:800;">${workouts.length}</div></div>
+      <div style="background:var(--surface);padding:14px 16px;"><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Total Volume</div><div style="font-size:20px;font-weight:800;">${Math.round(totalVol/1000)}t</div></div>
+      <div style="background:var(--surface);padding:14px 16px;"><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Avg Duration</div><div style="font-size:20px;font-weight:800;">${avgDur}m</div></div>
+      <div style="background:var(--surface);padding:14px 16px;"><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Total Sets</div><div style="font-size:20px;font-weight:800;">${totalSets}</div></div>
+      ${avgSoreness ? `<div style="background:var(--surface);padding:14px 16px;"><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Avg Soreness</div><div style="font-size:20px;font-weight:800;">${avgSoreness}/10</div></div>` : ''}
+    </div>
+  `;
+}
+
+function refreshProgress() {
+  renderChart();
+  renderGoal();
+  renderProgressMuscleMap();
+  renderExerciseHistory();
 }
 
 function renderGoal() {
