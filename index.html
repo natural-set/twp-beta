@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lyfta — Workout Tracker</title>
+<title>TWP — Workout Tracker</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
@@ -132,7 +132,7 @@
     margin-bottom: 16px;
   }
   .snapshot-header span { font-size: 14px; color: var(--text-muted); }
-  .snapshot-header a { font-size: 13px; color: var(--accent-blue); text-decoration: none; }
+  .snapshot-header a { font-size: 13px; color: var(--accent-blue); text-decoration: none; cursor: pointer; }
   .snapshot-stats { display: flex; gap: 24px; }
   .stat-item .val { font-size: 26px; font-weight: 800; }
   .stat-item .lbl { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
@@ -142,6 +142,8 @@
     padding: 3px 8px; font-size: 11px; color: var(--text-muted);
     margin-top: 6px;
   }
+  .stat-delta.up { color: var(--green); }
+  .stat-delta.down { color: var(--red); }
 
   .cta-card {
     margin: 0 16px 24px;
@@ -620,6 +622,78 @@
     padding: 8px 10px; margin-bottom: 6px; font-size: 11px; color: var(--text-dim);
   }
 
+  /* ── WEEKLY DETAIL ── */
+  .week-nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 20px 16px;
+  }
+  .week-nav-btn {
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--text); width: 34px; height: 34px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+  }
+  .week-nav-btn svg { width: 16px; height: 16px; }
+  .week-nav-btn:disabled { opacity: .3; cursor: default; }
+  .week-nav-label { font-size: 14px; font-weight: 700; color: var(--text-muted); }
+
+  .week-compare-card {
+    margin: 0 16px 20px;
+    background: var(--surface); border-radius: var(--radius);
+    border: 1px solid var(--border); padding: 18px;
+  }
+  .week-compare-title { font-size: 12px; color: var(--text-muted); margin-bottom: 14px; }
+  .week-compare-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+  }
+  .wc-item { text-align: left; }
+  .wc-item .wc-val { font-size: 20px; font-weight: 800; }
+  .wc-item .wc-lbl { font-size: 11px; color: var(--text-muted); margin-top: 2px; margin-bottom: 6px; }
+  .wc-delta {
+    display: inline-flex; align-items: center; gap: 3px;
+    font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 10px;
+  }
+  .wc-delta.up { color: var(--green); background: rgba(34,197,94,.12); }
+  .wc-delta.down { color: var(--red); background: rgba(239,68,68,.12); }
+  .wc-delta.flat { color: var(--text-muted); background: var(--surface2); }
+
+  .trend-banner {
+    margin: 0 16px 20px; padding: 14px 16px;
+    background: rgba(59,130,246,.08); border: 1px solid rgba(59,130,246,.25);
+    border-radius: var(--radius); font-size: 13px; line-height: 1.5;
+    display: flex; gap: 10px; align-items: flex-start;
+  }
+  .trend-banner .emoji { font-size: 18px; flex-shrink: 0; }
+
+  .day-card {
+    margin: 0 16px 12px;
+    background: var(--surface); border-radius: var(--radius);
+    border: 1px solid var(--border); overflow: hidden;
+  }
+  .day-card.rest { opacity: .55; }
+  .day-card.today { border-color: var(--accent-blue); }
+  .day-card-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 16px;
+  }
+  .day-card-header .day-label { display: flex; align-items: center; gap: 8px; }
+  .day-card-header .day-name { font-size: 14px; font-weight: 800; }
+  .day-card-header .day-date { font-size: 11px; color: var(--text-dim); }
+  .day-card-header .day-vol { font-size: 13px; font-weight: 700; color: var(--accent-blue); }
+  .day-card-body { padding: 0 16px 14px; }
+  .day-ex-row {
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 12px; padding: 5px 0; color: var(--text-muted);
+  }
+  .day-ex-row .day-ex-name { color: var(--text); }
+  .day-rest-label {
+    font-size: 12px; color: var(--text-dim); padding: 0 16px 14px;
+  }
+  .today-pill {
+    font-size: 10px; font-weight: 700; color: var(--accent-blue);
+    background: rgba(59,130,246,.15); padding: 2px 7px; border-radius: 10px;
+  }
+
   /* scrollbar */
   ::-webkit-scrollbar { width: 4px; }
   ::-webkit-scrollbar-track { background: transparent; }
@@ -648,23 +722,23 @@
     <div class="snapshot-card">
       <div class="snapshot-header">
         <span>Your weekly snapshot</span>
-        <a href="#">See more</a>
+        <a onclick="openWeeklyDetail(0)">See more</a>
       </div>
       <div class="snapshot-stats">
         <div class="stat-item">
           <div class="val" id="home-workouts">0</div>
           <div class="lbl">Workouts</div>
-          <div class="stat-delta">▲ 0</div>
+          <div class="stat-delta" id="home-delta-workouts">▲ 0</div>
         </div>
         <div class="stat-item">
           <div class="val" id="home-duration">0min</div>
           <div class="lbl">Duration</div>
-          <div class="stat-delta">▲ 0min</div>
+          <div class="stat-delta" id="home-delta-duration">▲ 0min</div>
         </div>
         <div class="stat-item">
           <div class="val" id="home-volume">0kg</div>
           <div class="lbl">Volume</div>
-          <div class="stat-delta">▲ 0 kg</div>
+          <div class="stat-delta" id="home-delta-volume">▲ 0 kg</div>
         </div>
       </div>
     </div>
@@ -727,6 +801,17 @@
       </button>
     </div>
     <div id="detail-content"></div>
+  </div>
+
+  <!-- ══════════════════ WEEKLY DETAIL ══════════════════ -->
+  <div id="screen-weekly-detail" class="screen">
+    <div class="page-header" style="padding-bottom: 0;">
+      <button class="back-btn" onclick="navigate('home', document.querySelectorAll('.nav-btn')[0])">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5"/></svg>
+        <span>Home</span>
+      </button>
+    </div>
+    <div id="weekly-detail-content"></div>
   </div>
 
   <!-- ══════════════════ PROGRESS ══════════════════ -->
@@ -934,13 +1019,14 @@ let state = {
   currentMetric: 'duration',
   currentFilter: 'week',
   prevScreen: 'home',
+  weeklyDetailOffset: 0, // 0 = this week, -1 = last week, etc.
 };
 
 let chartInstance = null;
 
 // ── Load from localStorage ──
 function loadState() {
-  const saved = localStorage.getItem('lyfta_state');
+  const saved = localStorage.getItem('twp_state');
   if (saved) {
     const parsed = JSON.parse(saved);
     state.workouts = parsed.workouts || [];
@@ -949,7 +1035,7 @@ function loadState() {
 }
 
 function saveState() {
-  localStorage.setItem('lyfta_state', JSON.stringify({
+  localStorage.setItem('twp_state', JSON.stringify({
     workouts: state.workouts,
     userName: state.userName,
   }));
@@ -966,7 +1052,7 @@ function navigate(screenName, btn) {
   if (screenName === 'home') refreshHome();
   if (screenName === 'progress') refreshProgress();
   if (screenName === 'you') refreshYou();
-  if (screenName !== 'detail') state.prevScreen = screenName;
+  if (screenName !== 'detail' && screenName !== 'weekly-detail') state.prevScreen = screenName;
 }
 
 function goBack() {
@@ -1187,14 +1273,23 @@ function refreshHome() {
   const now = new Date();
   const weekStart = new Date(now); weekStart.setDate(now.getDate() - now.getDay());
   weekStart.setHours(0,0,0,0);
+  const lastWeekStart = new Date(weekStart); lastWeekStart.setDate(lastWeekStart.getDate() - 7);
 
   const weekWorkouts = state.workouts.filter(w => new Date(w.date) >= weekStart);
+  const lastWeekWorkouts = state.workouts.filter(w => { const d = new Date(w.date); return d >= lastWeekStart && d < weekStart; });
+
   const totalDuration = weekWorkouts.reduce((s,w) => s+w.duration, 0);
   const totalVolume = weekWorkouts.reduce((s,w) => s+w.volume, 0);
+  const lastDuration = lastWeekWorkouts.reduce((s,w) => s+w.duration, 0);
+  const lastVolume = lastWeekWorkouts.reduce((s,w) => s+w.volume, 0);
 
   document.getElementById('home-workouts').textContent = weekWorkouts.length;
   document.getElementById('home-duration').textContent = totalDuration + 'min';
   document.getElementById('home-volume').textContent = Math.round(totalVolume) + 'kg';
+
+  setDeltaBadge('home-delta-workouts', weekWorkouts.length - lastWeekWorkouts.length, '');
+  setDeltaBadge('home-delta-duration', totalDuration - lastDuration, 'min');
+  setDeltaBadge('home-delta-volume', Math.round(totalVolume - lastVolume), ' kg');
 
   // CTA visibility
   document.getElementById('home-cta').style.display = state.workouts.length === 0 ? 'block' : 'none';
@@ -1206,6 +1301,21 @@ function refreshHome() {
     return;
   }
   feed.innerHTML = state.workouts.slice(0,5).map(w => renderFeedCard(w)).join('');
+}
+
+function setDeltaBadge(elId, delta, unit) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  el.classList.remove('up','down');
+  if (delta > 0) {
+    el.classList.add('up');
+    el.textContent = `▲ ${delta}${unit}`;
+  } else if (delta < 0) {
+    el.classList.add('down');
+    el.textContent = `▼ ${Math.abs(delta)}${unit}`;
+  } else {
+    el.textContent = `▲ 0${unit}`;
+  }
 }
 
 function renderFeedCard(w) {
@@ -1251,6 +1361,196 @@ function renderFeedCard(w) {
     <div class="exercise-grid">${exerciseCells}${extra}</div>
     <div class="feed-card-date">${dateStr} ${sorenessTag}</div>
   </div>`;
+}
+
+// ═══════════════════════════════════════════
+//  WEEKLY DETAIL  (new feature)
+// ═══════════════════════════════════════════
+
+// Monday-start week helper
+function getMondayStart(d) {
+  const date = new Date(d);
+  const day = date.getDay(); // 0=Sun,1=Mon,...6=Sat
+  const diff = day === 0 ? -6 : 1 - day;
+  date.setDate(date.getDate() + diff);
+  date.setHours(0,0,0,0);
+  return date;
+}
+
+function openWeeklyDetail(offset) {
+  state.weeklyDetailOffset = offset || 0;
+  renderWeeklyDetail();
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-weekly-detail').classList.add('active');
+}
+
+function shiftWeeklyDetail(delta) {
+  // Don't allow navigating into the future beyond this week
+  if (state.weeklyDetailOffset + delta > 0) return;
+  state.weeklyDetailOffset += delta;
+  renderWeeklyDetail();
+}
+
+function renderWeeklyDetail() {
+  const offset = state.weeklyDetailOffset;
+  const now = new Date();
+  const thisMonday = getMondayStart(now);
+
+  const weekStart = new Date(thisMonday); weekStart.setDate(weekStart.getDate() + offset*7);
+  const weekEnd = new Date(weekStart); weekEnd.setDate(weekEnd.getDate() + 7);
+  const prevWeekStart = new Date(weekStart); prevWeekStart.setDate(prevWeekStart.getDate() - 7);
+
+  const weekWorkouts = state.workouts.filter(w => { const d = new Date(w.date); return d >= weekStart && d < weekEnd; });
+  const prevWeekWorkouts = state.workouts.filter(w => { const d = new Date(w.date); return d >= prevWeekStart && d < weekStart; });
+
+  // ── Week label ──
+  const weekEndDisplay = new Date(weekEnd); weekEndDisplay.setDate(weekEndDisplay.getDate()-1);
+  const fmt = (d) => d.toLocaleDateString('en-US', { month:'short', day:'numeric' });
+  const isCurrentWeek = offset === 0;
+  const weekLabel = isCurrentWeek ? `This Week · ${fmt(weekStart)}–${fmt(weekEndDisplay)}` : `${fmt(weekStart)}–${fmt(weekEndDisplay)}`;
+
+  // ── Totals this week vs last week ──
+  const totals = (arr) => ({
+    workouts: arr.length,
+    duration: arr.reduce((s,w)=>s+w.duration,0),
+    volume: arr.reduce((s,w)=>s+w.volume,0),
+    sets: arr.reduce((s,w)=>s+w.exercises.reduce((ss,e)=>ss+(e.sets||[]).filter(s=>!s.warmup).length,0),0),
+  });
+  const cur = totals(weekWorkouts);
+  const prev = totals(prevWeekWorkouts);
+
+  function pctChange(curVal, prevVal) {
+    if (prevVal === 0) return curVal > 0 ? { pct: null, dir: 'up' } : { pct: 0, dir: 'flat' };
+    const pct = Math.round(((curVal - prevVal) / prevVal) * 100);
+    return { pct, dir: pct > 0 ? 'up' : pct < 0 ? 'down' : 'flat' };
+  }
+
+  function deltaChip(curVal, prevVal) {
+    const { pct, dir } = pctChange(curVal, prevVal);
+    const arrow = dir === 'up' ? '▲' : dir === 'down' ? '▼' : '●';
+    const label = pct === null ? 'new' : `${Math.abs(pct)}%`;
+    return `<span class="wc-delta ${dir}">${arrow} ${label}</span>`;
+  }
+
+  // ── Trend banner (based on volume trend across last 4 weeks incl. this one) ──
+  const trendWeeks = [];
+  for (let i = 3; i >= 0; i--) {
+    const ws = new Date(weekStart); ws.setDate(ws.getDate() - i*7);
+    const we = new Date(ws); we.setDate(we.getDate()+7);
+    const vol = state.workouts.filter(w => { const d = new Date(w.date); return d >= ws && d < we; }).reduce((s,w)=>s+w.volume,0);
+    trendWeeks.push(vol);
+  }
+  let trendHTML = '';
+  const nonZeroWeeks = trendWeeks.filter(v => v > 0).length;
+  if (nonZeroWeeks >= 2) {
+    const first = trendWeeks[0], last = trendWeeks[trendWeeks.length-1];
+    if (last > first * 1.05) {
+      trendHTML = `<div class="trend-banner"><span class="emoji">📈</span><span>You're trending <strong>up</strong> — volume has grown over the last 4 weeks. Keep the momentum going!</span></div>`;
+    } else if (last < first * 0.95) {
+      trendHTML = `<div class="trend-banner"><span class="emoji">📉</span><span>Volume has dipped over the last 4 weeks. A lighter patch is normal — consider easing back in.</span></div>`;
+    } else {
+      trendHTML = `<div class="trend-banner"><span class="emoji">➡️</span><span>You're holding steady — volume has been consistent over the last 4 weeks.</span></div>`;
+    }
+  } else if (cur.workouts > 0) {
+    trendHTML = `<div class="trend-banner"><span class="emoji">👋</span><span>Not enough history yet to spot a trend — keep logging and it'll show up here.</span></div>`;
+  }
+
+  // ── Daily breakdown Mon–Sun ──
+  const dayNames = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const todayStr = new Date().toDateString();
+  let daysHTML = '';
+  for (let i = 0; i < 7; i++) {
+    const dayDate = new Date(weekStart); dayDate.setDate(dayDate.getDate() + i);
+    const dayWorkouts = weekWorkouts.filter(w => new Date(w.date).toDateString() === dayDate.toDateString());
+    const isToday = dayDate.toDateString() === todayStr;
+    const dayDateLabel = dayDate.toLocaleDateString('en-US', { month:'short', day:'numeric' });
+
+    if (!dayWorkouts.length) {
+      const isFuture = dayDate > new Date();
+      daysHTML += `
+        <div class="day-card rest ${isToday?'today':''}">
+          <div class="day-card-header">
+            <div class="day-label">
+              <div class="day-name">${dayNames[i]}</div>
+              <div class="day-date">${dayDateLabel}</div>
+              ${isToday ? '<span class="today-pill">Today</span>' : ''}
+            </div>
+          </div>
+          <div class="day-rest-label">${isFuture ? 'Upcoming' : 'Rest day'}</div>
+        </div>`;
+    } else {
+      const dayVolume = dayWorkouts.reduce((s,w)=>s+w.volume,0);
+      const exRows = dayWorkouts.flatMap(w => w.exercises).map(ex => {
+        const setsCount = (ex.sets||[]).filter(s=>!s.warmup).length;
+        const exVol = (ex.sets||[]).reduce((s,set)=>s+set.weight*set.reps,0);
+        if (ex.isCardio) {
+          return `<div class="day-ex-row"><span class="day-ex-name">${ex.icon} ${ex.name}</span><span>${ex.cardioMinutes}min</span></div>`;
+        }
+        if (!setsCount) {
+          return `<div class="day-ex-row"><span class="day-ex-name">${ex.icon} ${ex.name}</span><span>not logged</span></div>`;
+        }
+        return `<div class="day-ex-row"><span class="day-ex-name">${ex.icon} ${ex.name}</span><span>${setsCount} sets · ${Math.round(exVol)}kg</span></div>`;
+      }).join('');
+      const workoutNames = dayWorkouts.map(w=>w.name).join(', ');
+      daysHTML += `
+        <div class="day-card ${isToday?'today':''}" onclick="openDetail(${dayWorkouts[0].id})">
+          <div class="day-card-header">
+            <div class="day-label">
+              <div class="day-name">${dayNames[i]}</div>
+              <div class="day-date">${dayDateLabel}</div>
+              ${isToday ? '<span class="today-pill">Today</span>' : ''}
+            </div>
+            <div class="day-vol">${Math.round(dayVolume)}kg</div>
+          </div>
+          <div class="day-card-body">
+            <div style="font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:4px;">${workoutNames}</div>
+            ${exRows}
+          </div>
+        </div>`;
+    }
+  }
+
+  document.getElementById('weekly-detail-content').innerHTML = `
+    <div class="page-header" style="padding-top:0;">
+      <h1 style="font-size:20px;">Weekly Details</h1>
+    </div>
+    <div class="week-nav">
+      <button class="week-nav-btn" onclick="shiftWeeklyDetail(-1)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+      </button>
+      <div class="week-nav-label">${weekLabel}</div>
+      <button class="week-nav-btn" onclick="shiftWeeklyDetail(1)" ${offset>=0?'disabled':''}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+
+    <div class="week-compare-card">
+      <div class="week-compare-title">Compared to previous week</div>
+      <div class="week-compare-grid">
+        <div class="wc-item">
+          <div class="wc-val">${cur.workouts}</div>
+          <div class="wc-lbl">Workouts</div>
+          ${deltaChip(cur.workouts, prev.workouts)}
+        </div>
+        <div class="wc-item">
+          <div class="wc-val">${cur.duration}m</div>
+          <div class="wc-lbl">Duration</div>
+          ${deltaChip(cur.duration, prev.duration)}
+        </div>
+        <div class="wc-item">
+          <div class="wc-val">${Math.round(cur.volume)}kg</div>
+          <div class="wc-lbl">Volume</div>
+          ${deltaChip(cur.volume, prev.volume)}
+        </div>
+      </div>
+    </div>
+
+    ${trendHTML}
+
+    <div class="section-title" style="padding-top:0;">Daily Breakdown</div>
+    <div class="section-sub">Monday – Sunday</div>
+    ${daysHTML}
+  `;
 }
 
 // ═══════════════════════════════════════════
@@ -1383,8 +1683,6 @@ function openDetail(id) {
         ? `<span class="set-badge warmup">W</span>`
         : `<span class="set-badge numbered">${setIndex}</span>`;
       const prs = (s.prs||[]).map(p => `<span class="pr-badge ${prColors[p]||'gold'}">🏅 ${p}</span>`).join('');
-      const weightDisplay = s.weight === BODYWEIGHT_KG
-        ? `BW${s.weight > 0 ? '+0' : ''}` : `${s.weight}kg`;
       const rirDisplay = s.rir > 0 ? ` · RIR ${s.rir}` : '';
       return `<div class="detail-set-row ${s.prs&&s.prs.length?'pr-row':''}">
         ${badge}
@@ -1433,7 +1731,7 @@ function openDetail(id) {
   // Show detail screen without changing prevScreen
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('screen-detail').classList.add('active');
-  const labelMap = { home: 'Home', progress: 'Progress', you: 'You', workout: 'Workout' };
+  const labelMap = { home: 'Home', progress: 'Progress', you: 'You', workout: 'Workout', 'weekly-detail': 'Weekly Details' };
   document.getElementById('back-btn-label').textContent = labelMap[state.prevScreen] || 'Back';
 }
 
