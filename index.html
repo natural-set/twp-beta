@@ -781,7 +781,10 @@
     <div id="active-workout" style="display:none;">
       <div class="workout-top-bar">
         <div class="workout-timer" id="workout-timer">00:00</div>
-        <button class="btn-finish" onclick="finishWorkout()">Finish</button>
+          <div style="display: flex; gap: 8px;"></div>
+            <button onclick="cancelWorkout()" style="background: transparent; border: 1px solid var(--border); color: var(--text); padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background .15s;" onmouseover="this.style.background='var(--surface3)'" onmouseout="this.style.background='transparent'">Cancel</button>
+            <button class="btn-finish" onclick="finishWorkout()">Finish</button>
+        </div>
       </div>
 
       <div style="display: flex; gap: 10px; padding: 12px 20px 0;">
@@ -1386,7 +1389,17 @@ function renderFeedCard(w) {
 
   return `<div class="feed-card" onclick="openDetail(${w.id})">
     <div class="feed-card-header">
-      <div class="workout-name">${w.name}${w.imported ? ' 📥' : ''}</div>
+      
+      <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+        <div class="workout-name">${w.name}${w.imported ? ' 📥' : ''}</div>
+        
+        <div class="kebab-menu" onclick="toggleKebab(event, ${w.id})" style="position: relative; padding: 0 5px; margin-right: -5px; cursor: pointer; color: var(--text-muted); font-size: 18px; line-height: 1;">
+          ⋮
+          <div id="kebab-dropdown-${w.id}" class="kebab-dropdown" style="display: none; position: absolute; right: 0; top: 100%; margin-top: 5px; background: var(--surface3); border: 1px solid var(--border); border-radius: 8px; padding: 4px; z-index: 10; box-shadow: 0 4px 12px rgba(0,0,0,0.5);">
+            <button onclick="deleteWorkoutFromFeed(event, ${w.id})" style="background: transparent; border: none; color: var(--red); cursor: pointer; font-size: 13px; font-weight: 500; font-family: inherit; padding: 8px 16px; width: max-content; border-radius: 4px; transition: background .15s;" onmouseover="this.style.background='rgba(239, 68, 68, 0.1)'" onmouseout="this.style.background='transparent'">Delete Workout</button>
+          </div>
+        </div>
+      </div>
       ${w.note ? `<div class="workout-note">${w.note}</div>` : ''}
     </div>
     <div class="feed-meta">
@@ -2183,6 +2196,19 @@ function recalculateSets(blockId) {
   });
 }
 
+function cancelWorkout() {
+  clearInterval(state.timerInterval);
+  state.activeWorkout = null;
+  state.editingWorkoutId = null;
+
+  // Reset UI
+  document.getElementById('no-workout').style.display = 'block';
+  document.getElementById('active-workout').style.display = 'none';
+  
+  // Navigate back to the home screen safely
+  navigate('home', document.querySelectorAll('.nav-btn')[0]);
+}
+
 // ═══════════════════════════════════════════
 //  UTILS
 // ═══════════════════════════════════════════
@@ -2191,6 +2217,43 @@ function showToast(msg) {
   t.textContent = msg;
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ── KEBAB MENU & DELETE WORKOUT LOGIC ──
+
+function toggleKebab(event, id) {
+  event.stopPropagation(); // Prevents clicking the card and opening the detail view
+  
+  const dropdown = document.getElementById(`kebab-dropdown-${id}`);
+  
+  // Close all other dropdowns first
+  document.querySelectorAll('.kebab-dropdown').forEach(d => {
+    if(d.id !== `kebab-dropdown-${id}`) d.style.display = 'none';
+  });
+  
+  // Toggle the clicked one
+  dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+}
+
+// Close dropdowns if user clicks anywhere else on the screen
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.kebab-menu')) {
+    document.querySelectorAll('.kebab-dropdown').forEach(d => d.style.display = 'none');
+  }
+});
+
+function deleteWorkoutFromFeed(event, id) {
+  event.stopPropagation(); // Prevents opening detail view
+  
+  if (!confirm("Are you sure you want to delete this workout? This cannot be undone.")) return;
+  
+  // Remove from state
+  state.workouts = state.workouts.filter(w => w.id !== id);
+  saveState();
+  
+  // Refresh the home feed
+  navigate('home', document.querySelectorAll('.nav-btn')[0]);
+  showToast('Workout deleted 🗑️');
 }
 
 // ═══════════════════════════════════════════
