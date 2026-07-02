@@ -783,6 +783,12 @@
         <div class="workout-timer" id="workout-timer">00:00</div>
         <button class="btn-finish" onclick="finishWorkout()">Finish</button>
       </div>
+
+      <div style="display: flex; gap: 10px; padding: 12px 20px 0;">
+        <input type="datetime-local" id="workout-date" style="flex: 1; background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 8px; border-radius: 6px; font-family: inherit; font-size: 13px; outline: none;">
+        <input type="number" id="workout-duration-input" placeholder="Duration (min)" style="width: 110px; background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 8px; border-radius: 6px; font-family: inherit; font-size: 13px; outline: none;">
+      </div>
+
       <input class="workout-name-input" id="workout-name" placeholder="Workout name…" />
       <textarea class="workout-note-input" id="workout-note" placeholder="Add notes…" rows="1"></textarea>
 
@@ -1020,6 +1026,7 @@ let state = {
   currentFilter: 'week',
   prevScreen: 'home',
   weeklyDetailOffset: 0, // 0 = this week, -1 = last week, etc.
+  editingWorkoutId: null,
 };
 
 let chartInstance = null;
@@ -1069,10 +1076,13 @@ function goToWorkout() { navigate('workout', document.querySelectorAll('.nav-btn
 // ═══════════════════════════════════════════
 function startWorkout() {
   state.activeWorkout = { name: '', note: '', exercises: [], startTime: Date.now() };
+  state.editingWorkoutId = null; // Clear edit state
   document.getElementById('no-workout').style.display = 'none';
   document.getElementById('active-workout').style.display = 'block';
   document.getElementById('workout-name').value = '';
   document.getElementById('workout-note').value = '';
+  document.getElementById('workout-date').value = '';
+  document.getElementById('workout-duration-input').value = '';
   document.getElementById('exercises-container').innerHTML = '';
   startTimer();
 }
@@ -1089,19 +1099,25 @@ function startTimer() {
 }
 
 function finishWorkout() {
-  if (!state.activeWorkout) return;
+  if (!state.activeWorkout && !state.editingWorkoutId) return;
   clearInterval(state.timerInterval);
 
   const name = document.getElementById('workout-name').value.trim() || 'Workout';
   const note = document.getElementById('workout-note').value.trim();
+
+  // Grab Date and Duration from UI
+  const manualDuration = parseInt(document.getElementById('workout-duration-input').value);
+  const duration = isNaN(manualDuration) ? Math.round(state.timerSeconds / 60) : manualDuration;
+  
+  const manualDate = document.getElementById('workout-date').value;
+  const finalDate = manualDate ? new Date(manualDate).toISOString() : new Date().toISOString();
 
   // Collect exercises from DOM
   const exBlocks = document.querySelectorAll('.ex-block');
   const exercises = [];
   exBlocks.forEach(block => {
     const exId = block.dataset.exId;
-    const exDef = EXERCISES_DB.find(e => e.id === exId);
-    if (!exDef) return;
+    const exDef = EXERCISES_DB.find(e => e.id === exId) || { name: 'Unknown', icon: '❓', primary: [], secondary: [] };
     const noteEl = block.querySelector('.ex-note-ta');
     const exNote = noteEl ? noteEl.value : '';
     const sets = [];
@@ -1126,12 +1142,11 @@ function finishWorkout() {
     showToast('Add at least one exercise!'); return;
   }
 
-  // Compute volume & duration
+  // Compute volume
   let volume = 0;
   exercises.forEach(ex => ex.sets.forEach(s => { volume += s.weight * s.reps; }));
-  const duration = Math.round(state.timerSeconds / 60);
 
-  // Detect PRs (simple: compare against previous bests)
+  // Detect PRs
   exercises.forEach(ex => {
     ex.sets.forEach(s => {
       s.prs = [];
@@ -1146,19 +1161,40 @@ function finishWorkout() {
   });
 
   const workout = {
-    id: Date.now(),
+    id: state.editingWorkoutId || Date.now(),
     name, note, exercises, volume, duration,
-    date: new Date().toISOString(),
+    date: finalDate,
     records: exercises.reduce((sum, ex) => sum + ex.sets.filter(s => s.prs && s.prs.length).length, 0),
   };
 
-  state.workouts.unshift(workout);
+  if (state.editingWorkoutId) {
+    // We are editing
+    const index = state.workouts.findIndex(w => w.id === state.editingWorkoutId);
+    if (index !== -1) {
+      workout.sorenessRange = state.workouts[index].sorenessRange;
+      workout.bodyWeight = state.workouts[index].bodyWeight;
+      workout.imported = state.workouts[index].imported;
+      state.workouts[index] = workout; 
+    }
+    showToast('Workout updated! ✏️');
+  } else {
+    // It's a new workout
+    state.workouts.unshift(workout);
+    showToast('Workout saved! 🎉');
+  }
+
+  // Re-sort the array in case the user edited the date to the past
+  state.workouts.sort((a,b) => new Date(b.date) - new Date(a.date));
+
   saveState();
   state.activeWorkout = null;
+  state.editingWorkoutId = null;
+  
   document.getElementById('no-workout').style.display = 'block';
   document.getElementById('active-workout').style.display = 'none';
-  showToast('Workout saved! 🎉');
-  navigate('home', document.querySelectorAll('.nav-btn')[0]);
+  
+  // Refresh detail view
+  openDetail(workout.id);
 }
 
 function getBestFor(exId) {
@@ -1252,12 +1288,12 @@ function addSet(blockId, isWarmup) {
   tr.className = 'set-row' + (isWarmup ? ' warmup' : '');
   tr.dataset.warmup = isWarmup;
   const badgeClass = isWarmup ? 'warmup' : 'numbered';
-  tr.innerHTML = `
-    <td><span class="set-badge ${badgeClass}">${label}</span></td>
+ tr.innerHTML = `
+    <td><span class="set-badge ${badgeClass}" style="cursor:pointer" onclick="toggleSetType(this)" title="Click to toggle Warmup/Normal">${label}</span></td>
     <td><input class="set-input w-input" type="number" min="0" step="0.5" placeholder="kg"></td>
     <td><input class="set-input r-input" type="number" min="0" placeholder="reps"></td>
     <td><input class="rir-input" type="number" min="0" max="10" placeholder="0"></td>
-    <td><button class="set-del-btn" onclick="this.closest('tr').remove()">✕</button></td>
+    <td><button class="set-del-btn" onclick="const b='${blockId}'; this.closest('tr').remove(); recalculateSets(b)">✕</button></td>
   `;
   tbody.appendChild(tr);
 }
@@ -1707,9 +1743,14 @@ function openDetail(id) {
 
   document.getElementById('detail-content').innerHTML = `
     <div class="detail-hero">
-      <div class="workout-name">${w.name}${w.imported ? ' <span style="font-size:14px;font-weight:400;color:var(--text-muted)">· imported</span>' : ''}</div>
-      ${w.note ? `<div class="workout-note">${w.note}</div>` : ''}
-      <div class="date">${dateStr}</div>
+      <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+        <div>
+          <div class="workout-name">${w.name}${w.imported ? ' <span style="font-size:14px;font-weight:400;color:var(--text-muted)">· imported</span>' : ''}</div>
+          ${w.note ? `<div class="workout-note">${w.note}</div>` : ''}
+          <div class="date">${dateStr}</div>
+        </div>
+        <button onclick="editWorkout(${w.id})" style="background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; transition: opacity .15s;" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">Edit</button>
+      </div>
     </div>
     <div class="detail-stats">
       <div class="detail-stat"><div class="lbl">Duration</div><div class="val">${w.duration ? w.duration+'m' : '—'}</div></div>
@@ -2028,6 +2069,118 @@ function clearData() {
     refreshYou();
     showToast('All data cleared');
   }
+}
+
+// ═══════════════════════════════════════════
+//  EDITING ENGINE
+// ═══════════════════════════════════════════
+function editWorkout(id) {
+  const w = state.workouts.find(x => x.id === id);
+  if (!w) return;
+
+  state.editingWorkoutId = id;
+  clearInterval(state.timerInterval);
+
+  // Switch screens
+  document.getElementById('no-workout').style.display = 'none';
+  document.getElementById('active-workout').style.display = 'block';
+  navigate('workout', document.querySelectorAll('.nav-btn')[1]);
+
+  // Populate base info
+  document.getElementById('workout-name').value = w.name;
+  document.getElementById('workout-note').value = w.note || '';
+  
+  // Format datetime for the input
+  const d = new Date(w.date);
+  const localDateStr = new Date(d.getTime() - (d.getTimezoneOffset() * 60000)).toISOString().slice(0,16);
+  document.getElementById('workout-date').value = localDateStr;
+  document.getElementById('workout-duration-input').value = w.duration || '';
+
+  // Populate exercises
+  const container = document.getElementById('exercises-container');
+  container.innerHTML = '';
+  
+  w.exercises.forEach(ex => {
+    const blockId = 'ex-' + Date.now() + Math.random().toString(36).substr(2, 5);
+    const def = EXERCISES_DB.find(e => e.id === ex.exId) || { name: ex.name, icon: ex.icon, muscle: 'Custom' };
+    
+    const div = document.createElement('div');
+    div.className = 'ex-block'; div.id = blockId; div.dataset.exId = ex.exId;
+    div.innerHTML = `
+      <div class="ex-block-header">
+        <div class="ex-thumb">${def.icon}</div>
+        <div>
+          <div class="ex-block-name">${def.name}</div>
+          <div style="font-size:11px;color:var(--text-muted)">${def.muscle || ''}</div>
+        </div>
+      </div>
+      <div class="ex-block-note">
+        <textarea class="ex-note-ta" placeholder="Add notes…" rows="1">${ex.note || ''}</textarea>
+      </div>
+      <table class="sets-table">
+        <thead><tr><th style="width:40px">Set</th><th>Weight</th><th>Reps</th><th>RIR</th><th></th></tr></thead>
+        <tbody id="sets-${blockId}"></tbody>
+      </table>
+      <div class="ex-block-footer">
+        <button class="set-add-btn" onclick="addSet('${blockId}',false)">+ Add Set</button>
+        <button class="set-add-btn" onclick="addSet('${blockId}',true)" style="color:var(--accent)">+ Warmup</button>
+        <button class="ex-del-btn" onclick="removeExBlock('${blockId}')">Remove</button>
+      </div>
+    `;
+    container.appendChild(div);
+
+    // Populate sets
+    const tbody = document.getElementById('sets-' + blockId);
+    let workingSetCount = 1;
+    ex.sets.forEach((set) => {
+      const isWarmup = set.warmup;
+      const label = isWarmup ? 'W' : (workingSetCount++);
+      const badgeClass = isWarmup ? 'warmup' : 'numbered';
+      const tr = document.createElement('tr');
+      tr.className = 'set-row' + (isWarmup ? ' warmup' : '');
+      tr.dataset.warmup = isWarmup;
+      tr.innerHTML = `
+        <td><span class="set-badge ${badgeClass}" style="cursor:pointer" onclick="toggleSetType(this)" title="Click to toggle Warmup/Normal">${label}</span></td>
+        <td><input class="set-input w-input" type="number" min="0" step="0.5" value="${set.weight}"></td>
+        <td><input class="set-input r-input" type="number" min="0" value="${set.reps}"></td>
+        <td><input class="rir-input" type="number" min="0" max="10" value="${set.rir || ''}"></td>
+        <td><button class="set-del-btn" onclick="const b='${blockId}'; this.closest('tr').remove(); recalculateSets(b)">✕</button></td>
+      `;
+      tbody.appendChild(tr);
+    });
+  });
+}
+
+function toggleSetType(badgeEl) {
+  const tr = badgeEl.closest('tr');
+  const isCurrentlyWarmup = tr.dataset.warmup === 'true';
+  const blockId = tr.closest('.ex-block').id;
+  
+  tr.dataset.warmup = !isCurrentlyWarmup;
+  if (isCurrentlyWarmup) {
+    tr.classList.remove('warmup');
+    badgeEl.classList.remove('warmup');
+    badgeEl.classList.add('numbered');
+  } else {
+    tr.classList.add('warmup');
+    badgeEl.classList.add('warmup');
+    badgeEl.classList.remove('numbered');
+  }
+  recalculateSets(blockId);
+}
+
+function recalculateSets(blockId) {
+  const tbody = document.getElementById('sets-' + blockId);
+  if (!tbody) return;
+  let workingSetCount = 1;
+  tbody.querySelectorAll('tr').forEach(row => {
+    const badge = row.querySelector('.set-badge');
+    if (row.dataset.warmup === 'true') {
+      badge.textContent = 'W';
+    } else {
+      badge.textContent = workingSetCount++;
+    }
+  });
 }
 
 // ═══════════════════════════════════════════
