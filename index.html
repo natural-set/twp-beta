@@ -3310,10 +3310,26 @@
         const lines = rawText.split('\n').map(l => l.trim());
         const workouts = [];
         const unparsedLines = [];
+        const skippedEvents = []; // non-workout days (injury/recovery/travel/notes) for transparency
         let currentWorkout = null;
-        let pendingSoreness = null; // soreness logged value waiting to attach to PREVIOUS workout
+        let inMeasurementsBlock = false;
 
         const dateLineRegex = /^(?:day\s*)?(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?\s*$/i;
+
+        // A workout only "counts" if it has at least one exercise with real sets, or a cardio entry
+        function hasRealContent(w) {
+          return !!(w && w.exercises.some(e => e.isCardio || (e.sets && e.sets.length > 0)));
+        }
+
+        function flushCurrent() {
+          if (currentWorkout) {
+            if (hasRealContent(currentWorkout)) {
+              workouts.push(currentWorkout);
+            } else if (currentWorkout.note || currentWorkout.exercises.length || currentWorkout.bodyWeight) {
+              skippedEvents.push({ date: currentWorkout.dateLabel, reason: currentWorkout.note || (currentWorkout.bodyWeight ? `Bodyweight logged: ${currentWorkout.bodyWeight}kg` : 'no exercises logged') });
+            }
+          }
+        }
 
         for (let rawLine of lines) {
           if (!rawLine) continue;
@@ -3322,15 +3338,16 @@
           // Skip pure noise lines
           if (/^!*\s*week without training\s*!*$/i.test(line)) continue;
 
-          // ── DATE LINE ──
+          // ── MEASUREMENTS BLOCK TOGGLE ── (skip everything until next date line)
+          if (/^measurements?:/i.test(line)) { inMeasurementsBlock = true; continue; }
+
           const dm = line.match(dateLineRegex);
+          if (inMeasurementsBlock && !dm) continue;
+          if (dm) inMeasurementsBlock = false;
+
+          // ── DATE LINE ──
           if (dm) {
-            // push previous workout
-            if (currentWorkout && currentWorkout.exercises.length) {
-              workouts.push(currentWorkout);
-            } else if (currentWorkout) {
-              // empty workout, drop
-            }
+            flushCurrent();
             const day = parseInt(dm[1]);
             const month = parseInt(dm[2]);
             let year = dm[3] ? parseInt(dm[3]) : CURRENT_YEAR;
@@ -3347,38 +3364,48 @@
             continue;
           }
 
-          // ── "Day NN" without slash (just a day number, no month) — ambiguous, treat as note ──
+          // ── "Day NN" without slash (just a day number, no month) — ambiguous, skip ──
           const soloDayMatch = line.match(/^day\s+(\d{1,2})\s*$/i);
-          if (soloDayMatch && currentWorkout) {
-            // ambiguous day-of-month-only entries from older format; skip silently (already counted via prior date line context is unreliable)
-            // We treat this as a new entry only if no other anchor — push as unparsed for transparency
+          if (soloDayMatch) {
             unparsedLines.push(line + '  (ambiguous date, skipped)');
             continue;
           }
 
+          // ── HEIGHT LINE (skip, not modeled) ──
+          if (/^height:?\s*[\d.,]+\s*(m|cm)\b/i.test(line)) { continue; }
+
           // ── BODYWEIGHT LINE ──
-          const bwMatch = line.match(/body\s*weight\s+(\d+(?:[.,]\d+)?)\s*kg/i) || line.match(/^(\d+(?:[.,]\d+)?)\s*kg\s+first\s+return/i);
-          if (bwMatch && currentWorkout) {
+          const bwMatch = line.match(/body\s*weight:?\s+(\d+(?:[.,]\d+)?)\s*kg/i) || line.match(/^(\d+(?:[.,]\d+)?)\s*kg\s+first\s+return/i);
+          if (bwMatch) {
+            if (!currentWorkout) currentWorkout = { date: new Date().toISOString(), dateLabel: 'Unknown', exercises: [], durationMin: null, sorenessRange: null, note: '' };
             currentWorkout.bodyWeight = parseFloat(bwMatch[1].replace(',', '.'));
             continue;
           }
 
-          // ── DURATION LINE ── e.g. "1h08", "1h", "56min", "2h 0m"
-          const durMatch = line.match(/^(\d+)h(?:r)?(?:(\d{1,2}))?\s*$/i) || line.match(/^(\d+)\s*h(\d{1,2})$/i);
-          const minMatch = line.match(/^(\d+)\s*min(?:utes)?\s*$/i);
-          if (currentWorkout && (durMatch || minMatch)) {
-            if (durMatch) {
-              const h = parseInt(durMatch[1]);
-              const m = durMatch[2] ? parseInt(durMatch[2]) : 0;
-              currentWorkout.durationMin = h * 60 + m;
-            } else {
-              currentWorkout.durationMin = parseInt(minMatch[1]);
+          // ── DURATION LINE ── supports "Duration: 56min", "Duration: 1h07", "Duration: 1h", legacy bare "1h08", "56min"
+          const durationPrefixed = line.match(/^duration:?\s*(.+)$/i);
+          let durVal = durationPrefixed ? durationPrefixed[1].trim() : null;
+          const legacyDur = !durVal ? (line.match(/^(\d+)h(?:r)?(\d{0,2})\s*$/i)) : null;
+          const legacyMin = !durVal ? (line.match(/^(\d+)\s*min(?:utes)?\s*$/i)) : null;
+
+          if (durVal || legacyDur || legacyMin) {
+            if (!currentWorkout) currentWorkout = { date: new Date().toISOString(), dateLabel: 'Unknown', exercises: [], durationMin: null, sorenessRange: null, note: '' };
+            let mins = null;
+            if (durVal) {
+              const hm = durVal.match(/^(\d+)\s*h(?:r)?\s*(\d{0,2})\s*$/i);
+              const mOnly = durVal.match(/^(\d+)\s*min(?:utes)?\s*$/i);
+              if (hm) { mins = parseInt(hm[1]) * 60 + (hm[2] ? parseInt(hm[2]) : 0); }
+              else if (mOnly) { mins = parseInt(mOnly[1]); }
+            } else if (legacyDur) {
+              mins = parseInt(legacyDur[1]) * 60 + (legacyDur[2] ? parseInt(legacyDur[2]) : 0);
+            } else if (legacyMin) {
+              mins = parseInt(legacyMin[1]);
             }
-            continue;
+            if (mins !== null) { currentWorkout.durationMin = mins; continue; }
           }
 
-          // ── RUN LINE ── e.g. "27 min run", "Run 27 min"
-          const runMatch = line.match(/(\d+)\s*min\s*run/i) || line.match(/run\s+(\d+)\s*min/i);
+          // ── RUN LINE ── e.g. "27 min run", "Run 27 min", "Run 2.5 km in 25min"
+          const runMatch = line.match(/(\d+)\s*min\s*run/i) || line.match(/run\s+(?:[\d.]+\s*km\s+in\s+)?(\d+)\s*min/i);
           if (runMatch) {
             if (!currentWorkout) {
               currentWorkout = { date: new Date().toISOString(), dateLabel: 'Unknown', exercises: [], durationMin: null, sorenessRange: null, note: '' };
@@ -3394,8 +3421,11 @@
           const sorenessMatch = line.match(/soreness:?\s*(\d+)\s*-\s*(\d+)/i);
           if (sorenessMatch) {
             const range = [parseInt(sorenessMatch[1]), parseInt(sorenessMatch[2])];
-            // Soreness applies to the PREVIOUS workout (logged the next day)
-            if (workouts.length) {
+            // If current (still-open) block already has real exercises, soreness belongs to THIS workout.
+            // Otherwise (soreness logged under a fresh, empty date) it refers back to the last real workout.
+            if (currentWorkout && hasRealContent(currentWorkout)) {
+              currentWorkout.sorenessRange = range;
+            } else if (workouts.length) {
               workouts[workouts.length - 1].sorenessRange = range;
             } else if (currentWorkout) {
               currentWorkout.sorenessRange = range;
@@ -3403,27 +3433,38 @@
             continue;
           }
 
-          // ── REST TIME LINE attached inline already handled below; standalone like "2minR" handled in exercise line ──
+          // ── EXPLICIT "Note:" PREFIX ──
+          if (/^note:/i.test(line)) {
+            if (!currentWorkout) currentWorkout = { date: new Date().toISOString(), dateLabel: 'Unknown', exercises: [], durationMin: null, sorenessRange: null, note: '' };
+            const noteText = line.replace(/^note:\s*/i, '');
+            currentWorkout.note = currentWorkout.note ? currentWorkout.note + '; ' + noteText : noteText;
+            continue;
+          }
 
-          // ── KNEE INJURY / NOTES / FREE TEXT (no slashes, no digits-heavy) ──
+          // ── INJURY / RECOVERY MARKERS (wrapped in "!") ──
+          if (/^!.*!$/.test(line) || /^!\s*(injury|recovery)/i.test(line)) {
+            if (!currentWorkout) currentWorkout = { date: new Date().toISOString(), dateLabel: 'Unknown', exercises: [], durationMin: null, sorenessRange: null, note: '' };
+            const noteText = line.replace(/^!+\s*/, '').replace(/\s*!+$/, '');
+            currentWorkout.note = currentWorkout.note ? currentWorkout.note + '; ' + noteText : noteText;
+            continue;
+          }
+
+          // ── GENERIC NOTES / FREE TEXT (no slashes, no digits, or contains obvious note keywords) ──
           const hasSlash = line.includes('/');
           const hasDigit = /\d/.test(line);
-          const looksLikeNote = !hasSlash && (!hasDigit || /injur|knee|wrist|sick|recovery|travel|adapt|hurry|headache|spiritual|friend|uruau|sucatinga/i.test(line));
+          const looksLikeNote = !hasSlash && (!hasDigit || /injur|knee|wrist|sick|recovery|travel|adapt|hurry|headache|spiritual|friend|uruau|sucatinga|entry:/i.test(line));
 
-          if (looksLikeNote && !/^(measurements?:)/i.test(line)) {
+          if (looksLikeNote) {
             if (currentWorkout) {
               currentWorkout.note = currentWorkout.note ? currentWorkout.note + '; ' + line : line;
             }
             continue;
           }
 
-          // ── MEASUREMENTS LINE (skip gracefully, not part of workout data model) ──
-          if (/^measurements?:/i.test(line)) { continue; }
-          if (/^(left|right)\s+\w+\s+\d+/i.test(line) || /^(waist|shoulders|back\/chest)\s+\d+/i.test(line)) { continue; }
+          // ── MEASUREMENTS SUB-LINES (safety net, block toggle above should already skip these) ──
+          if (/^(left|right)\s+[\w/]+:?\s*\d+/i.test(line) || /^(waist|back\/chest):?\s*\d+/i.test(line)) { continue; }
 
           // ── EXERCISE LINE: "Name metrics" or just "Name" ──
-          // Try to split into exercise name part and the data part.
-          // Pattern: name can include "wp 1-3 3-1", "minR" rest, then slash-separated sets
           if (!currentWorkout) {
             currentWorkout = { date: new Date().toISOString(), dateLabel: 'Unknown', exercises: [], durationMin: null, sorenessRange: null, note: '' };
           }
@@ -3435,29 +3476,43 @@
             unparsedLines.push(line);
           }
         }
-        if (currentWorkout && currentWorkout.exercises.length) {
-          workouts.push(currentWorkout);
-        }
+        flushCurrent();
 
-        return { workouts, unparsedLines };
+        return { workouts, unparsedLines, skippedEvents };
       }
 
       function parseExerciseLine(line) {
         // Handle "---" or empty trailing => not done
         if (/^[-/]+$/.test(line)) return null;
 
-        // Extract warmup spec: "wp 1-3 3-1" or "warm-up 1-3 3-1"
-        let warmupSpec = null;
         let workLine = line;
-        const wpMatch = workLine.match(/\b(?:wp|warm-?up)\s+(\d+)-(\d+)\s+(\d+)-(\d+)/i);
+
+        // Strip trailing summary annotations like "= 39n", "= 34negatives", "=> 37 5c12" (recap, not new data)
+        workLine = workLine.split('=')[0].trim();
+
+        // Strip parenthetical explanations, e.g. "(unilateral exercise this 'x' means each leg...)"
+        workLine = workLine.replace(/\([^)]*\)/g, '').trim();
+        // Strip any stray trailing punctuation left behind (e.g. the "." after a removed "(...)")
+        workLine = workLine.replace(/[.,;]+\s*$/, '').trim();
+
+        // Normalize word-form negative-rep notation ("6negatives", "3 negatives", "6negative") down to
+        // the compact "6n" form the tokenizer already understands — the word contains letters outside
+        // the metric-token whitelist and would otherwise get misread as part of the exercise name.
+        workLine = workLine.replace(/(\d+)\s*negatives?\b/gi, '$1n');
+
+        if (!workLine) return null;
+
+        // Extract warmup spec: "wp 1-3 3-1", "warm-up 1-3 3-1", "warm-up-set 1-3-3-1"
+        let warmupSpec = null;
+        const wpMatch = workLine.match(/\b(?:wp|warm-?up(?:-set)?)\s+(\d+)-(\d+)[\s-]+(\d+)-(\d+)/i);
         if (wpMatch) {
-          warmupSpec = { start: parseInt(wpMatch[1]), end: parseInt(wpMatch[2]) };
+          warmupSpec = [parseInt(wpMatch[1]), parseInt(wpMatch[2]), parseInt(wpMatch[3]), parseInt(wpMatch[4])];
           workLine = workLine.replace(wpMatch[0], '').trim();
         }
 
-        // Extract rest time: "2minR", "1h", "1minR", "2min30R"
+        // Extract rest time: "2minR", "1minR", "2min30R" (legacy) and "2minRest", "1minRest", "2min30Rest" (new)
         let restSeconds = null;
-        const restMatch = workLine.match(/(\d+)\s*min\s*(?:(\d+)\s*)?R\b/i);
+        const restMatch = workLine.match(/(\d+)\s*min\s*(?:(\d+)\s*)?R(?:est)?\b/i);
         if (restMatch) {
           const mins = parseInt(restMatch[1]);
           const secs = restMatch[2] ? parseInt(restMatch[2]) : 0;
@@ -3466,9 +3521,6 @@
         }
 
         // Separate name from numeric/slash data.
-        // Find where the metric data starts: first token containing a digit or '/' that's part of a rep sequence,
-        // OR the name is followed by whitespace then digits/slashes pattern.
-        // Strategy: split on first occurrence of a token that looks like (digits)(optional c/p number)(optional more)
         const tokens = workLine.split(/\s+/);
         let nameTokens = [];
         let dataTokens = [];
@@ -3502,7 +3554,8 @@
         const setChunks = dataPart.split('/');
 
         if (!isMultiExercise) {
-          const sets = setChunks.map((chunk, i) => parseSetChunk(chunk, i, warmupSpec)).filter(Boolean);
+          const warmupSets = (warmupSpec || []).map(r => ({ warmup: true, weight: 0, reps: r, rir: 0, bodyweight: true, negativeReps: 0 }));
+          const sets = warmupSets.concat(setChunks.map((chunk, i) => parseSetChunk(chunk, i)).filter(Boolean));
           if (!sets.length) {
             return [{ name: titleCase(exerciseNamePart), icon: pickIcon(exerciseNamePart), note: '', sets: [], notLogged: true }];
           }
@@ -3520,7 +3573,7 @@
             const parts = chunk.split('+');
             parts.forEach((p, idx) => {
               if (idx < perExerciseSets.length) {
-                const s = parseSetChunk(p, perExerciseSets[idx].length, null);
+                const s = parseSetChunk(p, perExerciseSets[idx].length);
                 if (s) perExerciseSets[idx].push(s);
               }
             });
@@ -3539,69 +3592,66 @@
       }
 
       function isMetricToken(tok) {
-        // A token is "metric data" if it's mostly digits/slashes/c/p/n/+/- combos, or is exactly "---"
+        // A token is "metric data" if it's mostly digits/slashes/c/p/n/x/+/- combos, or is exactly "---"
         if (tok === '---') return true;
-        if (/^[\d/cpn+\-.]+$/i.test(tok) && /\d/.test(tok)) return true;
+        if (/^[\d/cpnx+\-.]+$/i.test(tok) && /\d/.test(tok)) return true;
         return false;
       }
 
-      function parseSetChunk(chunk, index, warmupSpec) {
+      function parseSetChunk(chunk, index) {
         chunk = chunk.trim();
         if (!chunk || chunk === '-' || chunk === '--' || chunk === '---') return null;
 
-        const isWarmup = warmupSpec ? true : false; // handled by caller context if needed; default false unless tagged
         let weight = 0;
         let reps = 0;
         let negativeReps = 0;
         let isBodyweight = true;
 
-        // Pattern: NUMBERcNUMBER  e.g. "12c10" -> 12 reps with 10kg
-        // Pattern: NUMBER+NUMBERn e.g. "5+2n" -> 5 reps + 2 negative reps (bodyweight unless cXX present)
-        // Pattern: NUMBERpNUMBER e.g. "8p8" -> partial reps variant, treat p-number as additional reps (partials)
-        // Combined possible: "10c5+10c10" multiple weight phases -- sum reps, use last/avg weight encountered
-
-        // First, extract all "cNN" weight markers to compute a representative weight (use weighted avg or first)
+        // First, extract all "cNN" weight markers to compute a representative weight
         const weightMatches = [...chunk.matchAll(/c(\d+(?:\.\d+)?)/gi)];
         if (weightMatches.length) {
           isBodyweight = false;
-          // use average of all weight phases (covers cases like "20c10e20c20")
           const weights = weightMatches.map(m => parseFloat(m[1]));
           weight = weights.reduce((a, b) => a + b, 0) / weights.length;
         }
 
-        // Extract negative reps "Xn" pattern at chunk level, e.g. "4+5n" or "39n" type tail markers (handled at exercise summary level normally, but per-set we look for "+Nn")
-        const negMatch = chunk.match(/\+(\d+)n\b/i);
+        // Negative reps: "+2n", "+ 3negatives", "+3negative" etc.
+        const negMatch = chunk.match(/\+\s*(\d+)\s*(?:n\b|negatives?\b)/i);
         if (negMatch) {
           negativeReps = parseInt(negMatch[1]);
         }
-        // also handle trailing bare "n" without plus, e.g. "6n" meaning all negative-assisted - rare, skip extra handling
 
-        // Extract partials "+Np" pattern (rare combos) - treat similarly additive
+        // Partials: "+Np" pattern
         const partialMatch = chunk.match(/\+(\d+)p\b/i);
         let partialReps = 0;
         if (partialMatch) partialReps = parseInt(partialMatch[1]);
 
-        // Now extract the leading rep number(s). Could be "12c10", "8p8" (partial-style), "5+2n", "10c5+10c10" (two phases)
-        // Strategy: take the first number in the chunk as primary reps, unless format is NumberpNumber meaning partials chain
-        const leadingNum = chunk.match(/^(\d+)/);
-        if (leadingNum) {
-          reps = parseInt(leadingNum[1]);
+        // Unilateral "x"-chained reps, e.g. "8x8x4x4" (sum all x-separated numbers), only when no weight found
+        let xSum = null;
+        if (!weightMatches.length && /^\d+(?:x\d+)+$/i.test(chunk)) {
+          const xNums = chunk.split(/x/i).map(Number).filter(n => !isNaN(n));
+          if (xNums.length > 1) xSum = xNums.reduce((a, b) => a + b, 0);
         }
 
-        // Handle "8p8" type — second number after 'p' with no 'c' weight: count as bodyweight partial reps added
-        const pChainMatches = [...chunk.matchAll(/p(\d+)/gi)];
-        if (pChainMatches.length && !weightMatches.length) {
-          // sum all p-numbers as additional reps (drop-set/partial style), already have leading reps captured
-          pChainMatches.forEach(m => { reps += parseInt(m[1]); });
+        if (xSum !== null) {
+          reps = xSum;
+        } else {
+          // Leading rep number, e.g. "12c10", "8p8", "5+2n"
+          const leadingNum = chunk.match(/^(\d+)/);
+          if (leadingNum) reps = parseInt(leadingNum[1]);
+
+          // "8p8" type — sum all p-numbers as additional reps when no weight present
+          const pChainMatches = [...chunk.matchAll(/p(\d+)/gi)];
+          if (pChainMatches.length && !weightMatches.length) {
+            pChainMatches.forEach(m => { reps += parseInt(m[1]); });
+          }
         }
 
-        // Add negative & partial reps into total (per user instruction: negatives count toward total)
         const totalReps = reps + negativeReps + partialReps;
-
         if (!totalReps && !weight) return null;
 
         return {
-          warmup: !!isWarmup,
+          warmup: false,
           weight: Math.round(weight * 100) / 100,
           reps: totalReps,
           rir: 0,
@@ -3619,9 +3669,9 @@
         if (n.includes('pull')) return '🔝';
         if (n.includes('dip')) return '📉';
         if (n.includes('squat')) return '🦵';
-        if (n.includes('stiff') || n.includes('rdl') || n.includes('deadlift')) return '🏹';
+        if (n.includes('stiff') || n.includes('rdl') || n.includes('deadlift') || n.includes('romanian')) return '🏹';
         if (n.includes('calf') || n.includes('calv')) return '🦶';
-        if (n.includes('shoulder')) return '🙌';
+        if (n.includes('shoulder') || n.includes('press') || n.includes('upright row')) return '🙌';
         if (n.includes('forarm') || n.includes('forearm') || n.includes('wrist')) return '💪';
         if (n.includes('lateral') || n.includes('raise')) return '🙌';
         if (n.includes('run')) return '🏃';
@@ -3630,7 +3680,7 @@
         if (n.includes('push')) return '🏋️';
         if (n.includes('walk')) return '🚶';
         if (n.includes('abductor') || n.includes('glute')) return '🍑';
-        if (n.includes('extensor') || n.includes('leg')) return '🦵';
+        if (n.includes('extensor') || n.includes('leg') || n.includes('step-up') || n.includes('stepup')) return '🦵';
         return '💪';
       }
 
