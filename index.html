@@ -1927,6 +1927,12 @@
             </svg>
           </div>
         </div>
+
+        <div style="font-size: 11px; color: var(--text-dim); letter-spacing: .08em; text-transform: uppercase; margin: 8px 20px;">Profile & Measurements</div>
+        <div class="settings-section" style="padding-top:0;" id="you-profile-list"></div>
+
+        <div style="font-size: 11px; color: var(--text-dim); letter-spacing: .08em; text-transform: uppercase; margin: 8px 20px;">Workout History</div>
+        <div id="you-history-list" style="margin: 0 0 16px;"></div>
       </div>
 
       <!-- ══════════════════ BOTTOM NAV ══════════════════ -->
@@ -2142,6 +2148,7 @@
           const parsed = JSON.parse(saved);
           state.workouts = parsed.workouts || [];
           state.userName = parsed.userName || 'Athlete';
+          state.profile = parsed.profile || {};
         }
       }
 
@@ -2149,7 +2156,52 @@
         localStorage.setItem('twp_state', JSON.stringify({
           workouts: state.workouts,
           userName: state.userName,
+          profile: state.profile,
         }));
+      }
+
+      const PROFILE_FIELDS = [
+        { k: 'dob', l: 'DOB' }, { k: 'height', l: 'Height (cm)' }, { k: 'weight', l: 'Current Weight' },
+        { k: 'goalWeight', l: 'Goal Weight' }, { k: 'bodyFat', l: 'Body Fat %' }, { k: 'sport', l: 'Sport' },
+        { k: 'activityLevel', l: 'Activity Level' }, { k: 'trainingStyle', l: 'Training Style' },
+        { k: 'injuries', l: 'Injuries' }, { k: 'surgeries', l: 'Surgeries' }, { k: 'prExercise', l: "PR's Exercise" },
+        { k: 'chest', l: 'Chest' }, { k: 'waist', l: 'Waist' }, { k: 'shoulders', l: 'Shoulders' },
+        { k: 'lArm', l: 'L Arm' }, { k: 'rArm', l: 'R Arm' }, { k: 'lForearm', l: 'L Forearm' },
+        { k: 'rForearm', l: 'R Forearm' }, { k: 'lThigh', l: 'L Thigh' }, { k: 'rThigh', l: 'R Thigh' },
+        { k: 'lCalf', l: 'L Calf' }, { k: 'rCalf', l: 'R Calf' }, { k: 'notes', l: 'Notes' },
+      ];
+
+      function editProfileField(key, label) {
+        const cur = (state.profile && state.profile[key]) || '';
+        const v = prompt('Enter ' + label + ':', cur);
+        if (v !== null) {
+          if (!state.profile) state.profile = {};
+          state.profile[key] = v.trim();
+          saveState();
+          renderProfile();
+        }
+      }
+
+      function renderProfile() {
+        const el = document.getElementById('you-profile-list');
+        if (!el) return;
+        el.innerHTML = PROFILE_FIELDS.map(f => {
+          const val = (state.profile && state.profile[f.k]) || '';
+          return `<div class="settings-item" onclick="editProfileField('${f.k}','${f.l}')">
+      <span>${f.l}</span>
+      <span style="color:var(--text-muted);font-size:13px;display:flex;align-items:center;gap:6px;">
+        ${val ? val : '<span style="color:var(--text-dim)">Add</span>'}
+        <svg width="18" height="18" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
+      </span>
+    </div>`;
+        }).join('');
+      }
+
+      function renderYouHistory() {
+        const el = document.getElementById('you-history-list');
+        if (!el) return;
+        if (!state.workouts.length) { el.innerHTML = '<div style="padding:12px 4px;color:var(--text-muted);font-size:13px;">No workouts yet.</div>'; return; }
+        el.innerHTML = state.workouts.map(w => renderFeedCard(w)).join('');
       }
 
       // ═══════════════════════════════════════════
@@ -3379,6 +3431,8 @@
         const prs = state.workouts.reduce((s, w) => s + w.exercises.reduce((ss, ex) =>
           ss + ex.sets.filter(s => s.prs && s.prs.length).length, 0), 0);
         document.getElementById('you-prs').textContent = prs;
+        renderProfile();
+        renderYouHistory();
       }
 
       function editName() {
