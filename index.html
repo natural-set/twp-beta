@@ -715,17 +715,86 @@
     }
 
     .combo-block .ex-block {
-      margin: 0 10px 10px;
+      margin: 0 10px;
+      border: none;
+      border-radius: 0;
+      border-top: 1px solid var(--border);
+      padding-top: 10px;
+    }
+
+    .combo-block .ex-block:first-child {
+      border-top: none;
+      padding-top: 0;
+    }
+
+    .combo-block .ex-block:last-child {
+      margin-bottom: 10px;
     }
 
     .combo-header {
       display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 14px 10px;
+      flex-direction: column;
+      gap: 3px;
+      padding: 12px 14px 10px;
       font-size: 12px;
       font-weight: 700;
       color: var(--accent-blue);
+    }
+
+    .combo-header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+    }
+
+    .combo-header-title {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--accent-blue);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+
+    .combo-header-sub {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-muted);
+      text-transform: none;
+      letter-spacing: normal;
+    }
+
+    .detail-combo-block {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      border-left: 2px solid var(--accent-blue);
+      background: rgba(59, 130, 246, .03);
+    }
+
+    .detail-combo-header {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      margin-bottom: 12px;
+    }
+
+    .detail-combo-title {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--accent-blue);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+
+    .detail-combo-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .detail-combo-member + .detail-combo-member {
+      border-top: 1px solid var(--border);
+      padding-top: 14px;
+      margin-top: 14px;
     }
 
     /* exercise picker modal */
@@ -2026,7 +2095,7 @@
           <div class="modal-header">
             <input class="modal-search" id="ex-search" placeholder="Search exercises…"
               oninput="filterExercises(this.value)">
-            <button class="icon-btn" id="combo-toggle-btn" onclick="toggleComboMode()" title="Combine multiple exercises into one combined set">
+            <button class="icon-btn" id="combo-toggle-btn" onclick="toggleComboMode()" title="Combine multiple exercises into one Combined Exercise">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width:20px;height:20px;">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244" />
               </svg>
@@ -2034,7 +2103,7 @@
             <button class="modal-close-btn" onclick="closeExPicker()">✕</button>
           </div>
           <div id="ex-list"></div>
-          <div id="ex-picker-footer" style="display:none; padding:12px 20px; border-top:1px solid var(--border); align-items:center; justify-content:space-between;">
+          <div id="ex-picker-footer" style="display:none; position:sticky; bottom:0; padding:12px 20px; border-top:1px solid var(--border); align-items:center; justify-content:space-between; background:var(--surface); box-shadow:0 -8px 16px -8px rgba(0,0,0,.5); z-index:5;">
             <span id="combo-selected-count" style="font-size:13px;color:var(--text-muted);">0 selected</span>
             <button class="btn-primary-flex" style="flex:none;padding:10px 22px;" onclick="continueCombo()">Continue</button>
           </div>
@@ -2576,6 +2645,7 @@
         const def = EXERCISES_DB.find(e => e.id === exId);
         if (!def) return;
         const container = containerOverride || document.getElementById('exercises-container');
+        const isCombo = !!linkGroupPrefill;
         const blockId = 'ex-' + Date.now() + Math.random().toString(36).slice(2, 6);
         const div = document.createElement('div');
         div.className = 'ex-block'; div.id = blockId; div.dataset.exId = exId;
@@ -2592,7 +2662,9 @@
     </div>
     <div style="display:flex;gap:8px;padding:8px 14px;border-bottom:1px solid var(--border);">
       <input class="ex-rest-input" type="number" min="0" placeholder="Rest (sec)" style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:6px;font-size:12px;font-family:inherit;outline:none;">
-      <input class="ex-link-input" type="text" placeholder="Superset group (optional)" value="${linkGroupPrefill || ''}" style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:6px;font-size:12px;font-family:inherit;outline:none;">
+      ${isCombo
+            ? `<input class="ex-link-input" type="hidden" value="${linkGroupPrefill}">`
+            : `<input class="ex-link-input" type="text" placeholder="Superset group (optional)" value="" style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:6px;font-size:12px;font-family:inherit;outline:none;">`}
     </div>
     <div style="overflow-x:auto;">
     <table class="sets-table">
@@ -2623,7 +2695,13 @@
         const container = document.getElementById('exercises-container');
         const wrapper = document.createElement('div');
         wrapper.className = 'combo-block'; wrapper.id = comboId;
-        wrapper.innerHTML = `<div class="combo-header"><span>🔗 Combined Set · ${exIds.length} exercises</span><button class="ex-del-btn" onclick="removeComboBlock('${comboId}')">Remove All</button></div>`;
+        wrapper.innerHTML = `<div class="combo-header">
+      <div class="combo-header-top">
+        <span class="combo-header-title">🔗 Combined Exercise</span>
+        <button class="ex-del-btn" onclick="removeComboBlock('${comboId}')">Remove All</button>
+      </div>
+      <span class="combo-header-sub">${exIds.length} exercises · stacked as one set</span>
+    </div>`;
         container.appendChild(wrapper);
         exIds.forEach(id => addExercise(id, wrapper, comboId));
       }
@@ -2849,7 +2927,7 @@
         }).join('');
         const extra = w.exercises.length > 6 ? `<div class="exercise-cell" style="align-items:center;justify-content:center;color:var(--text-muted);font-size:12px">+${w.exercises.length - 6} more</div>` : '';
 
-        const sorenessTag = w.sorenessRange ? `<div style="font-size:11px;color:var(--accent);">Soreness ${w.sorenessRange[0]}-${w.sorenessRange[1]}</div>` : '';
+        const sorenessTag = w.sorenessRange ? `<div style="font-size:11px;color:var(--accent);">Soreness ${formatSorenessRange(w.sorenessRange)}</div>` : '';
 
         return `<div class="feed-card" onclick="openDetail(${w.id})">
     <div class="feed-card-header">
@@ -3111,27 +3189,26 @@
   ` : '';
 
         // ── Exercise blocks ──
-        const exercisesHTML = w.exercises.map((ex, exIdx) => {
+        // Renders the inner content for one exercise (thumb, name, notes, sets) without
+        // the outer wrapping card — used both for standalone exercises and for members
+        // stacked inside a Combined Exercise card.
+        function renderDetailExInner(ex) {
           if (ex.isCardio) {
-            return `<div class="detail-ex-block">
-        <div class="detail-ex-header">
-          <div class="ex-thumb" style="width:40px;height:40px;background:var(--surface2);border-radius:8px;display:flex;align-items:center;justify-content:center;">${ex.icon}</div>
-          <div>
-            <div class="detail-ex-name">${ex.name}</div>
-            <div style="font-size:12px;color:var(--text-muted)">Cardio</div>
-          </div>
+            return `<div class="detail-ex-header">
+        <div class="ex-thumb" style="width:40px;height:40px;background:var(--surface2);border-radius:8px;display:flex;align-items:center;justify-content:center;">${ex.icon}</div>
+        <div>
+          <div class="detail-ex-name">${ex.name}</div>
+          <div style="font-size:12px;color:var(--text-muted)">Cardio</div>
         </div>
-        <div class="detail-note">🏃 ${ex.cardioMinutes} minute session</div>
-      </div>`;
+      </div>
+      <div class="detail-note">🏃 ${ex.cardioMinutes} minute session</div>`;
           }
           if (!ex.sets || !ex.sets.length) {
-            return `<div class="detail-ex-block" style="opacity:.55">
-        <div class="detail-ex-header">
-          <div class="ex-thumb" style="width:40px;height:40px;background:var(--surface2);border-radius:8px;display:flex;align-items:center;justify-content:center;">${ex.icon}</div>
-          <div>
-            <div class="detail-ex-name">${ex.name}</div>
-            <div style="font-size:12px;color:var(--text-dim)">Planned — not logged</div>
-          </div>
+            return `<div class="detail-ex-header">
+        <div class="ex-thumb" style="width:40px;height:40px;background:var(--surface2);border-radius:8px;display:flex;align-items:center;justify-content:center;">${ex.icon}</div>
+        <div>
+          <div class="detail-ex-name">${ex.name}</div>
+          <div style="font-size:12px;color:var(--text-dim)">Planned — not logged</div>
         </div>
       </div>`;
           }
@@ -3139,8 +3216,6 @@
           const workingSets = ex.sets.filter(s => !s.warmup);
           const warmupSets = ex.sets.filter(s => s.warmup);
           const exVolume = ex.sets.reduce((s, set) => s + set.weight * set.reps, 0);
-          const maxWeight = Math.max(...ex.sets.map(s => s.weight), 0);
-          const maxReps = Math.max(...ex.sets.map(s => s.reps), 0);
           const restNote = ex.restSeconds ? `Rest ~${Math.round(ex.restSeconds / 60)}min` : ex.note && ex.note.includes('Rest') ? ex.note : '';
           const extraNote = ex.note && !ex.note.includes('Rest') ? ex.note : '';
 
@@ -3162,8 +3237,7 @@
       </div>`;
           }).join('');
 
-          return `<div class="detail-ex-block">
-      <div class="detail-ex-header">
+          return `<div class="detail-ex-header">
         <div class="ex-thumb" style="width:40px;height:40px;background:var(--surface2);border-radius:8px;display:flex;align-items:center;justify-content:center;">${ex.icon}</div>
         <div style="flex:1">
           <div class="detail-ex-name">${ex.name}</div>
@@ -3172,7 +3246,40 @@
       </div>
       ${extraNote ? `<div class="detail-note">${extraNote}</div>` : ''}
       ${restNote ? `<div style="padding:6px 0 6px 0;font-size:11px;color:var(--accent-blue);display:flex;align-items:center;gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>${restNote}</div>` : ''}
-      ${setsHTML}
+      ${setsHTML}`;
+        }
+
+        // Group exercises that share a linkGroup (bi-sets/supersets created via the
+        // Combined Exercise picker) so they render stacked in one card instead of
+        // several separate ones.
+        const exGroups = [];
+        const usedExIdx = new Set();
+        w.exercises.forEach((ex, i) => {
+          if (usedExIdx.has(i)) return;
+          if (ex.linkGroup) {
+            const members = [i]; usedExIdx.add(i);
+            w.exercises.forEach((e2, j) => {
+              if (j > i && !usedExIdx.has(j) && e2.linkGroup === ex.linkGroup) { members.push(j); usedExIdx.add(j); }
+            });
+            exGroups.push(members);
+          } else {
+            exGroups.push([i]); usedExIdx.add(i);
+          }
+        });
+
+        const exercisesHTML = exGroups.map(members => {
+          if (members.length === 1) {
+            const ex = w.exercises[members[0]];
+            const notLogged = !ex.isCardio && (!ex.sets || !ex.sets.length);
+            return `<div class="detail-ex-block"${notLogged ? ' style="opacity:.55"' : ''}>${renderDetailExInner(ex)}</div>`;
+          }
+          const inner = members.map(idx => `<div class="detail-combo-member">${renderDetailExInner(w.exercises[idx])}</div>`).join('');
+          return `<div class="detail-combo-block">
+      <div class="detail-combo-header">
+        <span class="detail-combo-title">🔗 Combined Exercise</span>
+        <span class="detail-combo-sub">${members.length} exercises · stacked as one set</span>
+      </div>
+      ${inner}
     </div>`;
         }).join('');
 
@@ -3196,7 +3303,10 @@
         <div class="lbl">Intensity</div>
         <div class="val" style="color:${intensityColor}">${intensity}/10 <span style="font-size:11px;font-weight:500">${intensityLabel}</span></div>
       </div>
-      ${w.sorenessRange ? `<div class="detail-stat"><div class="lbl">Soreness</div><div class="val">${w.sorenessRange[0]}-${w.sorenessRange[1]}/10</div></div>` : ''}
+      <div class="detail-stat" style="cursor:pointer" onclick="editSoreness(${w.id})" title="Tap to edit">
+        <div class="lbl">Soreness</div>
+        <div class="val">${w.sorenessRange ? formatSorenessRange(w.sorenessRange) + '/10' : '<span style="font-size:14px;font-weight:600;color:var(--text-dim);">+ Add</span>'}</div>
+      </div>
       ${w.bodyWeight ? `<div class="detail-stat"><div class="lbl">Bodyweight</div><div class="val">${w.bodyWeight}kg</div></div>` : ''}
       ${w.records > 0 ? `<div class="detail-stat"><div class="lbl">Records</div><div class="val">🥇 ${w.records}</div></div>` : ''}
     </div>
@@ -3742,6 +3852,7 @@
       function populateExBlock(ex, container) {
         const blockId = 'ex-' + Date.now() + Math.random().toString(36).slice(2, 6);
         const def = EXERCISES_DB.find(e => e.id === ex.exId) || { name: ex.name, icon: ex.icon, muscle: 'Custom' };
+        const isCombo = !!ex.linkGroup;
 
         const div = document.createElement('div');
         div.className = 'ex-block'; div.id = blockId; div.dataset.exId = ex.exId;
@@ -3758,7 +3869,9 @@
       </div>
       <div style="display:flex;gap:8px;padding:8px 14px;border-bottom:1px solid var(--border);">
         <input class="ex-rest-input" type="number" min="0" placeholder="Rest (sec)" value="${ex.restSeconds || ''}" style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:6px;font-size:12px;font-family:inherit;outline:none;">
-        <input class="ex-link-input" type="text" placeholder="Superset group (optional)" value="${ex.linkGroup || ''}" style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:6px;font-size:12px;font-family:inherit;outline:none;">
+        ${isCombo
+            ? `<input class="ex-link-input" type="hidden" value="${ex.linkGroup}">`
+            : `<input class="ex-link-input" type="text" placeholder="Superset group (optional)" value="${ex.linkGroup || ''}" style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:6px;font-size:12px;font-family:inherit;outline:none;">`}
       </div>
       <div style="overflow-x:auto;">
       <table class="sets-table">
@@ -3826,7 +3939,7 @@
         document.getElementById('workout-duration-input').value = w.duration || '';
 
         // Populate exercises — group by linkGroup so bi-sets/supersets render as
-        // "Combined Set" cards instead of separate ones.
+        // "Combined Exercise" cards instead of separate ones.
         const container = document.getElementById('exercises-container');
         container.innerHTML = '';
 
@@ -3850,7 +3963,13 @@
             const comboId = 'combo-' + Date.now() + Math.random().toString(36).slice(2, 5);
             const wrapper = document.createElement('div');
             wrapper.className = 'combo-block'; wrapper.id = comboId;
-            wrapper.innerHTML = `<div class="combo-header"><span>🔗 Combined Set · ${members.length} exercises</span><button class="ex-del-btn" onclick="removeComboBlock('${comboId}')">Remove All</button></div>`;
+            wrapper.innerHTML = `<div class="combo-header">
+        <div class="combo-header-top">
+          <span class="combo-header-title">🔗 Combined Exercise</span>
+          <button class="ex-del-btn" onclick="removeComboBlock('${comboId}')">Remove All</button>
+        </div>
+        <span class="combo-header-sub">${members.length} exercises · stacked as one set</span>
+      </div>`;
             container.appendChild(wrapper);
             members.forEach(idx => populateExBlock(w.exercises[idx], wrapper));
           } else {
@@ -3911,6 +4030,39 @@
       // ═══════════════════════════════════════════
       //  UTILS
       // ═══════════════════════════════════════════
+      // Soreness is stored as [low, high]; single-value entries are stored as [v, v].
+      // This renders "7" instead of "7-7" when both ends match.
+      function formatSorenessRange(range) {
+        if (!range) return '';
+        return range[0] === range[1] ? `${range[0]}` : `${range[0]}-${range[1]}`;
+      }
+
+      function editSoreness(workoutId) {
+        const w = state.workouts.find(x => x.id === workoutId);
+        if (!w) return;
+        const cur = w.sorenessRange ? formatSorenessRange(w.sorenessRange) : '';
+        const input = prompt('How sore did you feel after this workout? Enter a number (0-10) or a range like "6-7":', cur);
+        if (input === null) return;
+        const trimmed = input.trim();
+        if (!trimmed) {
+          w.sorenessRange = null;
+        } else {
+          const rangeMatch = trimmed.match(/^(\d+)\s*-\s*(\d+)$/);
+          const singleMatch = trimmed.match(/^(\d+)$/);
+          if (rangeMatch) {
+            w.sorenessRange = [parseInt(rangeMatch[1]), parseInt(rangeMatch[2])];
+          } else if (singleMatch) {
+            const v = parseInt(singleMatch[1]);
+            w.sorenessRange = [v, v];
+          } else {
+            showToast('Enter a number like 7, or a range like 6-7');
+            return;
+          }
+        }
+        saveState();
+        openDetail(workoutId);
+      }
+
       function showToast(msg) {
         const t = document.getElementById('toast');
         t.textContent = msg;
@@ -4076,10 +4228,14 @@
             continue;
           }
 
-          // ── SORENESS LINE ── e.g. "Soreness 6-7", "Soreness: 9-10"
-          const sorenessMatch = line.match(/soreness:?\s*(\d+)\s*-\s*(\d+)/i);
+          // ── SORENESS LINE ── e.g. "Soreness 6-7", "Soreness: 9-10", or a single value "Soreness: 7"
+          // (soreness is a post-workout status, never an exercise — anchored so it can't
+          // fall through to the exercise-line parser below and get logged as a fake lift).
+          const sorenessMatch = line.match(/^soreness:?\s*(\d+)(?:\s*-\s*(\d+))?\s*$/i);
           if (sorenessMatch) {
-            const range = [parseInt(sorenessMatch[1]), parseInt(sorenessMatch[2])];
+            const lo = parseInt(sorenessMatch[1]);
+            const hi = sorenessMatch[2] ? parseInt(sorenessMatch[2]) : lo;
+            const range = [lo, hi];
             // If current (still-open) block already has real exercises, soreness belongs to THIS workout.
             // Otherwise (soreness logged under a fresh, empty date) it refers back to the last real workout.
             if (currentWorkout && hasRealContent(currentWorkout)) {
@@ -4703,7 +4859,7 @@
           });
 
           if (w.duration) lines.push(`Duration: ${w.duration}min`);
-          if (w.sorenessRange) lines.push(`Soreness: ${w.sorenessRange[0]}-${w.sorenessRange[1]}`);
+          if (w.sorenessRange) lines.push(`Soreness: ${formatSorenessRange(w.sorenessRange)}`);
           if (w.note) lines.push(`Note: ${w.note}`);
           lines.push('');
         });
