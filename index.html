@@ -2168,6 +2168,29 @@
         </div>
       </div>
 
+      <!-- Soreness Popover -->
+      <div class="modal-overlay" id="soreness-modal">
+        <div class="modal-sheet" style="max-height:60vh;">
+          <div class="modal-header">
+            <div style="font-size:16px;font-weight:800;flex:1;">😖 Soreness</div>
+            <button class="modal-close-btn" onclick="closeSorenessModal()">✕</button>
+          </div>
+          <div style="padding:18px 20px 22px;">
+            <div style="font-size:13px;color:var(--text-muted);margin-bottom:14px;">How sore did you feel after this workout? Tap a number, or set a range below.</div>
+            <div id="soreness-scale" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;"></div>
+            <div style="display:flex;gap:10px;align-items:center;">
+              <input id="soreness-low-input" type="number" min="0" max="10" placeholder="Low" style="flex:1;min-width:0;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:10px;font-family:inherit;font-size:14px;text-align:center;outline:none;">
+              <span style="color:var(--text-muted);">–</span>
+              <input id="soreness-high-input" type="number" min="0" max="10" placeholder="High" style="flex:1;min-width:0;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:10px;font-family:inherit;font-size:14px;text-align:center;outline:none;">
+            </div>
+            <div style="display:flex;gap:10px;margin-top:20px;">
+              <button class="btn-secondary" onclick="clearSoreness()">Clear</button>
+              <button class="btn-primary-flex" onclick="saveSorenessModal()">Save</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Toast -->
       <div class="toast" id="toast"></div>
     </div>
@@ -4037,30 +4060,72 @@
         return range[0] === range[1] ? `${range[0]}` : `${range[0]}-${range[1]}`;
       }
 
+      // ── Soreness popover (replaces native prompt) ──
+      let sorenessModalWorkoutId = null;
+
       function editSoreness(workoutId) {
         const w = state.workouts.find(x => x.id === workoutId);
         if (!w) return;
-        const cur = w.sorenessRange ? formatSorenessRange(w.sorenessRange) : '';
-        const input = prompt('How sore did you feel after this workout? Enter a number (0-10) or a range like "6-7":', cur);
-        if (input === null) return;
-        const trimmed = input.trim();
-        if (!trimmed) {
+        sorenessModalWorkoutId = workoutId;
+        document.getElementById('soreness-low-input').value = w.sorenessRange ? w.sorenessRange[0] : '';
+        document.getElementById('soreness-high-input').value = w.sorenessRange ? w.sorenessRange[1] : '';
+        renderSorenessScale(w.sorenessRange);
+        document.getElementById('soreness-modal').classList.add('open');
+      }
+
+      function renderSorenessScale(currentRange) {
+        const el = document.getElementById('soreness-scale');
+        el.innerHTML = '';
+        for (let i = 0; i <= 10; i++) {
+          const active = !!currentRange && currentRange[0] === i && currentRange[1] === i;
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.textContent = i;
+          btn.onclick = () => {
+            document.getElementById('soreness-low-input').value = i;
+            document.getElementById('soreness-high-input').value = i;
+            renderSorenessScale([i, i]);
+          };
+          btn.style.cssText = `width:32px;height:32px;border-radius:50%;border:1px solid ${active ? 'var(--accent)' : 'var(--border)'};background:${active ? 'var(--accent)' : 'var(--surface2)'};color:${active ? '#fff' : 'var(--text)'};font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0;`;
+          el.appendChild(btn);
+        }
+      }
+
+      function closeSorenessModal() {
+        document.getElementById('soreness-modal').classList.remove('open');
+        sorenessModalWorkoutId = null;
+      }
+
+      function clearSoreness() {
+        if (sorenessModalWorkoutId == null) return;
+        const w = state.workouts.find(x => x.id === sorenessModalWorkoutId);
+        const id = sorenessModalWorkoutId;
+        if (w) { w.sorenessRange = null; saveState(); }
+        closeSorenessModal();
+        openDetail(id);
+      }
+
+      function saveSorenessModal() {
+        if (sorenessModalWorkoutId == null) return;
+        const w = state.workouts.find(x => x.id === sorenessModalWorkoutId);
+        if (!w) return;
+        const id = sorenessModalWorkoutId;
+        const lowRaw = document.getElementById('soreness-low-input').value;
+        const highRaw = document.getElementById('soreness-high-input').value;
+        const lowVal = parseInt(lowRaw);
+        const highVal = parseInt(highRaw);
+        if (isNaN(lowVal) && isNaN(highVal)) {
           w.sorenessRange = null;
+        } else if (isNaN(highVal)) {
+          w.sorenessRange = [lowVal, lowVal];
+        } else if (isNaN(lowVal)) {
+          w.sorenessRange = [highVal, highVal];
         } else {
-          const rangeMatch = trimmed.match(/^(\d+)\s*-\s*(\d+)$/);
-          const singleMatch = trimmed.match(/^(\d+)$/);
-          if (rangeMatch) {
-            w.sorenessRange = [parseInt(rangeMatch[1]), parseInt(rangeMatch[2])];
-          } else if (singleMatch) {
-            const v = parseInt(singleMatch[1]);
-            w.sorenessRange = [v, v];
-          } else {
-            showToast('Enter a number like 7, or a range like 6-7');
-            return;
-          }
+          w.sorenessRange = [Math.min(lowVal, highVal), Math.max(lowVal, highVal)];
         }
         saveState();
-        openDetail(workoutId);
+        closeSorenessModal();
+        openDetail(id);
       }
 
       function showToast(msg) {
@@ -4382,7 +4447,10 @@
             restSeconds,
           }];
         } else {
-          // Multi-exercise (bi-set/superset): each chunk has "+"-joined sub-values for each exercise
+          // Multi-exercise (bi-set/superset): each chunk has "+"-joined sub-values for each exercise.
+          // All exercises parsed from this one line share a linkGroup so the app can render
+          // them stacked together as a single "Combined Exercise" card, same as exercises
+          // combined manually via the picker.
           const perExerciseSets = exerciseNames.map(() => []);
           setChunks.forEach(chunk => {
             const parts = chunk.split('+');
@@ -4393,11 +4461,14 @@
               }
             });
           });
+          const importedLinkGroup = 'import-link-' + Math.random().toString(36).slice(2, 9);
           return exerciseNames.map((n, idx) => ({
             name: titleCase(n),
             icon: pickIcon(n),
             note: restSeconds ? `Rest: ~${Math.round(restSeconds / 60)}min (part of ${exerciseNames.length > 2 ? 'superset' : 'bi-set'})` : (exerciseNames.length > 2 ? 'Part of superset' : 'Part of bi-set'),
             sets: perExerciseSets[idx],
+            restSeconds,
+            linkGroup: importedLinkGroup,
           }));
         }
       }
@@ -4517,6 +4588,8 @@
               secondary: [],
               note: ex.note || '',
               sets,
+              restSeconds: ex.restSeconds || null,
+              linkGroup: ex.linkGroup || '',
             };
           }).filter(ex => ex.sets.length > 0);
 
