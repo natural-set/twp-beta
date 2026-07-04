@@ -2022,6 +2022,65 @@
         { name: 'Traps', icon: '🎯', color: 'secondary' },
       ];
 
+      // Keyword-based muscle inference for exercises that don't carry an explicit
+      // primary/secondary list (e.g. custom exercises created via log import).
+      const EXERCISE_MUSCLE_KEYWORDS = {
+        'pullup': { p: ['Lats', 'Back'], s: ['Biceps'] },
+        'pull-up': { p: ['Lats', 'Back'], s: ['Biceps'] },
+        'pullups': { p: ['Lats', 'Back'], s: ['Biceps'] },
+        'dip': { p: ['Chest', 'Triceps'], s: ['Shoulders'] },
+        'dips': { p: ['Chest', 'Triceps'], s: ['Shoulders'] },
+        'squat': { p: ['Quadriceps', 'Glutes'], s: ['Hamstrings', 'Core'] },
+        'squats': { p: ['Quadriceps', 'Glutes'], s: ['Hamstrings', 'Core'] },
+        'stiff': { p: ['Hamstrings', 'Glutes'], s: ['Back'] },
+        'rdl': { p: ['Hamstrings', 'Glutes'], s: ['Back'] },
+        'romanian': { p: ['Hamstrings', 'Glutes'], s: ['Back'] },
+        'deadlift': { p: ['Back', 'Hamstrings'], s: ['Glutes', 'Core'] },
+        'calf': { p: ['Calves'], s: [] },
+        'calves': { p: ['Calves'], s: [] },
+        'calfs': { p: ['Calves'], s: [] },
+        'shoulder': { p: ['Shoulders'], s: ['Triceps'] },
+        'shoulders': { p: ['Shoulders'], s: ['Triceps'] },
+        'lateral': { p: ['Shoulders'], s: [] },
+        'forarm': { p: ['Forearms'], s: [] },
+        'forearm': { p: ['Forearms'], s: [] },
+        'foarms': { p: ['Forearms'], s: [] },
+        'forarmos': { p: ['Forearms'], s: [] },
+        'row': { p: ['Back'], s: ['Biceps'] },
+        'bench': { p: ['Chest'], s: ['Triceps', 'Shoulders'] },
+        'press': { p: ['Chest'], s: ['Triceps'] },
+        'lunge': { p: ['Quadriceps'], s: ['Glutes'] },
+        'curl': { p: ['Biceps'], s: [] },
+        'pushdown': { p: ['Triceps'], s: [] },
+        'run': { p: ['Cardiovascular'], s: ['Calves', 'Quadriceps'] },
+        'goblet': { p: ['Quadriceps', 'Glutes'], s: ['Core'] },
+        'abductor': { p: ['Glutes'], s: ['Hips'] },
+        'swing': { p: ['Glutes', 'Back'], s: ['Core', 'Shoulders'] },
+        'plank': { p: ['Core', 'Abs'], s: [] },
+        'extensor': { p: ['Quadriceps'], s: [] },
+        'facepull': { p: ['Shoulders'], s: ['Traps'] },
+        'face pull': { p: ['Shoulders'], s: ['Traps'] },
+      };
+
+      // Resolve {primary, secondary} muscle names for an exercise: prefer the explicit
+      // lists (set for built-in EXERCISES_DB picks), otherwise infer from the name —
+      // this is what makes imported/custom exercises count toward the Muscle Split.
+      function getExerciseMuscles(ex) {
+        if (ex.primary && ex.primary.length) {
+          return { primary: ex.primary, secondary: ex.secondary || [] };
+        }
+        const exLow = (ex.name || '').toLowerCase();
+        const primary = new Set();
+        const secondary = new Set();
+        Object.entries(EXERCISE_MUSCLE_KEYWORDS).forEach(([key, val]) => {
+          if (exLow.includes(key)) {
+            val.p.forEach(m => primary.add(m));
+            val.s.forEach(m => secondary.add(m));
+          }
+        });
+        return { primary: [...primary], secondary: [...secondary] };
+      }
+
       // ── State ──
       let state = {
         workouts: [],
@@ -2662,54 +2721,10 @@
 
         // ── Targeted muscles ──
         const muscleMap = {}; // name → 'primary'|'secondary'
-        const EXERCISE_MUSCLES = {
-          'pullup': { p: ['Lats', 'Back'], s: ['Biceps'] },
-          'pull-up': { p: ['Lats', 'Back'], s: ['Biceps'] },
-          'pullups': { p: ['Lats', 'Back'], s: ['Biceps'] },
-          'dip': { p: ['Chest', 'Triceps'], s: ['Shoulders'] },
-          'dips': { p: ['Chest', 'Triceps'], s: ['Shoulders'] },
-          'squat': { p: ['Quadriceps', 'Glutes'], s: ['Hamstrings', 'Core'] },
-          'squats': { p: ['Quadriceps', 'Glutes'], s: ['Hamstrings', 'Core'] },
-          'stiff': { p: ['Hamstrings', 'Glutes'], s: ['Back'] },
-          'rdl': { p: ['Hamstrings', 'Glutes'], s: ['Back'] },
-          'deadlift': { p: ['Back', 'Hamstrings'], s: ['Glutes', 'Core'] },
-          'calf': { p: ['Calves'], s: [] },
-          'calves': { p: ['Calves'], s: [] },
-          'calfs': { p: ['Calves'], s: [] },
-          'shoulder': { p: ['Shoulders'], s: ['Triceps'] },
-          'shoulders': { p: ['Shoulders'], s: ['Triceps'] },
-          'lateral': { p: ['Shoulders'], s: [] },
-          'forarm': { p: ['Forearms'], s: [] },
-          'forearm': { p: ['Forearms'], s: [] },
-          'foarms': { p: ['Forearms'], s: [] },
-          'forarmos': { p: ['Forearms'], s: [] },
-          'row': { p: ['Back'], s: ['Biceps'] },
-          'bench': { p: ['Chest'], s: ['Triceps', 'Shoulders'] },
-          'press': { p: ['Chest'], s: ['Triceps'] },
-          'lunge': { p: ['Quadriceps'], s: ['Glutes'] },
-          'curl': { p: ['Biceps'], s: [] },
-          'run': { p: ['Cardiovascular'], s: ['Calves', 'Quadriceps'] },
-          'goblet': { p: ['Quadriceps', 'Glutes'], s: ['Core'] },
-          'abductor': { p: ['Glutes'], s: ['Hips'] },
-          'swing': { p: ['Glutes', 'Back'], s: ['Core', 'Shoulders'] },
-          'plank': { p: ['Core', 'Abs'], s: [] },
-          'extensor': { p: ['Quadriceps'], s: [] },
-        };
         w.exercises.forEach(ex => {
-          // Use existing primary/secondary if defined (from EXERCISES_DB)
-          if (ex.primary && ex.primary.length) {
-            ex.primary.forEach(m => { if (!muscleMap[m]) muscleMap[m] = 'primary'; });
-            (ex.secondary || []).forEach(m => { if (!muscleMap[m]) muscleMap[m] = 'secondary'; });
-          } else {
-            // infer from name keywords
-            const exLow = ex.name.toLowerCase();
-            Object.entries(EXERCISE_MUSCLES).forEach(([key, val]) => {
-              if (exLow.includes(key)) {
-                val.p.forEach(m => { if (!muscleMap[m]) muscleMap[m] = 'primary'; });
-                val.s.forEach(m => { if (!muscleMap[m]) muscleMap[m] = 'secondary'; });
-              }
-            });
-          }
+          const { primary, secondary } = getExerciseMuscles(ex);
+          primary.forEach(m => { if (!muscleMap[m]) muscleMap[m] = 'primary'; });
+          secondary.forEach(m => { if (!muscleMap[m]) muscleMap[m] = 'secondary'; });
         });
         const primaryMuscles = Object.entries(muscleMap).filter(([, v]) => v === 'primary').map(([k]) => k);
         const secondaryMuscles = Object.entries(muscleMap).filter(([, v]) => v === 'secondary').map(([k]) => k);
@@ -2869,19 +2884,23 @@
         // Decide bucket size based on filter
         const useDays = state.currentFilter === 'week' || state.currentFilter === 'month';
 
+        // Local-date key (YYYY-MM-DD) — avoids the UTC round-trip that toISOString()
+        // introduces, which shifted bucket dates by a day for timezones behind UTC.
+        const localKey = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+
         const buckets = {};
         workouts.forEach(w => {
           const d = new Date(w.date);
-          let key;
+          let bucketDate;
           if (useDays) {
-            key = d.toISOString().slice(0, 10); // daily buckets
+            bucketDate = new Date(d.getFullYear(), d.getMonth(), d.getDate());
           } else {
-            // weekly buckets
-            const tmp = new Date(d);
-            tmp.setDate(tmp.getDate() - tmp.getDay());
-            key = tmp.toISOString().slice(0, 10);
+            // weekly buckets — snap to the local Sunday of that week
+            bucketDate = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+            bucketDate.setDate(bucketDate.getDate() - bucketDate.getDay());
           }
-          if (!buckets[key]) buckets[key] = { duration: 0, volume: 0, workouts: 0 };
+          const key = localKey(bucketDate);
+          if (!buckets[key]) buckets[key] = { duration: 0, volume: 0, workouts: 0, date: bucketDate };
           buckets[key].duration += w.duration;
           buckets[key].volume += w.volume;
           buckets[key].workouts++;
@@ -2912,9 +2931,7 @@
           type: 'line',
           data: {
             labels: labels.length ? labels.map(l => {
-              const d = new Date(l);
-              if (useDays) return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-              return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+              return buckets[l].date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
             }) : ['No data'],
             datasets: [{
               data: values.length ? values : [0],
@@ -3030,11 +3047,23 @@
         MUSCLE_GROUPS.forEach(m => { stats[m.name] = { kg: 0, sets: 0, color: m.color }; });
         state.workouts.forEach(w => {
           w.exercises.forEach(ex => {
-            const workSets = ex.sets.filter(s => !s.warmup);
-            ex.primary.forEach(m => {
+            const workSets = (ex.sets || []).filter(s => !s.warmup);
+            if (!workSets.length) return;
+            const vol = workSets.reduce((s, set) => s + set.weight * set.reps, 0);
+            // Infers muscles from the exercise name when primary/secondary aren't set
+            // (custom exercises created via log import), so imported history counts too.
+            const { primary, secondary } = getExerciseMuscles(ex);
+            primary.forEach(m => {
               if (stats[m]) {
                 stats[m].sets += workSets.length;
-                stats[m].kg += workSets.reduce((s, set) => s + set.weight * set.reps, 0);
+                stats[m].kg += vol;
+              }
+            });
+            // Secondary muscles get half credit — they're worked, just not the main target.
+            secondary.forEach(m => {
+              if (stats[m]) {
+                stats[m].sets += workSets.length * 0.5;
+                stats[m].kg += vol * 0.5;
               }
             });
           });
@@ -3048,7 +3077,7 @@
       <div class="muscle-item-icon">${m.icon}</div>
       <div style="flex:1">
         <div class="muscle-item-name">${m.name}</div>
-        <div class="muscle-item-stats">${Math.round(s.kg)}kg · ${s.sets} sets</div>
+        <div class="muscle-item-stats">${Math.round(s.kg)}kg · ${Math.round(s.sets)} sets</div>
         <div class="muscle-bar ${m.color === 'secondary' ? 'secondary' : ''}" style="width:${barW}%"></div>
       </div>
     </div>`;
