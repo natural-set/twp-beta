@@ -1978,6 +1978,39 @@
         <div class="import-modal-sheet" id="import-modal-content"></div>
       </div>
 
+      <!-- Exercise / Muscle Detail Modal -->
+      <div class="modal-overlay" id="detail-modal-overlay">
+        <div class="modal-sheet" style="max-height:88vh;">
+          <div class="modal-header">
+            <div style="display:flex;align-items:center;gap:10px;flex:1;">
+              <div class="ex-thumb" id="detail-modal-icon" style="width:40px;height:40px;font-size:20px;">💪</div>
+              <div>
+                <div style="font-size:16px;font-weight:800;" id="detail-modal-title">Exercise</div>
+                <div style="font-size:11px;color:var(--text-muted);" id="detail-modal-subtitle">Progression</div>
+              </div>
+            </div>
+            <button class="modal-close-btn" onclick="closeDetailModal()">✕</button>
+          </div>
+          <div style="padding:16px 20px 20px;">
+            <div class="time-filters" id="detail-modal-filters">
+              <button class="time-filter" onclick="switchDetailFilter(this,'week')">Week</button>
+              <button class="time-filter" onclick="switchDetailFilter(this,'month')">Month</button>
+              <button class="time-filter" onclick="switchDetailFilter(this,'3m')">3M</button>
+              <button class="time-filter" onclick="switchDetailFilter(this,'6m')">6M</button>
+              <button class="time-filter" onclick="switchDetailFilter(this,'year')">Year</button>
+              <button class="time-filter active" onclick="switchDetailFilter(this,'all')">All</button>
+            </div>
+            <div class="chart-container" style="margin:0 0 16px;">
+              <div class="chart-label" id="detail-modal-period">All time</div>
+              <div class="chart-value" id="detail-modal-value">0kg</div>
+              <canvas id="detail-modal-chart" height="140"></canvas>
+              <div class="metric-tabs" id="detail-modal-metrics"></div>
+            </div>
+            <div id="detail-modal-stats"></div>
+          </div>
+        </div>
+      </div>
+
       <!-- Toast -->
       <div class="toast" id="toast"></div>
     </div>
@@ -2097,6 +2130,10 @@
       };
 
       let chartInstance = null;
+      let detailChartInstance = null;
+      // Which exercise/muscle the detail modal is currently showing, plus its own
+      // time filter + metric — independent from the main Progress chart's state.
+      let detailModalState = { type: null, key: null, filter: 'all', metric: 'volume' };
 
       // ── Load from localStorage ──
       function loadState() {
@@ -3019,15 +3056,15 @@
         const seen = {};
         state.workouts.forEach(w => {
           w.exercises.forEach(ex => {
-            if (!seen[ex.exId]) seen[ex.exId] = { name: ex.name, icon: ex.icon, count: 0, volume: 0 };
+            if (!seen[ex.exId]) seen[ex.exId] = { exId: ex.exId, name: ex.name, icon: ex.icon, count: 0, volume: 0 };
             seen[ex.exId].count++;
-            ex.sets.filter(s => !s.warmup).forEach(s => { seen[ex.exId].volume += s.weight * s.reps; });
+            (ex.sets || []).filter(s => !s.warmup).forEach(s => { seen[ex.exId].volume += s.weight * s.reps; });
           });
         });
         const items = Object.values(seen);
         if (!items.length) { el.innerHTML = ''; return; }
         el.innerHTML = items.map(it => `
-    <div class="muscle-item">
+    <div class="muscle-item" style="cursor:pointer" onclick="openExerciseDetail('${it.exId}')">
       <div class="muscle-item-icon">${it.icon}</div>
       <div>
         <div class="muscle-item-name">${it.name}</div>
@@ -3073,7 +3110,7 @@
         document.getElementById('muscle-split-list').innerHTML = MUSCLE_GROUPS.map(m => {
           const s = stats[m.name] || { kg: 0, sets: 0 };
           const barW = Math.max(2, (s.kg / maxKg) * 100);
-          return `<div class="muscle-item">
+          return `<div class="muscle-item" style="cursor:pointer" onclick="openMuscleDetail('${m.name}')">
       <div class="muscle-item-icon">${m.icon}</div>
       <div style="flex:1">
         <div class="muscle-item-name">${m.name}</div>
@@ -3118,6 +3155,216 @@
         return `<div style="display:flex;gap:16px;justify-content:center;align-items:flex-start;">
     ${body(false)}${body(true)}
   </div>`;
+      }
+
+      // ═══════════════════════════════════════════
+      //  EXERCISE / MUSCLE DETAIL MODAL
+      // ═══════════════════════════════════════════
+
+      // Per-workout sessions for one exercise (matched by exId), oldest → newest.
+      function getExerciseSessions(exId) {
+        let name = '', icon = '💪';
+        const sessions = [];
+        state.workouts.forEach(w => {
+          const matches = w.exercises.filter(e => e.exId === exId);
+          if (!matches.length) return;
+          if (!name) { name = matches[0].name; icon = matches[0].icon; }
+          let volume = 0, reps = 0, sets = 0;
+          matches.forEach(ex => {
+            (ex.sets || []).filter(s => !s.warmup).forEach(s => {
+              volume += s.weight * s.reps;
+              reps += s.reps;
+              sets++;
+            });
+          });
+          sessions.push({ date: w.date, volume, reps, sets });
+        });
+        sessions.sort((a, b) => new Date(a.date) - new Date(b.date));
+        return { name, icon, sessions };
+      }
+
+      // Per-workout sessions for one muscle group — primary exercises count fully,
+      // secondary exercises count at half credit (matches renderMuscleSplit's logic).
+      function getMuscleSessions(muscleName) {
+        const group = MUSCLE_GROUPS.find(m => m.name === muscleName);
+        const icon = group ? group.icon : '💪';
+        const sessions = [];
+        state.workouts.forEach(w => {
+          let volume = 0, sets = 0;
+          w.exercises.forEach(ex => {
+            const workSets = (ex.sets || []).filter(s => !s.warmup);
+            if (!workSets.length) return;
+            const vol = workSets.reduce((s, set) => s + set.weight * set.reps, 0);
+            const { primary, secondary } = getExerciseMuscles(ex);
+            if (primary.includes(muscleName)) { volume += vol; sets += workSets.length; }
+            if (secondary.includes(muscleName)) { volume += vol * 0.5; sets += workSets.length * 0.5; }
+          });
+          if (volume > 0 || sets > 0) sessions.push({ date: w.date, volume, sets, reps: null });
+        });
+        sessions.sort((a, b) => new Date(a.date) - new Date(b.date));
+        return { icon, sessions };
+      }
+
+      function filterSessionsByRange(sessions, filter) {
+        if (filter === 'all') return sessions;
+        const now = new Date();
+        const cutoff = new Date();
+        if (filter === 'week') { cutoff.setDate(now.getDate() - now.getDay()); cutoff.setHours(0, 0, 0, 0); }
+        else if (filter === 'month') { cutoff.setDate(1); cutoff.setHours(0, 0, 0, 0); }
+        else if (filter === '3m') { cutoff.setMonth(now.getMonth() - 3); }
+        else if (filter === '6m') { cutoff.setMonth(now.getMonth() - 6); }
+        else if (filter === 'year') { cutoff.setFullYear(now.getFullYear(), 0, 1); cutoff.setHours(0, 0, 0, 0); }
+        return sessions.filter(s => new Date(s.date) >= cutoff);
+      }
+
+      // Buckets sessions into local-date buckets (daily for week/month, weekly otherwise) —
+      // same timezone-safe approach as the main Progress chart.
+      function bucketSessions(sessions, filter) {
+        const useDays = filter === 'week' || filter === 'month';
+        const localKey = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+        const buckets = {};
+        sessions.forEach(s => {
+          const d = new Date(s.date);
+          let bucketDate;
+          if (useDays) {
+            bucketDate = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+          } else {
+            bucketDate = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+            bucketDate.setDate(bucketDate.getDate() - bucketDate.getDay());
+          }
+          const key = localKey(bucketDate);
+          if (!buckets[key]) buckets[key] = { volume: 0, reps: 0, sets: 0, sessions: 0, date: bucketDate };
+          buckets[key].volume += s.volume || 0;
+          buckets[key].reps += s.reps || 0;
+          buckets[key].sets += s.sets || 0;
+          buckets[key].sessions += 1;
+        });
+        return Object.keys(buckets).sort().slice(-24).map(k => buckets[k]);
+      }
+
+      function openExerciseDetail(exId) {
+        const info = getExerciseSessions(exId);
+        if (!info.sessions.length) { showToast('No history for this exercise yet'); return; }
+        detailModalState = { type: 'exercise', key: exId, filter: 'all', metric: 'volume' };
+        document.getElementById('detail-modal-icon').textContent = info.icon;
+        document.getElementById('detail-modal-title').textContent = info.name;
+        document.getElementById('detail-modal-subtitle').textContent = 'Exercise progression';
+        document.getElementById('detail-modal-metrics').innerHTML = `
+    <button class="metric-tab active" onclick="switchDetailMetric(this,'volume')">Volume</button>
+    <button class="metric-tab" onclick="switchDetailMetric(this,'reps')">Reps</button>
+    <button class="metric-tab" onclick="switchDetailMetric(this,'sets')">Sets</button>
+  `;
+        resetDetailFilters();
+        document.getElementById('detail-modal-overlay').classList.add('open');
+        renderDetailModal();
+      }
+
+      function openMuscleDetail(muscleName) {
+        const info = getMuscleSessions(muscleName);
+        if (!info.sessions.length) { showToast('No data yet for ' + muscleName); return; }
+        detailModalState = { type: 'muscle', key: muscleName, filter: 'all', metric: 'volume' };
+        document.getElementById('detail-modal-icon').textContent = info.icon;
+        document.getElementById('detail-modal-title').textContent = muscleName;
+        document.getElementById('detail-modal-subtitle').textContent = 'Muscle progression';
+        document.getElementById('detail-modal-metrics').innerHTML = `
+    <button class="metric-tab active" onclick="switchDetailMetric(this,'volume')">Volume</button>
+    <button class="metric-tab" onclick="switchDetailMetric(this,'sets')">Sets</button>
+  `;
+        resetDetailFilters();
+        document.getElementById('detail-modal-overlay').classList.add('open');
+        renderDetailModal();
+      }
+
+      function resetDetailFilters() {
+        document.querySelectorAll('#detail-modal-filters .time-filter').forEach(b => b.classList.remove('active'));
+        const allBtn = document.querySelector('#detail-modal-filters .time-filter:last-child');
+        if (allBtn) allBtn.classList.add('active');
+      }
+
+      function closeDetailModal() {
+        document.getElementById('detail-modal-overlay').classList.remove('open');
+        if (detailChartInstance) { detailChartInstance.destroy(); detailChartInstance = null; }
+      }
+
+      function switchDetailFilter(btn, f) {
+        document.querySelectorAll('#detail-modal-filters .time-filter').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        detailModalState.filter = f;
+        renderDetailModal();
+      }
+
+      function switchDetailMetric(btn, m) {
+        document.querySelectorAll('#detail-modal-metrics .metric-tab').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        detailModalState.metric = m;
+        renderDetailModal();
+      }
+
+      function renderDetailModal() {
+        const { type, key, filter, metric } = detailModalState;
+        const info = type === 'exercise' ? getExerciseSessions(key) : getMuscleSessions(key);
+        const filtered = filterSessionsByRange(info.sessions, filter);
+        const buckets = bucketSessions(filtered, filter);
+
+        const periodLabels = { week: 'This week', month: 'This month', '3m': 'Last 3 months', '6m': 'Last 6 months', year: 'This year', all: 'All time' };
+        document.getElementById('detail-modal-period').textContent = periodLabels[filter] || '';
+
+        const values = buckets.map(b => {
+          if (metric === 'volume') return Math.round(b.volume);
+          if (metric === 'reps') return b.reps;
+          if (metric === 'sets') return Math.round(b.sets);
+          return b.sessions;
+        });
+        const total = values.reduce((a, b) => a + b, 0);
+        const unit = metric === 'volume' ? 'kg' : '';
+        document.getElementById('detail-modal-value').textContent = total + unit;
+
+        const ctx = document.getElementById('detail-modal-chart').getContext('2d');
+        if (detailChartInstance) detailChartInstance.destroy();
+        detailChartInstance = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: buckets.length ? buckets.map(b => b.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })) : ['No data'],
+            datasets: [{
+              data: values.length ? values : [0],
+              borderColor: '#f97316',
+              backgroundColor: 'rgba(249,115,22,0.08)',
+              fill: true,
+              tension: 0.35,
+              pointBackgroundColor: '#f97316',
+              pointRadius: 4,
+              pointHoverRadius: 6,
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: { display: false },
+              tooltip: { callbacks: { label: ctx => ctx.parsed.y + unit } }
+            },
+            scales: {
+              x: { grid: { color: '#1e1e1e' }, ticks: { color: '#555', font: { size: 10 }, maxTicksLimit: 8 } },
+              y: { grid: { color: '#1e1e1e' }, ticks: { color: '#555', font: { size: 10 } }, beginAtZero: true },
+            }
+          }
+        });
+
+        // Summary stat cards below the chart, scoped to the selected time range
+        const totalVolume = filtered.reduce((s, x) => s + (x.volume || 0), 0);
+        const totalSessions = filtered.length;
+        const totalReps = filtered.reduce((s, x) => s + (x.reps || 0), 0);
+        const totalSets = filtered.reduce((s, x) => s + (x.sets || 0), 0);
+        const statCards = [
+          { lbl: 'Total Volume', val: Math.round(totalVolume / 1000 * 10) / 10 + 't' },
+          { lbl: 'Sessions', val: totalSessions },
+          { lbl: 'Total Sets', val: Math.round(totalSets) },
+        ];
+        if (type === 'exercise') statCards.push({ lbl: 'Total Reps', val: totalReps });
+        document.getElementById('detail-modal-stats').innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--border);border-radius:var(--radius);overflow:hidden;">
+      ${statCards.map(c => `<div style="background:var(--surface);padding:14px 16px;"><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">${c.lbl}</div><div style="font-size:20px;font-weight:800;">${c.val}</div></div>`).join('')}
+    </div>
+  `;
       }
 
       // ═══════════════════════════════════════════
