@@ -519,14 +519,16 @@
       font-size: 11px;
       color: var(--text-dim);
       font-weight: 500;
-      padding: 6px 14px;
+      padding: 6px 10px;
       text-align: left;
       border-bottom: 1px solid var(--border);
+      white-space: nowrap;
     }
 
     .sets-table td {
-      padding: 6px 14px;
+      padding: 6px 10px;
       font-size: 13px;
+      white-space: nowrap;
     }
 
     .set-row {
@@ -595,6 +597,28 @@
       padding: 4px 6px;
       width: 44px;
       outline: none;
+    }
+
+    .variations-btn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      color: var(--text-muted);
+      font-size: 10px;
+      padding: 4px 8px;
+      cursor: pointer;
+      font-family: inherit;
+      white-space: nowrap;
+      max-width: 110px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: inline-block;
+    }
+
+    .variations-btn.has-tags {
+      color: var(--accent-blue);
+      border-color: var(--accent-blue);
+      background: rgba(59, 130, 246, .12);
     }
 
     .pr-badges {
@@ -679,6 +703,29 @@
 
     .add-ex-btn:hover {
       border-color: var(--accent-blue);
+    }
+
+    /* combined-set (bi-set/superset) card */
+    .combo-block {
+      margin: 0 16px 16px;
+      border: 1px solid var(--accent-blue);
+      border-radius: var(--radius);
+      padding: 12px 0 2px;
+      background: rgba(59, 130, 246, .04);
+    }
+
+    .combo-block .ex-block {
+      margin: 0 10px 10px;
+    }
+
+    .combo-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 14px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--accent-blue);
     }
 
     /* exercise picker modal */
@@ -1704,16 +1751,22 @@
         <button class="btn-primary" onclick="goToWorkout()">Start my first workout</button>
       </div>
 
-      <div class="import-card" onclick="document.getElementById('file-input').click()">
-        <div class="import-icon">
+      <div class="import-card" id="import-export-card" onclick="handleImportExportClick()" style="position:relative;">
+        <button class="icon-btn" onclick="event.stopPropagation(); toggleImportExportMode();" title="Switch Import/Export"
+          style="position:absolute; top:8px; right:8px; background:var(--surface2); border-radius:50%; padding:6px;">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width:16px;height:16px;">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
+          </svg>
+        </button>
+        <div class="import-icon" id="import-export-icon">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round"
               d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
           </svg>
         </div>
         <div class="import-text">
-          <div class="title">Import training log</div>
-          <div class="sub">Upload a PDF, Excel, or text file to populate your data</div>
+          <div class="title" id="import-export-title">Import training log</div>
+          <div class="sub" id="import-export-sub">Upload a PDF, Excel, or text file to populate your data</div>
         </div>
       </div>
       <input type="file" id="file-input" accept=".pdf,.xlsx,.xls,.csv,.txt" onchange="handleFileUpload(event)">
@@ -1973,9 +2026,38 @@
           <div class="modal-header">
             <input class="modal-search" id="ex-search" placeholder="Search exercises…"
               oninput="filterExercises(this.value)">
+            <button class="icon-btn" id="combo-toggle-btn" onclick="toggleComboMode()" title="Combine multiple exercises into one combined set">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width:20px;height:20px;">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244" />
+              </svg>
+            </button>
             <button class="modal-close-btn" onclick="closeExPicker()">✕</button>
           </div>
           <div id="ex-list"></div>
+          <div id="ex-picker-footer" style="display:none; padding:12px 20px; border-top:1px solid var(--border); align-items:center; justify-content:space-between;">
+            <span id="combo-selected-count" style="font-size:13px;color:var(--text-muted);">0 selected</span>
+            <button class="btn-primary-flex" style="flex:none;padding:10px 22px;" onclick="continueCombo()">Continue</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Set Variations Modal -->
+      <div class="modal-overlay" id="variations-modal">
+        <div class="modal-sheet" style="max-height:75vh;">
+          <div class="modal-header">
+            <div style="font-size:16px;font-weight:800;flex:1;">Set Variations</div>
+            <button class="modal-close-btn" onclick="closeVariationsPicker()">✕</button>
+          </div>
+          <div style="padding:16px 20px 24px;">
+            <div id="variations-preset-list"></div>
+            <div style="margin-top:14px; display:flex; gap:8px;">
+              <input id="variations-custom-input" type="text" placeholder="Custom tag…"
+                style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:8px;font-family:inherit;font-size:13px;outline:none;">
+              <button class="btn-secondary" style="flex:none;padding:8px 16px;" onclick="addCustomVariationTag()">Add</button>
+            </div>
+            <div id="variations-custom-list" style="margin-top:10px; display:flex; flex-wrap:wrap; gap:6px;"></div>
+            <button class="btn-primary" style="margin-top:20px;" onclick="saveVariationsPicker()">Done</button>
+          </div>
         </div>
       </div>
 
@@ -2120,6 +2202,16 @@
         return { primary: [...primary], secondary: [...secondary] };
       }
 
+      // ── Variations (set tags) ──
+      const VARIATION_PRESETS = [
+        { type: 'negatives', label: 'Negatives', hasValue: true, valueType: 'number', valuePlaceholder: 'reps' },
+        { type: 'partials', label: 'Partials', hasValue: true, valueType: 'text', valuePlaceholder: 'e.g. 5-1' },
+        { type: 'pyramids', label: 'Pyramids', hasValue: false },
+        { type: 'explosives', label: 'Explosives', hasValue: false },
+        { type: 'slow', label: 'Slow', hasValue: false },
+      ];
+      const VARIATION_LABELS = Object.fromEntries(VARIATION_PRESETS.map(p => [p.type, p.label]));
+
       // ── State ──
       let state = {
         workouts: [],
@@ -2133,6 +2225,7 @@
         returnTo: 'home', // last main tab (home/progress/you) visited — used to know where to land after cancel/finish
         weeklyDetailOffset: 0, // 0 = this week, -1 = last week, etc.
         editingWorkoutId: null,
+        customTags: [],
       };
 
       let chartInstance = null;
@@ -2149,6 +2242,7 @@
           state.workouts = parsed.workouts || [];
           state.userName = parsed.userName || 'Athlete';
           state.profile = parsed.profile || {};
+          state.customTags = parsed.customTags || [];
         }
       }
 
@@ -2157,6 +2251,7 @@
           workouts: state.workouts,
           userName: state.userName,
           profile: state.profile,
+          customTags: state.customTags,
         }));
       }
 
@@ -2296,23 +2391,30 @@
           const exDef = EXERCISES_DB.find(e => e.id === exId) || { name: 'Unknown', icon: '❓', primary: [], secondary: [] };
           const noteEl = block.querySelector('.ex-note-ta');
           const exNote = noteEl ? noteEl.value : '';
+          const restEl = block.querySelector('.ex-rest-input');
+          const restSeconds = restEl && restEl.value ? parseInt(restEl.value) : null;
+          const linkEl = block.querySelector('.ex-link-input');
+          const linkGroup = linkEl ? linkEl.value.trim() : '';
           const sets = [];
           block.querySelectorAll('.set-row').forEach(row => {
             const isWarmup = row.dataset.warmup === 'true';
             const wEl = row.querySelector('.w-input');
             const rEl = row.querySelector('.r-input');
             const rirEl = row.querySelector('.rir-input');
+            let variations = [];
+            try { variations = JSON.parse(row.dataset.variations || '[]'); } catch (e) { variations = []; }
             sets.push({
               warmup: isWarmup,
               weight: parseFloat(wEl?.value) || 0,
               reps: parseInt(rEl?.value) || 0,
               rir: parseInt(rirEl?.value) || 0,
+              variations,
             });
           });
           exercises.push({
             exId, name: exDef.name, icon: exDef.icon,
             primary: exDef.primary, secondary: exDef.secondary,
-            note: exNote, sets
+            note: exNote, sets, restSeconds, linkGroup
           });
         });
 
@@ -2396,21 +2498,68 @@
         return best;
       }
 
-      // ── Exercise Blocks ──
+      // ── Exercise Picker (single-select + combined-set multi-select) ──
+      let exPickerMultiMode = false;
+      let exPickerSelected = new Set();
+
       function openExPicker() {
         document.getElementById('ex-picker').classList.add('open');
         document.getElementById('ex-search').value = '';
+        exPickerMultiMode = false;
+        exPickerSelected.clear();
+        document.getElementById('ex-picker-footer').style.display = 'none';
+        document.getElementById('combo-toggle-btn').style.color = '';
         renderExList('');
         document.getElementById('ex-search').focus();
       }
       function closeExPicker() { document.getElementById('ex-picker').classList.remove('open'); }
       function filterExercises(q) { renderExList(q); }
 
+      function toggleComboMode() {
+        exPickerMultiMode = !exPickerMultiMode;
+        exPickerSelected.clear();
+        document.getElementById('combo-toggle-btn').style.color = exPickerMultiMode ? 'var(--accent-blue)' : '';
+        document.getElementById('ex-picker-footer').style.display = exPickerMultiMode ? 'flex' : 'none';
+        document.getElementById('combo-selected-count').textContent = '0 selected';
+        renderExList(document.getElementById('ex-search').value);
+        if (exPickerMultiMode) showToast('Select 2+ exercises, then Continue');
+      }
+
+      function toggleComboSelect(exId) {
+        if (exPickerSelected.has(exId)) exPickerSelected.delete(exId);
+        else exPickerSelected.add(exId);
+        document.getElementById('combo-selected-count').textContent = exPickerSelected.size + ' selected';
+        renderExList(document.getElementById('ex-search').value);
+      }
+
+      function continueCombo() {
+        if (exPickerSelected.size < 2) { showToast('Select at least 2 exercises'); return; }
+        const ids = Array.from(exPickerSelected);
+        closeExPicker();
+        createComboBlock(ids);
+        exPickerMultiMode = false;
+        exPickerSelected.clear();
+      }
+
       function renderExList(q) {
         const q2 = q.toLowerCase();
         const filtered = EXERCISES_DB.filter(e =>
           e.name.toLowerCase().includes(q2) || e.muscle.toLowerCase().includes(q2));
         const el = document.getElementById('ex-list');
+        if (exPickerMultiMode) {
+          el.innerHTML = filtered.map(ex => {
+            const selected = exPickerSelected.has(ex.id);
+            return `<div class="ex-list-item" onclick="toggleComboSelect('${ex.id}')" style="${selected ? 'background:var(--surface2);' : ''}">
+        <div class="ex-list-icon">${ex.icon}</div>
+        <div style="flex:1">
+          <div class="ex-list-name">${ex.name}</div>
+          <div class="ex-list-muscle">${ex.muscle}</div>
+        </div>
+        <div style="width:22px;height:22px;border-radius:6px;border:2px solid ${selected ? 'var(--accent-blue)' : 'var(--border)'};background:${selected ? 'var(--accent-blue)' : 'transparent'};display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;flex-shrink:0;">${selected ? '✓' : ''}</div>
+      </div>`;
+          }).join('');
+          return;
+        }
         el.innerHTML = filtered.map(ex => `
     <div class="ex-list-item" onclick="addExercise('${ex.id}')">
       <div class="ex-list-icon">${ex.icon}</div>
@@ -2422,12 +2571,12 @@
   `).join('');
       }
 
-      function addExercise(exId) {
+      function addExercise(exId, containerOverride, linkGroupPrefill) {
         closeExPicker();
         const def = EXERCISES_DB.find(e => e.id === exId);
         if (!def) return;
-        const container = document.getElementById('exercises-container');
-        const blockId = 'ex-' + Date.now();
+        const container = containerOverride || document.getElementById('exercises-container');
+        const blockId = 'ex-' + Date.now() + Math.random().toString(36).slice(2, 6);
         const div = document.createElement('div');
         div.className = 'ex-block'; div.id = blockId; div.dataset.exId = exId;
         div.innerHTML = `
@@ -2441,16 +2590,23 @@
     <div class="ex-block-note">
       <textarea class="ex-note-ta" placeholder="Add notes…" rows="1"></textarea>
     </div>
+    <div style="display:flex;gap:8px;padding:8px 14px;border-bottom:1px solid var(--border);">
+      <input class="ex-rest-input" type="number" min="0" placeholder="Rest (sec)" style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:6px;font-size:12px;font-family:inherit;outline:none;">
+      <input class="ex-link-input" type="text" placeholder="Superset group (optional)" value="${linkGroupPrefill || ''}" style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:6px;font-size:12px;font-family:inherit;outline:none;">
+    </div>
+    <div style="overflow-x:auto;">
     <table class="sets-table">
       <thead><tr>
-        <th style="width:40px">Set</th>
+        <th style="width:34px">Set</th>
         <th>Weight</th>
         <th>Reps</th>
-        <th>RIR</th>
-        <th></th>
+        <th>Variations</th>
+        <th style="width:44px">RIR</th>
+        <th style="width:28px"></th>
       </tr></thead>
       <tbody id="sets-${blockId}"></tbody>
     </table>
+    </div>
     <div class="ex-block-footer">
       <button class="set-add-btn" onclick="addSet('${blockId}',false)">+ Add Set</button>
       <button class="set-add-btn" onclick="addSet('${blockId}',true)" style="color:var(--accent)">+ Warmup</button>
@@ -2459,6 +2615,21 @@
   `;
         container.appendChild(div);
         addSet(blockId, false);
+        return blockId;
+      }
+
+      function createComboBlock(exIds) {
+        const comboId = 'combo-' + Date.now() + Math.random().toString(36).slice(2, 5);
+        const container = document.getElementById('exercises-container');
+        const wrapper = document.createElement('div');
+        wrapper.className = 'combo-block'; wrapper.id = comboId;
+        wrapper.innerHTML = `<div class="combo-header"><span>🔗 Combined Set · ${exIds.length} exercises</span><button class="ex-del-btn" onclick="removeComboBlock('${comboId}')">Remove All</button></div>`;
+        container.appendChild(wrapper);
+        exIds.forEach(id => addExercise(id, wrapper, comboId));
+      }
+
+      function removeComboBlock(comboId) {
+        document.getElementById(comboId)?.remove();
       }
 
       function addSet(blockId, isWarmup) {
@@ -2470,11 +2641,13 @@
         const tr = document.createElement('tr');
         tr.className = 'set-row' + (isWarmup ? ' warmup' : '');
         tr.dataset.warmup = isWarmup;
+        tr.dataset.variations = '[]';
         const badgeClass = isWarmup ? 'warmup' : 'numbered';
         tr.innerHTML = `
     <td><span class="set-badge ${badgeClass}" style="cursor:pointer" onclick="toggleSetType(this)" title="Click to toggle Warmup/Normal">${label}</span></td>
     <td><input class="set-input w-input" type="number" min="0" step="0.5" placeholder="kg"></td>
     <td><input class="set-input r-input" type="number" min="0" placeholder="reps"></td>
+    <td><button type="button" class="variations-btn" onclick="openVariationsPicker(this)">+ Tag</button></td>
     <td><input class="rir-input" type="number" min="0" max="10" placeholder="0"></td>
     <td><button class="set-del-btn" onclick="const b='${blockId}'; this.closest('tr').remove(); recalculateSets(b)">✕</button></td>
   `;
@@ -2483,6 +2656,117 @@
 
       function removeExBlock(blockId) {
         document.getElementById(blockId)?.remove();
+      }
+
+      // ── Set Variations picker ──
+      let currentVariationsRow = null;
+      let variationsDraft = [];
+
+      function openVariationsPicker(btn) {
+        const tr = btn.closest('tr');
+        currentVariationsRow = tr;
+        let vars = [];
+        try { vars = JSON.parse(tr.dataset.variations || '[]'); } catch (e) { vars = []; }
+        variationsDraft = vars.map(v => ({ ...v }));
+        renderVariationsModal();
+        document.getElementById('variations-modal').classList.add('open');
+      }
+
+      function renderVariationsModal() {
+        const presetHTML = VARIATION_PRESETS.map(p => {
+          const existing = variationsDraft.find(v => v.type === p.type);
+          const checked = !!existing;
+          return `<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);">
+      <input type="checkbox" id="vp-${p.type}" ${checked ? 'checked' : ''} onchange="toggleVariationPreset('${p.type}', this.checked)" style="width:18px;height:18px;flex-shrink:0;">
+      <label for="vp-${p.type}" style="flex:1;font-size:14px;">${p.label}</label>
+      ${p.hasValue ? `<input type="${p.valueType}" placeholder="${p.valuePlaceholder}" value="${existing && existing.value ? existing.value : ''}" oninput="setVariationValue('${p.type}', this.value)" style="width:80px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:5px;font-size:12px;font-family:inherit;outline:none;">` : ''}
+    </div>`;
+        }).join('');
+        document.getElementById('variations-preset-list').innerHTML = presetHTML;
+
+        // Custom (non-preset) tags currently applied — shown as removable chips.
+        // Also surface previously used custom tags (from state.customTags) as quick-add chips.
+        const appliedTypes = new Set(variationsDraft.map(v => v.type));
+        const customApplied = variationsDraft.filter(v => !VARIATION_PRESETS.some(p => p.type === v.type));
+        const suggestions = (state.customTags || []).filter(t => !appliedTypes.has(t));
+
+        let html = customApplied.map(v => `
+    <span style="background:var(--surface3);border-radius:14px;padding:4px 10px;font-size:12px;display:inline-flex;align-items:center;gap:6px;">
+      ${titleCase(v.type.replace(/-/g, ' '))}
+      <span style="cursor:pointer;color:var(--red);" onclick="removeCustomVariationTag('${v.type}')">✕</span>
+    </span>
+  `).join('');
+        html += suggestions.map(t => `
+    <span style="background:var(--surface2);border:1px dashed var(--border);border-radius:14px;padding:4px 10px;font-size:12px;cursor:pointer;color:var(--text-muted);" onclick="quickAddVariationTag('${t}')">
+      + ${titleCase(t.replace(/-/g, ' '))}
+    </span>
+  `).join('');
+        document.getElementById('variations-custom-list').innerHTML = html;
+      }
+
+      function toggleVariationPreset(type, checked) {
+        if (checked) {
+          if (!variationsDraft.find(v => v.type === type)) variationsDraft.push({ type });
+        } else {
+          variationsDraft = variationsDraft.filter(v => v.type !== type);
+        }
+        renderVariationsModal();
+      }
+
+      function setVariationValue(type, value) {
+        let entry = variationsDraft.find(v => v.type === type);
+        if (!entry) { entry = { type }; variationsDraft.push(entry); }
+        entry.value = value;
+      }
+
+      function addCustomVariationTag() {
+        const input = document.getElementById('variations-custom-input');
+        const raw = input.value.trim();
+        if (!raw) return;
+        const type = raw.toLowerCase().replace(/\s+/g, '-');
+        if (!variationsDraft.find(v => v.type === type)) variationsDraft.push({ type });
+        if (!state.customTags) state.customTags = [];
+        if (!state.customTags.includes(type)) { state.customTags.push(type); saveState(); }
+        input.value = '';
+        renderVariationsModal();
+      }
+
+      function quickAddVariationTag(type) {
+        if (!variationsDraft.find(v => v.type === type)) variationsDraft.push({ type });
+        renderVariationsModal();
+      }
+
+      function removeCustomVariationTag(type) {
+        variationsDraft = variationsDraft.filter(v => v.type !== type);
+        renderVariationsModal();
+      }
+
+      function saveVariationsPicker() {
+        if (currentVariationsRow) {
+          currentVariationsRow.dataset.variations = JSON.stringify(variationsDraft);
+          updateVariationsBtn(currentVariationsRow);
+        }
+        closeVariationsPicker();
+      }
+
+      function closeVariationsPicker() {
+        document.getElementById('variations-modal').classList.remove('open');
+        currentVariationsRow = null;
+      }
+
+      function updateVariationsBtn(tr) {
+        const btn = tr.querySelector('.variations-btn');
+        if (!btn) return;
+        let vars = [];
+        try { vars = JSON.parse(tr.dataset.variations || '[]'); } catch (e) { vars = []; }
+        if (!vars.length) { btn.textContent = '+ Tag'; btn.classList.remove('has-tags'); return; }
+        btn.classList.add('has-tags');
+        btn.textContent = vars.map(v => VARIATION_LABELS[v.type] || titleCase(v.type.replace(/-/g, ' '))).join(', ');
+      }
+
+      function variationsSummary(vars) {
+        if (!vars || !vars.length) return '';
+        return vars.map(v => VARIATION_LABELS[v.type] || titleCase(v.type.replace(/-/g, ' '))).join(', ');
       }
 
       // ═══════════════════════════════════════════
@@ -2869,9 +3153,11 @@
               : `<span class="set-badge numbered">${setIndex}</span>`;
             const prs = (s.prs || []).map(p => `<span class="pr-badge ${prColors[p] || 'gold'}">🏅 ${p}</span>`).join('');
             const rirDisplay = s.rir > 0 ? ` · RIR ${s.rir}` : '';
+            const varSummary = variationsSummary(s.variations);
+            const varDisplay = varSummary ? ` · <span style="color:var(--accent-blue)">${varSummary}</span>` : '';
             return `<div class="detail-set-row ${s.prs && s.prs.length ? 'pr-row' : ''}">
         ${badge}
-        <span style="flex:1">${s.weight}kg × <strong>${s.reps}</strong> reps${rirDisplay}</span>
+        <span style="flex:1">${s.weight}kg × <strong>${s.reps}</strong> reps${rirDisplay}${varDisplay}</span>
         <div class="pr-badges">${prs}</div>
       </div>`;
           }).join('');
@@ -3453,6 +3739,70 @@
       // ═══════════════════════════════════════════
       //  EDITING ENGINE
       // ═══════════════════════════════════════════
+      function populateExBlock(ex, container) {
+        const blockId = 'ex-' + Date.now() + Math.random().toString(36).slice(2, 6);
+        const def = EXERCISES_DB.find(e => e.id === ex.exId) || { name: ex.name, icon: ex.icon, muscle: 'Custom' };
+
+        const div = document.createElement('div');
+        div.className = 'ex-block'; div.id = blockId; div.dataset.exId = ex.exId;
+        div.innerHTML = `
+      <div class="ex-block-header">
+        <div class="ex-thumb">${def.icon}</div>
+        <div>
+          <div class="ex-block-name">${def.name}</div>
+          <div style="font-size:11px;color:var(--text-muted)">${def.muscle || ''}</div>
+        </div>
+      </div>
+      <div class="ex-block-note">
+        <textarea class="ex-note-ta" placeholder="Add notes…" rows="1">${ex.note || ''}</textarea>
+      </div>
+      <div style="display:flex;gap:8px;padding:8px 14px;border-bottom:1px solid var(--border);">
+        <input class="ex-rest-input" type="number" min="0" placeholder="Rest (sec)" value="${ex.restSeconds || ''}" style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:6px;font-size:12px;font-family:inherit;outline:none;">
+        <input class="ex-link-input" type="text" placeholder="Superset group (optional)" value="${ex.linkGroup || ''}" style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:6px;font-size:12px;font-family:inherit;outline:none;">
+      </div>
+      <div style="overflow-x:auto;">
+      <table class="sets-table">
+        <thead><tr><th style="width:34px">Set</th><th>Weight</th><th>Reps</th><th>Variations</th><th style="width:44px">RIR</th><th style="width:28px"></th></tr></thead>
+        <tbody id="sets-${blockId}"></tbody>
+      </table>
+      </div>
+      <div class="ex-block-footer">
+        <button class="set-add-btn" onclick="addSet('${blockId}',false)">+ Add Set</button>
+        <button class="set-add-btn" onclick="addSet('${blockId}',true)" style="color:var(--accent)">+ Warmup</button>
+        <button class="ex-del-btn" onclick="removeExBlock('${blockId}')">Remove</button>
+      </div>
+    `;
+        container.appendChild(div);
+
+        const tbody = document.getElementById('sets-' + blockId);
+        let workingSetCount = 1;
+        (ex.sets || []).forEach((set) => {
+          const isWarmup = set.warmup;
+          const label = isWarmup ? 'W' : (workingSetCount++);
+          const badgeClass = isWarmup ? 'warmup' : 'numbered';
+          let variations = set.variations || [];
+          if (!variations.length) {
+            // migrate legacy per-input fields from older saved workouts
+            if (set.negativeReps) variations.push({ type: 'negatives', value: String(set.negativeReps) });
+            if (set.partialReps) variations.push({ type: 'partials', value: set.partialReps });
+          }
+          const tr = document.createElement('tr');
+          tr.className = 'set-row' + (isWarmup ? ' warmup' : '');
+          tr.dataset.warmup = isWarmup;
+          tr.dataset.variations = JSON.stringify(variations);
+          tr.innerHTML = `
+        <td><span class="set-badge ${badgeClass}" style="cursor:pointer" onclick="toggleSetType(this)" title="Click to toggle Warmup/Normal">${label}</span></td>
+        <td><input class="set-input w-input" type="number" min="0" step="0.5" value="${set.weight}"></td>
+        <td><input class="set-input r-input" type="number" min="0" value="${set.reps}"></td>
+        <td><button type="button" class="variations-btn" onclick="openVariationsPicker(this)">+ Tag</button></td>
+        <td><input class="rir-input" type="number" min="0" max="10" value="${set.rir || ''}"></td>
+        <td><button class="set-del-btn" onclick="const b='${blockId}'; this.closest('tr').remove(); recalculateSets(b)">✕</button></td>
+      `;
+          tbody.appendChild(tr);
+          updateVariationsBtn(tr);
+        });
+      }
+
       function editWorkout(id) {
         const w = state.workouts.find(x => x.id === id);
         if (!w) return;
@@ -3475,58 +3825,37 @@
         document.getElementById('workout-date').value = localDateStr;
         document.getElementById('workout-duration-input').value = w.duration || '';
 
-        // Populate exercises
+        // Populate exercises — group by linkGroup so bi-sets/supersets render as
+        // "Combined Set" cards instead of separate ones.
         const container = document.getElementById('exercises-container');
         container.innerHTML = '';
 
-        w.exercises.forEach(ex => {
-          const blockId = 'ex-' + Date.now() + Math.random().toString(36).substr(2, 5);
-          const def = EXERCISES_DB.find(e => e.id === ex.exId) || { name: ex.name, icon: ex.icon, muscle: 'Custom' };
+        const groups = [];
+        const used = new Set();
+        w.exercises.forEach((ex, i) => {
+          if (used.has(i)) return;
+          if (ex.linkGroup) {
+            const members = [i]; used.add(i);
+            w.exercises.forEach((e2, j) => {
+              if (j > i && !used.has(j) && e2.linkGroup === ex.linkGroup) { members.push(j); used.add(j); }
+            });
+            groups.push(members);
+          } else {
+            groups.push([i]); used.add(i);
+          }
+        });
 
-          const div = document.createElement('div');
-          div.className = 'ex-block'; div.id = blockId; div.dataset.exId = ex.exId;
-          div.innerHTML = `
-      <div class="ex-block-header">
-        <div class="ex-thumb">${def.icon}</div>
-        <div>
-          <div class="ex-block-name">${def.name}</div>
-          <div style="font-size:11px;color:var(--text-muted)">${def.muscle || ''}</div>
-        </div>
-      </div>
-      <div class="ex-block-note">
-        <textarea class="ex-note-ta" placeholder="Add notes…" rows="1">${ex.note || ''}</textarea>
-      </div>
-      <table class="sets-table">
-        <thead><tr><th style="width:40px">Set</th><th>Weight</th><th>Reps</th><th>RIR</th><th></th></tr></thead>
-        <tbody id="sets-${blockId}"></tbody>
-      </table>
-      <div class="ex-block-footer">
-        <button class="set-add-btn" onclick="addSet('${blockId}',false)">+ Add Set</button>
-        <button class="set-add-btn" onclick="addSet('${blockId}',true)" style="color:var(--accent)">+ Warmup</button>
-        <button class="ex-del-btn" onclick="removeExBlock('${blockId}')">Remove</button>
-      </div>
-    `;
-          container.appendChild(div);
-
-          // Populate sets
-          const tbody = document.getElementById('sets-' + blockId);
-          let workingSetCount = 1;
-          ex.sets.forEach((set) => {
-            const isWarmup = set.warmup;
-            const label = isWarmup ? 'W' : (workingSetCount++);
-            const badgeClass = isWarmup ? 'warmup' : 'numbered';
-            const tr = document.createElement('tr');
-            tr.className = 'set-row' + (isWarmup ? ' warmup' : '');
-            tr.dataset.warmup = isWarmup;
-            tr.innerHTML = `
-        <td><span class="set-badge ${badgeClass}" style="cursor:pointer" onclick="toggleSetType(this)" title="Click to toggle Warmup/Normal">${label}</span></td>
-        <td><input class="set-input w-input" type="number" min="0" step="0.5" value="${set.weight}"></td>
-        <td><input class="set-input r-input" type="number" min="0" value="${set.reps}"></td>
-        <td><input class="rir-input" type="number" min="0" max="10" value="${set.rir || ''}"></td>
-        <td><button class="set-del-btn" onclick="const b='${blockId}'; this.closest('tr').remove(); recalculateSets(b)">✕</button></td>
-      `;
-            tbody.appendChild(tr);
-          });
+        groups.forEach(members => {
+          if (members.length > 1) {
+            const comboId = 'combo-' + Date.now() + Math.random().toString(36).slice(2, 5);
+            const wrapper = document.createElement('div');
+            wrapper.className = 'combo-block'; wrapper.id = comboId;
+            wrapper.innerHTML = `<div class="combo-header"><span>🔗 Combined Set · ${members.length} exercises</span><button class="ex-del-btn" onclick="removeComboBlock('${comboId}')">Remove All</button></div>`;
+            container.appendChild(wrapper);
+            members.forEach(idx => populateExBlock(w.exercises[idx], wrapper));
+          } else {
+            populateExBlock(w.exercises[members[0]], container);
+          }
         });
       }
 
@@ -4249,6 +4578,145 @@
         pendingImportWorkouts = null;
         refreshHome();
         showImportModal('success', { count });
+      }
+
+      // ═══════════════════════════════════════════
+      //  IMPORT / EXPORT TOGGLE
+      // ═══════════════════════════════════════════
+      let importExportMode = 'import';
+
+      function toggleImportExportMode() {
+        importExportMode = importExportMode === 'import' ? 'export' : 'import';
+        const title = document.getElementById('import-export-title');
+        const sub = document.getElementById('import-export-sub');
+        const icon = document.getElementById('import-export-icon');
+        if (importExportMode === 'import') {
+          title.textContent = 'Import training log';
+          sub.textContent = 'Upload a PDF, Excel, or text file to populate your data';
+          icon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>`;
+        } else {
+          title.textContent = 'Export training log';
+          sub.textContent = 'Download your training history as a .txt file';
+          icon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M12 3v13.5m0 0L7.5 12M12 16.5 16.5 12" /></svg>`;
+        }
+      }
+
+      function handleImportExportClick() {
+        if (importExportMode === 'import') {
+          document.getElementById('file-input').click();
+        } else {
+          exportTrainingLog();
+        }
+      }
+
+      function formatRest(sec) {
+        const mins = Math.floor(sec / 60);
+        const secs = sec % 60;
+        return secs > 0 ? `${mins}min${secs}Rest` : `${mins}minRest`;
+      }
+
+      function groupWarmupReps(reps) {
+        const out = [];
+        for (let i = 0; i < reps.length; i += 2) {
+          out.push(i + 1 < reps.length ? `${reps[i]}-${reps[i + 1]}` : `${reps[i]}`);
+        }
+        return out.join(' ');
+      }
+
+      function fmtSetToken(s) {
+        if (!s) return '';
+        const variations = s.variations || [];
+        const partial = variations.find(v => v.type === 'partials' && v.value);
+        if (partial) return partial.value;
+        const bw = (typeof BODYWEIGHT_KG !== 'undefined') ? BODYWEIGHT_KG : 80;
+        const hasWeight = s.weight && s.weight !== bw;
+        let tok = `${s.reps}${hasWeight ? 'c' + s.weight : ''}`;
+        variations.forEach(v => {
+          if (v.type === 'partials') return; // handled above (or no value given — nothing to append)
+          if (v.type === 'negatives') tok += v.value ? `+${v.value}negatives` : `+negatives`;
+          else tok += `+${v.type}`;
+        });
+        return tok;
+      }
+
+      function exerciseLineTokens(ex) {
+        const warmups = (ex.sets || []).filter(s => s.warmup);
+        const working = (ex.sets || []).filter(s => !s.warmup);
+        let str = '';
+        if (warmups.length) str += `warm-up-set ${groupWarmupReps(warmups.map(s => s.reps))}/`;
+        str += working.map(fmtSetToken).join('/');
+        return str;
+      }
+
+      function exportTrainingLog() {
+        if (!state.workouts.length) { showToast('No workouts to export'); return; }
+        const sorted = [...state.workouts].sort((a, b) => new Date(a.date) - new Date(b.date));
+        const lines = ['twp training tracker', ''];
+        sorted.forEach(w => {
+          const d = new Date(w.date);
+          const dd = String(d.getDate()).padStart(2, '0');
+          const mm = String(d.getMonth() + 1).padStart(2, '0');
+          const yyyy = d.getFullYear();
+          lines.push(`Day ${dd}/${mm}/${yyyy}`);
+          if (w.bodyWeight) lines.push(`Body weight: ${w.bodyWeight}kg`);
+
+          // Group exercises sharing a non-empty linkGroup into one superset/bi-set line
+          const groups = [];
+          const used = new Set();
+          w.exercises.forEach((ex, i) => {
+            if (used.has(i)) return;
+            if (ex.linkGroup) {
+              const members = [];
+              w.exercises.forEach((e2, j) => {
+                if (!used.has(j) && e2.linkGroup === ex.linkGroup) { members.push(j); used.add(j); }
+              });
+              groups.push(members);
+            } else {
+              groups.push([i]); used.add(i);
+            }
+          });
+
+          groups.forEach(members => {
+            if (members.length === 1) {
+              const ex = w.exercises[members[0]];
+              if (ex.isCardio) { lines.push(`${ex.cardioMinutes} min run`); return; }
+              if (!ex.sets || !ex.sets.length) { lines.push(ex.name); return; }
+              let line = `${ex.name} ${exerciseLineTokens(ex)}`;
+              if (ex.restSeconds) line += ` ${formatRest(ex.restSeconds)}`;
+              lines.push(line.trim());
+            } else {
+              const exs = members.map(i => w.exercises[i]);
+              const name = exs.map(e => e.name).join(' + ');
+              const maxLen = Math.max(...exs.map(e => (e.sets || []).filter(s => !s.warmup).length), 0);
+              const chunks = [];
+              for (let i = 0; i < maxLen; i++) {
+                chunks.push(exs.map(e => {
+                  const working = (e.sets || []).filter(s => !s.warmup);
+                  return working[i] ? fmtSetToken(working[i]) : '';
+                }).join('+'));
+              }
+              let line = `${name} ${chunks.join('/')}`;
+              const restEx = exs.find(e => e.restSeconds);
+              if (restEx) line += ` ${formatRest(restEx.restSeconds)}`;
+              lines.push(line.trim());
+            }
+          });
+
+          if (w.duration) lines.push(`Duration: ${w.duration}min`);
+          if (w.sorenessRange) lines.push(`Soreness: ${w.sorenessRange[0]}-${w.sorenessRange[1]}`);
+          if (w.note) lines.push(`Note: ${w.note}`);
+          lines.push('');
+        });
+        const blob = new Blob([lines.join('\n')], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'twp_training_tracker.txt';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+        showToast('Training log exported 📄');
       }
 
       // ── Init ──
