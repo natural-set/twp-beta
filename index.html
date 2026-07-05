@@ -2205,76 +2205,90 @@
       //  DATA
       // ═══════════════════════════════════════════
       const EXERCISES_DB = [
-        { id: 'bench', name: 'Bench Press', icon: '🏋️', muscle: 'Chest', primary: ['Chest'], secondary: ['Triceps', 'Shoulders'] },
-        { id: 'squat', name: 'Barbell Squat', icon: '🦵', muscle: 'Quadriceps', primary: ['Quadriceps'], secondary: ['Hamstrings', 'Glutes'] },
-        { id: 'deadlift', name: 'Barbell Deadlift', icon: '⚡', muscle: 'Back', primary: ['Back'], secondary: ['Hamstrings', 'Glutes'] },
-        { id: 'ohp', name: 'Overhead Press', icon: '🙌', muscle: 'Shoulders', primary: ['Shoulders'], secondary: ['Triceps'] },
-        { id: 'pullup', name: 'Pull-Up', icon: '🔝', muscle: 'Back', primary: ['Lats'], secondary: ['Biceps'] },
-        { id: 'row', name: 'Barbell Row', icon: '↩️', muscle: 'Back', primary: ['Back'], secondary: ['Biceps'] },
+        { id: 'bench', name: 'Bench Press', icon: '🏋️', muscle: 'Chest', primary: ['Chest'], secondary: ['Triceps', 'Front Delts'] },
+        { id: 'squat', name: 'Barbell Squat', icon: '🦵', muscle: 'Quadriceps', primary: ['Quadriceps', 'Glutes'], secondary: ['Hamstrings'] },
+        { id: 'deadlift', name: 'Barbell Deadlift', icon: '⚡', muscle: 'Back', primary: ['Lower Back', 'Hamstrings'], secondary: ['Glutes', 'Traps'] },
+        { id: 'ohp', name: 'Overhead Press', icon: '🙌', muscle: 'Shoulders', primary: ['Front Delts', 'Side Delts'], secondary: ['Triceps'] },
+        { id: 'pullup', name: 'Pull-Up', icon: '🔝', muscle: 'Back', primary: ['Lats'], secondary: ['Biceps', 'Upper Back'] },
+        { id: 'row', name: 'Barbell Row', icon: '↩️', muscle: 'Back', primary: ['Upper Back', 'Lats'], secondary: ['Biceps'] },
         { id: 'curl', name: 'Bicep Curl', icon: '💪', muscle: 'Biceps', primary: ['Biceps'], secondary: ['Forearms'] },
         { id: 'pushdown', name: 'Tricep Pushdown', icon: '⬇️', muscle: 'Triceps', primary: ['Triceps'], secondary: [] },
-        { id: 'rdl', name: 'Romanian Deadlift', icon: '🏹', muscle: 'Hamstrings', primary: ['Hamstrings'], secondary: ['Glutes', 'Back'] },
+        { id: 'rdl', name: 'Romanian Deadlift', icon: '🏹', muscle: 'Hamstrings', primary: ['Hamstrings', 'Glutes'], secondary: ['Lower Back'] },
         { id: 'lunge', name: 'Lunges', icon: '🚶', muscle: 'Quadriceps', primary: ['Quadriceps'], secondary: ['Glutes', 'Hamstrings'] },
-        { id: 'dip', name: 'Dips', icon: '📉', muscle: 'Chest', primary: ['Chest', 'Triceps'], secondary: ['Shoulders'] },
-        { id: 'facepull', name: 'Face Pull', icon: '🎯', muscle: 'Shoulders', primary: ['Deltoid Posterior'], secondary: ['Traps'] },
+        { id: 'dip', name: 'Dips', icon: '📉', muscle: 'Chest', primary: ['Chest', 'Triceps'], secondary: ['Front Delts'] },
+        { id: 'facepull', name: 'Face Pull', icon: '🎯', muscle: 'Shoulders', primary: ['Rear Delts'], secondary: ['Traps'] },
         { id: 'latpull', name: 'Lat Pulldown', icon: '⤵️', muscle: 'Back', primary: ['Lats'], secondary: ['Biceps'] },
-        { id: 'calf', name: 'Calf Raise', icon: '🦶', muscle: 'Calves', primary: ['Gastrocnemius'], secondary: ['Soleus'] },
-        { id: 'plank', name: 'Plank', icon: '🧘', muscle: 'Abs', primary: ['Abs'], secondary: ['Core'] },
+        { id: 'calf', name: 'Calf Raise', icon: '🦶', muscle: 'Calves', primary: ['Calves'], secondary: [] },
+        { id: 'plank', name: 'Plank', icon: '🧘', muscle: 'Abs', primary: ['Abs'], secondary: ['Obliques'] },
       ];
 
       const MUSCLE_GROUPS = [
         { name: 'Chest', icon: '💪', color: 'primary' },
-        { name: 'Back', icon: '🔙', color: 'primary' },
-        { name: 'Shoulders', icon: '🙌', color: 'primary' },
+        { name: 'Front Delts', icon: '🙌', color: 'primary' },
+        { name: 'Side Delts', icon: '🙌', color: 'primary' },
+        { name: 'Rear Delts', icon: '🙌', color: 'primary' },
+        { name: 'Traps', icon: '🎯', color: 'secondary' },
+        { name: 'Upper Back', icon: '🔙', color: 'primary' },
+        { name: 'Lower Back', icon: '🔙', color: 'primary' },
+        { name: 'Lats', icon: '🔝', color: 'secondary' },
         { name: 'Biceps', icon: '💪', color: 'primary' },
         { name: 'Triceps', icon: '⬇️', color: 'primary' },
+        { name: 'Forearms', icon: '✊', color: 'secondary' },
+        { name: 'Abs', icon: '🧘', color: 'secondary' },
+        { name: 'Obliques', icon: '🌀', color: 'secondary' },
+        { name: 'Glutes', icon: '🍑', color: 'secondary' },
         { name: 'Quadriceps', icon: '🦵', color: 'primary' },
         { name: 'Hamstrings', icon: '🏹', color: 'primary' },
-        { name: 'Glutes', icon: '🍑', color: 'secondary' },
         { name: 'Calves', icon: '🦶', color: 'secondary' },
-        { name: 'Abs', icon: '🧘', color: 'secondary' },
-        { name: 'Lats', icon: '🔝', color: 'secondary' },
-        { name: 'Traps', icon: '🎯', color: 'secondary' },
       ];
 
       // Keyword-based muscle inference for exercises that don't carry an explicit
       // primary/secondary list (e.g. custom exercises created via log import).
       const EXERCISE_MUSCLE_KEYWORDS = {
-        'pullup': { p: ['Lats', 'Back'], s: ['Biceps'] },
-        'pull-up': { p: ['Lats', 'Back'], s: ['Biceps'] },
-        'pullups': { p: ['Lats', 'Back'], s: ['Biceps'] },
-        'dip': { p: ['Chest', 'Triceps'], s: ['Shoulders'] },
-        'dips': { p: ['Chest', 'Triceps'], s: ['Shoulders'] },
-        'squat': { p: ['Quadriceps', 'Glutes'], s: ['Hamstrings', 'Core'] },
-        'squats': { p: ['Quadriceps', 'Glutes'], s: ['Hamstrings', 'Core'] },
-        'stiff': { p: ['Hamstrings', 'Glutes'], s: ['Back'] },
-        'rdl': { p: ['Hamstrings', 'Glutes'], s: ['Back'] },
-        'romanian': { p: ['Hamstrings', 'Glutes'], s: ['Back'] },
-        'deadlift': { p: ['Back', 'Hamstrings'], s: ['Glutes', 'Core'] },
+        'pullup': { p: ['Lats'], s: ['Biceps', 'Upper Back'] },
+        'pull-up': { p: ['Lats'], s: ['Biceps', 'Upper Back'] },
+        'pullups': { p: ['Lats'], s: ['Biceps', 'Upper Back'] },
+        'dip': { p: ['Chest', 'Triceps'], s: ['Front Delts'] },
+        'dips': { p: ['Chest', 'Triceps'], s: ['Front Delts'] },
+        'squat': { p: ['Quadriceps', 'Glutes'], s: ['Hamstrings'] },
+        'squats': { p: ['Quadriceps', 'Glutes'], s: ['Hamstrings'] },
+        'sissy': { p: ['Quadriceps'], s: [] },
+        'stiff': { p: ['Hamstrings', 'Glutes'], s: ['Lower Back'] },
+        'rdl': { p: ['Hamstrings', 'Glutes'], s: ['Lower Back'] },
+        'romanian': { p: ['Hamstrings', 'Glutes'], s: ['Lower Back'] },
+        'deadlift': { p: ['Lower Back', 'Hamstrings'], s: ['Glutes', 'Traps'] },
         'calf': { p: ['Calves'], s: [] },
         'calves': { p: ['Calves'], s: [] },
         'calfs': { p: ['Calves'], s: [] },
-        'shoulder': { p: ['Shoulders'], s: ['Triceps'] },
-        'shoulders': { p: ['Shoulders'], s: ['Triceps'] },
-        'lateral': { p: ['Shoulders'], s: [] },
+        'shoulder': { p: ['Side Delts', 'Front Delts'], s: ['Triceps'] },
+        'shoulders': { p: ['Side Delts', 'Front Delts'], s: ['Triceps'] },
+        'lateral': { p: ['Side Delts'], s: [] },
+        'upright row': { p: ['Side Delts', 'Traps'], s: ['Biceps'] },
+        'head press': { p: ['Front Delts'], s: ['Triceps'] },
+        'facepull': { p: ['Rear Delts'], s: ['Traps'] },
+        'face pull': { p: ['Rear Delts'], s: ['Traps'] },
         'forarm': { p: ['Forearms'], s: [] },
         'forearm': { p: ['Forearms'], s: [] },
         'foarms': { p: ['Forearms'], s: [] },
         'forarmos': { p: ['Forearms'], s: [] },
-        'row': { p: ['Back'], s: ['Biceps'] },
-        'bench': { p: ['Chest'], s: ['Triceps', 'Shoulders'] },
-        'press': { p: ['Chest'], s: ['Triceps'] },
+        'wrist': { p: ['Forearms'], s: [] },
+        'row': { p: ['Upper Back', 'Lats'], s: ['Biceps'] },
+        'bench': { p: ['Chest'], s: ['Triceps', 'Front Delts'] },
+        'press': { p: ['Chest'], s: ['Triceps', 'Front Delts'] },
         'lunge': { p: ['Quadriceps'], s: ['Glutes'] },
-        'curl': { p: ['Biceps'], s: [] },
+        'curl': { p: ['Biceps'], s: ['Forearms'] },
         'pushdown': { p: ['Triceps'], s: [] },
-        'run': { p: ['Cardiovascular'], s: ['Calves', 'Quadriceps'] },
-        'goblet': { p: ['Quadriceps', 'Glutes'], s: ['Core'] },
-        'abductor': { p: ['Glutes'], s: ['Hips'] },
-        'swing': { p: ['Glutes', 'Back'], s: ['Core', 'Shoulders'] },
-        'plank': { p: ['Core', 'Abs'], s: [] },
+        'run': { p: [], s: ['Calves', 'Quadriceps'] },
+        'goblet': { p: ['Quadriceps', 'Glutes'], s: ['Abs'] },
+        'abductor': { p: ['Glutes'], s: [] },
+        'swing': { p: ['Glutes', 'Lower Back'], s: ['Abs', 'Rear Delts'] },
+        'halo': { p: ['Side Delts'], s: ['Abs'] },
+        'plank': { p: ['Abs'], s: ['Obliques'] },
         'extensor': { p: ['Quadriceps'], s: [] },
-        'facepull': { p: ['Shoulders'], s: ['Traps'] },
-        'face pull': { p: ['Shoulders'], s: ['Traps'] },
+        'side walk': { p: ['Glutes'], s: [] },
+        'step-up': { p: ['Quadriceps'], s: ['Glutes'] },
+        'stepup': { p: ['Quadriceps'], s: ['Glutes'] },
+        'walk': { p: ['Glutes'], s: ['Quadriceps'] },
       };
 
       // Resolve {primary, secondary} muscle names for an exercise: prefer the explicit
@@ -3521,7 +3535,11 @@
       }
 
       function renderProgressMuscleMap() {
-        document.getElementById('progress-muscle-map').innerHTML = buildBodySVGs('small');
+        const now = new Date();
+        const weekStart = new Date(now); weekStart.setDate(now.getDate() - now.getDay()); weekStart.setHours(0, 0, 0, 0);
+        const weekWorkouts = state.workouts.filter(w => new Date(w.date) >= weekStart);
+        const stats = computeMuscleActivation(weekWorkouts);
+        document.getElementById('progress-muscle-map').innerHTML = buildBodySVGs('small', stats);
       }
 
       function renderExerciseHistory() {
@@ -3551,7 +3569,7 @@
       //  MUSCLE SPLIT
       // ═══════════════════════════════════════════
       function renderMuscleSplit() {
-        document.getElementById('muscle-map-full').innerHTML = buildBodySVGs('full');
+        document.getElementById('muscle-map-full').innerHTML = buildBodySVGs('full', computeMuscleActivation(state.workouts));
 
         const stats = {};
         MUSCLE_GROUPS.forEach(m => { stats[m.name] = { kg: 0, sets: 0, color: m.color }; });
@@ -3594,39 +3612,141 @@
         }).join('');
       }
 
-      function buildBodySVGs(size) {
-        const w = size === 'small' ? 120 : 160;
-        // Simplified human body outline SVG (front + back)
-        const body = (flip) => `
-    <svg viewBox="0 0 80 200" xmlns="http://www.w3.org/2000/svg" style="width:${w}px;">
-      <!-- head -->
-      <ellipse cx="40" cy="18" rx="14" ry="16" fill="#1e1e1e" stroke="#333" stroke-width="1.5"/>
-      <!-- neck -->
-      <rect x="35" y="32" width="10" height="10" rx="3" fill="#1e1e1e" stroke="#333" stroke-width="1.5"/>
-      <!-- torso -->
-      <path d="M20 42 Q18 70 20 100 L60 100 Q62 70 60 42 Z" fill="#1e1e1e" stroke="#333" stroke-width="1.5"/>
-      <!-- left arm -->
-      <path d="M20 44 Q10 60 12 90 L18 90 Q18 60 24 46 Z" fill="#1e1e1e" stroke="#333" stroke-width="1.5"/>
-      <!-- right arm -->
-      <path d="M60 44 Q70 60 68 90 L62 90 Q62 60 56 46 Z" fill="#1e1e1e" stroke="#333" stroke-width="1.5"/>
-      <!-- left forearm -->
-      <path d="M12 90 Q10 115 12 130 L18 130 Q18 115 18 90 Z" fill="#1e1e1e" stroke="#333" stroke-width="1.5"/>
-      <!-- right forearm -->
-      <path d="M68 90 Q70 115 68 130 L62 130 Q62 115 62 90 Z" fill="#1e1e1e" stroke="#333" stroke-width="1.5"/>
-      <!-- hips -->
-      <path d="M20 100 Q18 115 22 120 L58 120 Q62 115 60 100 Z" fill="#1e1e1e" stroke="#333" stroke-width="1.5"/>
-      <!-- left leg -->
-      <path d="M22 120 Q18 150 20 175 L34 175 Q34 150 36 120 Z" fill="#1e1e1e" stroke="#333" stroke-width="1.5"/>
-      <!-- right leg -->
-      <path d="M58 120 Q62 150 60 175 L46 175 Q46 150 44 120 Z" fill="#1e1e1e" stroke="#333" stroke-width="1.5"/>
-      <!-- left calf -->
-      <path d="M20 175 Q18 190 20 200 L34 200 Q34 190 34 175 Z" fill="#1e1e1e" stroke="#333" stroke-width="1.5"/>
-      <!-- right calf -->
-      <path d="M60 175 Q62 190 60 200 L46 200 Q46 190 46 175 Z" fill="#1e1e1e" stroke="#333" stroke-width="1.5"/>
-    </svg>
-  `;
-        return `<div style="display:flex;gap:16px;justify-content:center;align-items:flex-start;">
-    ${body(false)}${body(true)}
+      // ── Muscle activation → color helpers ──
+      // stats: { MuscleName: { level: 'primary'|'secondary', intensity: 0..1 } }
+      function muscleFill(name, stats) {
+        const s = stats && stats[name];
+        if (!s) return '#262626';
+        const t = Math.max(0, Math.min(1, s.intensity || 0));
+        if (s.level === 'primary') {
+          const a = (0.45 + 0.5 * t).toFixed(2);
+          return `rgba(239,68,68,${a})`;
+        }
+        const a = (0.4 + 0.45 * t).toFixed(2);
+        return `rgba(59,130,246,${a})`;
+      }
+      function muscleStroke(name, stats) {
+        const s = stats && stats[name];
+        if (!s) return '#3a3a3a';
+        return s.level === 'primary' ? '#f87171' : '#60a5fa';
+      }
+      function muscleAttrs(name, stats) {
+        const clickable = MUSCLE_GROUPS.some(m => m.name === name);
+        return `fill="${muscleFill(name, stats)}" stroke="${muscleStroke(name, stats)}" stroke-width="1.2" class="muscle-region"${clickable ? ` data-muscle="${name}" onclick="openMuscleDetail('${name}')" style="cursor:pointer"` : ''}`;
+      }
+
+      // Aggregates primary/secondary volume per muscle group across a set of workouts,
+      // then normalizes into an intensity 0..1 (separately for primary vs secondary)
+      // so the body map can shade harder-worked muscles darker/more saturated.
+      function computeMuscleActivation(workouts) {
+        const raw = {};
+        MUSCLE_GROUPS.forEach(m => { raw[m.name] = { primaryKg: 0, secondaryKg: 0, primarySets: 0, secondarySets: 0 }; });
+        (workouts || []).forEach(w => {
+          w.exercises.forEach(ex => {
+            const workSets = (ex.sets || []).filter(s => !s.warmup);
+            if (!workSets.length) return;
+            const vol = workSets.reduce((s, set) => s + set.weight * set.reps, 0);
+            const { primary, secondary } = getExerciseMuscles(ex);
+            primary.forEach(m => { if (raw[m]) { raw[m].primaryKg += vol; raw[m].primarySets += workSets.length; } });
+            secondary.forEach(m => { if (raw[m]) { raw[m].secondaryKg += vol * 0.5; raw[m].secondarySets += workSets.length * 0.5; } });
+          });
+        });
+        const maxPrimary = Math.max(...Object.values(raw).map(r => r.primaryKg), 1);
+        const maxSecondary = Math.max(...Object.values(raw).map(r => r.secondaryKg), 1);
+        const stats = {};
+        Object.entries(raw).forEach(([name, r]) => {
+          if (r.primaryKg > 0) stats[name] = { level: 'primary', intensity: r.primaryKg / maxPrimary, kg: r.primaryKg, sets: r.primarySets };
+          else if (r.secondaryKg > 0) stats[name] = { level: 'secondary', intensity: r.secondaryKg / maxSecondary, kg: r.secondaryKg, sets: r.secondarySets };
+        });
+        return stats;
+      }
+
+      // Detailed front/back muscle-map illustration. `stats` (optional) is the output
+      // of computeMuscleActivation() — muscle regions matching a MUSCLE_GROUPS name get
+      // shaded red (primary) or blue (secondary) by relative intensity; everything else
+      // (skin, joints, shins — not tracked as a group) stays neutral dark gray.
+      function buildBodySVGs(size, stats) {
+        const w = size === 'small' ? 130 : 175;
+        const skin = 'fill="#1b1b1b" stroke="#333" stroke-width="1"';
+        const neutral = 'fill="#242424" stroke="#3a3a3a" stroke-width="1"';
+
+        const front = `
+    <svg viewBox="0 0 100 220" xmlns="http://www.w3.org/2000/svg" style="width:${w}px;">
+      <ellipse cx="50" cy="12" rx="9" ry="11" ${skin}/>
+      <rect x="45" y="21" width="10" height="8" rx="3" ${skin}/>
+      <path d="M31 28 Q50 23 69 28 L72 62 Q50 70 28 62 Z" ${skin}/>
+      <path d="M30 92 Q50 98 70 92 L67 110 Q50 115 33 110 Z" ${skin}/>
+
+      <path d="M20 27 C16 29 14 34 15 40 L24 41 C25 35 24 30 22 27 Z" ${muscleAttrs('Front Delts', stats)}/>
+      <path d="M80 27 C84 29 86 34 85 40 L76 41 C75 35 76 30 78 27 Z" ${muscleAttrs('Front Delts', stats)}/>
+      <ellipse cx="18" cy="35" rx="6" ry="8" ${muscleAttrs('Side Delts', stats)}/>
+      <ellipse cx="82" cy="35" rx="6" ry="8" ${muscleAttrs('Side Delts', stats)}/>
+
+      <path d="M33 29 C27 29 25 38 28 46 C33 50 43 48 45 41 C46 34 41 29 33 29 Z" ${muscleAttrs('Chest', stats)}/>
+      <path d="M67 29 C73 29 75 38 72 46 C67 50 57 48 55 41 C54 34 59 29 67 29 Z" ${muscleAttrs('Chest', stats)}/>
+
+      <path d="M13 41 C9 46 8 55 11 62 C14 64 18 63 19 58 C20 52 19 46 20 42 Z" ${muscleAttrs('Biceps', stats)}/>
+      <path d="M87 41 C91 46 92 55 89 62 C86 64 82 63 81 58 C80 52 81 46 80 42 Z" ${muscleAttrs('Biceps', stats)}/>
+      <path d="M11 62 Q9 78 12 92 L20 92 Q19 78 20 62 Z" ${muscleAttrs('Forearms', stats)}/>
+      <path d="M89 62 Q91 78 88 92 L80 92 Q81 78 80 62 Z" ${muscleAttrs('Forearms', stats)}/>
+
+      <rect x="42" y="50" width="16" height="34" rx="4" ${muscleAttrs('Abs', stats)}/>
+      <line x1="50" y1="50" x2="50" y2="84" stroke="#00000055" stroke-width="1"/>
+      <line x1="43" y1="59" x2="57" y2="59" stroke="#00000055" stroke-width="1"/>
+      <line x1="43" y1="68" x2="57" y2="68" stroke="#00000055" stroke-width="1"/>
+      <line x1="43" y1="77" x2="57" y2="77" stroke="#00000055" stroke-width="1"/>
+      <path d="M35 51 C32 62 32 74 36 84 L41 84 C39 73 39 61 40 51 Z" ${muscleAttrs('Obliques', stats)}/>
+      <path d="M65 51 C68 62 68 74 64 84 L59 84 C61 73 61 61 60 51 Z" ${muscleAttrs('Obliques', stats)}/>
+
+      <path d="M30 110 L46 110 L44 158 L32 158 Z" ${muscleAttrs('Quadriceps', stats)}/>
+      <path d="M70 110 L54 110 L56 158 L68 158 Z" ${muscleAttrs('Quadriceps', stats)}/>
+      <path d="M32 160 L44 160 L43 196 L33 196 Z" ${neutral}/>
+      <path d="M68 160 L56 160 L57 196 L67 196 Z" ${neutral}/>
+      <ellipse cx="38" cy="205" rx="8" ry="5" ${skin}/>
+      <ellipse cx="62" cy="205" rx="8" ry="5" ${skin}/>
+    </svg>`;
+
+        const back = `
+    <svg viewBox="0 0 100 220" xmlns="http://www.w3.org/2000/svg" style="width:${w}px;">
+      <ellipse cx="50" cy="12" rx="9" ry="11" ${skin}/>
+      <rect x="45" y="21" width="10" height="8" rx="3" ${skin}/>
+      <path d="M31 28 Q50 23 69 28 L72 62 Q50 70 28 62 Z" ${skin}/>
+      <path d="M30 92 Q50 98 70 92 L67 110 Q50 115 33 110 Z" ${skin}/>
+
+      <path d="M50 24 L60 30 L54 44 L50 47 L46 44 L40 30 Z" ${muscleAttrs('Traps', stats)}/>
+      <path d="M20 27 C16 29 14 34 15 40 L24 41 C25 35 24 30 22 27 Z" ${muscleAttrs('Rear Delts', stats)}/>
+      <path d="M80 27 C84 29 86 34 85 40 L76 41 C75 35 76 30 78 27 Z" ${muscleAttrs('Rear Delts', stats)}/>
+      <ellipse cx="18" cy="35" rx="6" ry="8" ${muscleAttrs('Side Delts', stats)}/>
+      <ellipse cx="82" cy="35" rx="6" ry="8" ${muscleAttrs('Side Delts', stats)}/>
+
+      <path d="M40 30 L36 46 C38 52 43 55 46 52 L47 32 Z" ${muscleAttrs('Upper Back', stats)}/>
+      <path d="M60 30 L64 46 C62 52 57 55 54 52 L53 32 Z" ${muscleAttrs('Upper Back', stats)}/>
+      <path d="M30 32 C25 42 24 54 30 62 C35 60 38 52 37 44 C37 39 34 34 30 32 Z" ${muscleAttrs('Lats', stats)}/>
+      <path d="M70 32 C75 42 76 54 70 62 C65 60 62 52 63 44 C63 39 66 34 70 32 Z" ${muscleAttrs('Lats', stats)}/>
+      <rect x="43" y="54" width="14" height="28" rx="4" ${muscleAttrs('Lower Back', stats)}/>
+
+      <path d="M13 41 C9 46 8 55 11 62 C14 64 18 63 19 58 C20 52 19 46 20 42 Z" ${muscleAttrs('Triceps', stats)}/>
+      <path d="M87 41 C91 46 92 55 89 62 C86 64 82 63 81 58 C80 52 81 46 80 42 Z" ${muscleAttrs('Triceps', stats)}/>
+      <path d="M11 62 Q9 78 12 92 L20 92 Q19 78 20 62 Z" ${muscleAttrs('Forearms', stats)}/>
+      <path d="M89 62 Q91 78 88 92 L80 92 Q81 78 80 62 Z" ${muscleAttrs('Forearms', stats)}/>
+
+      <path d="M31 94 Q50 100 69 94 L67 112 Q50 118 33 112 Z" ${muscleAttrs('Glutes', stats)}/>
+      <path d="M31 113 L46 113 L44 158 L33 158 Z" ${muscleAttrs('Hamstrings', stats)}/>
+      <path d="M69 113 L54 113 L56 158 L67 158 Z" ${muscleAttrs('Hamstrings', stats)}/>
+      <ellipse cx="38" cy="178" rx="7.5" ry="18" ${muscleAttrs('Calves', stats)}/>
+      <ellipse cx="62" cy="178" rx="7.5" ry="18" ${muscleAttrs('Calves', stats)}/>
+      <ellipse cx="38" cy="205" rx="8" ry="5" ${skin}/>
+      <ellipse cx="62" cy="205" rx="8" ry="5" ${skin}/>
+    </svg>`;
+
+        const legend = stats ? `<div class="muscle-legend" style="padding:10px 0 0;justify-content:center;">
+      <span><span class="legend-dot" style="background:var(--red)"></span>Primary</span>
+      <span><span class="legend-dot" style="background:var(--accent-blue)"></span>Secondary</span>
+    </div>` : '';
+
+        return `<div style="display:flex;flex-direction:column;align-items:center;">
+    <div style="display:flex;gap:16px;justify-content:center;align-items:flex-start;">${front}${back}</div>
+    ${legend}
   </div>`;
       }
 
