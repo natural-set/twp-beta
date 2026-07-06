@@ -601,6 +601,31 @@
       outline: none;
     }
 
+    .rest-timer {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--accent-blue);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .rest-timer.stopped {
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .rest-input {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 12px;
+      font-family: inherit;
+      text-align: center;
+      padding: 4px 6px;
+      width: 52px;
+      outline: none;
+    }
+
     .variations-btn {
       background: var(--surface2);
       border: 1px solid var(--border);
@@ -1929,7 +1954,7 @@
         </div>
 
         <div id="ptab-overview">
-          <div class="time-filters" id="overview-time-filters">
+          <div class="time-filters">
             <button class="time-filter active" onclick="switchFilter(this,'week')">Week</button>
             <button class="time-filter" onclick="switchFilter(this,'month')">Month</button>
             <button class="time-filter" onclick="switchFilter(this,'3m')">3M</button>
@@ -1984,8 +2009,8 @@
             <button class="goal-btn">Set Goal</button>
           </div>
 
-          <div class="section-title" style="padding-top: 8px;" id="muscle-map-title">This Week</div>
-          <div class="section-sub" id="muscle-map-sub">Your muscle coverage</div>
+          <div class="section-title" style="padding-top: 8px;">This Week</div>
+          <div class="section-sub">Your muscle coverage</div>
           <div id="progress-muscle-map" class="muscle-body-container"></div>
         </div>
 
@@ -1997,21 +2022,13 @@
         </div>
 
         <div id="ptab-muscles" style="display:none;">
-          <div class="time-filters" id="muscle-time-filters">
-            <button class="time-filter" onclick="switchMuscleFilter(this,'week')">Week</button>
-            <button class="time-filter" onclick="switchMuscleFilter(this,'month')">Month</button>
-            <button class="time-filter" onclick="switchMuscleFilter(this,'3m')">3M</button>
-            <button class="time-filter" onclick="switchMuscleFilter(this,'6m')">6M</button>
-            <button class="time-filter" onclick="switchMuscleFilter(this,'year')">Year</button>
-            <button class="time-filter active" onclick="switchMuscleFilter(this,'all')">All</button>
-          </div>
           <div class="muscle-body-container" id="muscle-map-full"></div>
           <div class="muscle-legend">
             <span><span class="legend-dot" style="background:var(--red)"></span>Primary</span>
             <span><span class="legend-dot" style="background:var(--accent-blue)"></span>Secondary</span>
           </div>
           <div class="muscle-section-title">Muscle Split</div>
-          <div class="muscle-section-sub" id="muscle-split-sub">Distribution</div>
+          <div class="muscle-section-sub">Distribution</div>
           <div class="muscle-list" id="muscle-split-list"></div>
         </div>
       </div>
@@ -2214,108 +2231,126 @@
       // ═══════════════════════════════════════════
       const EXERCISES_DB = [
         { id: 'bench', name: 'Bench Press', icon: '🏋️', muscle: 'Chest', primary: ['Chest'], secondary: ['Triceps', 'Front Delts'] },
-        { id: 'squat', name: 'Barbell Squat', icon: '🦵', muscle: 'Quadriceps', primary: ['Quadriceps', 'Glutes'], secondary: ['Hamstrings'] },
-        { id: 'deadlift', name: 'Barbell Deadlift', icon: '⚡', muscle: 'Back', primary: ['Lower Back', 'Hamstrings'], secondary: ['Glutes', 'Traps'] },
+        { id: 'squat', name: 'Barbell Squat', icon: '🦵', muscle: 'Quadriceps', primary: ['Quadriceps'], secondary: ['Hamstrings', 'Glutes'] },
+        { id: 'deadlift', name: 'Barbell Deadlift', icon: '⚡', muscle: 'Lower Back', primary: ['Lower Back', 'Hamstrings'], secondary: ['Glutes', 'Upper Back', 'Forearms'] },
         { id: 'ohp', name: 'Overhead Press', icon: '🙌', muscle: 'Shoulders', primary: ['Front Delts', 'Side Delts'], secondary: ['Triceps'] },
-        { id: 'pullup', name: 'Pull-Up', icon: '🔝', muscle: 'Back', primary: ['Lats'], secondary: ['Biceps', 'Upper Back'] },
-        { id: 'row', name: 'Barbell Row', icon: '↩️', muscle: 'Back', primary: ['Upper Back', 'Lats'], secondary: ['Biceps'] },
+        { id: 'pullup', name: 'Pull-Up', icon: '🔝', muscle: 'Back', primary: ['Lats'], secondary: ['Biceps', 'Rear Delts', 'Forearms'] },
+        { id: 'row', name: 'Barbell Row', icon: '↩️', muscle: 'Back', primary: ['Upper Back', 'Lats'], secondary: ['Biceps', 'Rear Delts'] },
         { id: 'curl', name: 'Bicep Curl', icon: '💪', muscle: 'Biceps', primary: ['Biceps'], secondary: ['Forearms'] },
         { id: 'pushdown', name: 'Tricep Pushdown', icon: '⬇️', muscle: 'Triceps', primary: ['Triceps'], secondary: [] },
-        { id: 'rdl', name: 'Romanian Deadlift', icon: '🏹', muscle: 'Hamstrings', primary: ['Hamstrings', 'Glutes'], secondary: ['Lower Back'] },
+        { id: 'rdl', name: 'Romanian Deadlift', icon: '🏹', muscle: 'Hamstrings', primary: ['Hamstrings'], secondary: ['Glutes', 'Lower Back'] },
         { id: 'lunge', name: 'Lunges', icon: '🚶', muscle: 'Quadriceps', primary: ['Quadriceps'], secondary: ['Glutes', 'Hamstrings'] },
         { id: 'dip', name: 'Dips', icon: '📉', muscle: 'Chest', primary: ['Chest', 'Triceps'], secondary: ['Front Delts'] },
-        { id: 'facepull', name: 'Face Pull', icon: '🎯', muscle: 'Shoulders', primary: ['Rear Delts'], secondary: ['Traps'] },
-        { id: 'latpull', name: 'Lat Pulldown', icon: '⤵️', muscle: 'Back', primary: ['Lats'], secondary: ['Biceps'] },
+        { id: 'facepull', name: 'Face Pull', icon: '🎯', muscle: 'Shoulders', primary: ['Rear Delts'], secondary: ['Upper Back', 'Traps'] },
+        { id: 'latpull', name: 'Lat Pulldown', icon: '⤵️', muscle: 'Back', primary: ['Lats'], secondary: ['Biceps', 'Rear Delts'] },
         { id: 'calf', name: 'Calf Raise', icon: '🦶', muscle: 'Calves', primary: ['Calves'], secondary: [] },
         { id: 'plank', name: 'Plank', icon: '🧘', muscle: 'Abs', primary: ['Abs'], secondary: ['Obliques'] },
       ];
 
+      // Full anatomical breakdown — 17 tracked groups. `color` only tints the bar in
+      // the Muscle Split list (major lifts = red bar, smaller/stabilizer groups = blue).
       const MUSCLE_GROUPS = [
         { name: 'Chest', icon: '💪', color: 'primary' },
-        { name: 'Front Delts', icon: '🙌', color: 'primary' },
-        { name: 'Side Delts', icon: '🙌', color: 'primary' },
-        { name: 'Rear Delts', icon: '🙌', color: 'primary' },
-        { name: 'Traps', icon: '🎯', color: 'secondary' },
         { name: 'Upper Back', icon: '🔙', color: 'primary' },
-        { name: 'Lower Back', icon: '🔙', color: 'primary' },
+        { name: 'Lower Back', icon: '🦴', color: 'primary' },
         { name: 'Lats', icon: '🔝', color: 'secondary' },
+        { name: 'Traps', icon: '🎯', color: 'secondary' },
+        { name: 'Front Delts', icon: '🙌', color: 'secondary' },
+        { name: 'Side Delts', icon: '🤸', color: 'secondary' },
+        { name: 'Rear Delts', icon: '🏹', color: 'secondary' },
         { name: 'Biceps', icon: '💪', color: 'primary' },
         { name: 'Triceps', icon: '⬇️', color: 'primary' },
         { name: 'Forearms', icon: '✊', color: 'secondary' },
         { name: 'Abs', icon: '🧘', color: 'secondary' },
         { name: 'Obliques', icon: '🌀', color: 'secondary' },
-        { name: 'Glutes', icon: '🍑', color: 'secondary' },
         { name: 'Quadriceps', icon: '🦵', color: 'primary' },
         { name: 'Hamstrings', icon: '🏹', color: 'primary' },
+        { name: 'Glutes', icon: '🍑', color: 'secondary' },
         { name: 'Calves', icon: '🦶', color: 'secondary' },
       ];
 
       // Keyword-based muscle inference for exercises that don't carry an explicit
       // primary/secondary list (e.g. custom exercises created via log import).
+      // Keys are checked longest-first and only the FIRST match applies — this stops
+      // a generic word like "press" from also firing inside a more specific phrase
+      // like "head press" (which should hit its own, more accurate entry instead).
       const EXERCISE_MUSCLE_KEYWORDS = {
-        'pullup': { p: ['Lats'], s: ['Biceps', 'Upper Back'] },
-        'pull-up': { p: ['Lats'], s: ['Biceps', 'Upper Back'] },
-        'pullups': { p: ['Lats'], s: ['Biceps', 'Upper Back'] },
+        'head press': { p: ['Traps', 'Side Delts'], s: ['Rear Delts'] },
+        'upright row': { p: ['Side Delts', 'Traps'], s: ['Biceps'] },
+        'incline push-up': { p: ['Chest'], s: ['Front Delts', 'Triceps'] },
+        'incline push up': { p: ['Chest'], s: ['Front Delts', 'Triceps'] },
+        'horizontal push': { p: ['Chest'], s: ['Front Delts', 'Triceps'] },
+        'face pull': { p: ['Rear Delts'], s: ['Upper Back', 'Traps'] },
+        'facepull': { p: ['Rear Delts'], s: ['Upper Back', 'Traps'] },
+        'kettlebell halo': { p: ['Side Delts', 'Traps'], s: ['Abs'] },
+        'halo': { p: ['Side Delts', 'Traps'], s: ['Abs'] },
+        'persian swing': { p: ['Side Delts', 'Lower Back'], s: ['Abs'] },
+        'crossbody': { p: ['Obliques'], s: ['Side Delts'] },
+        'side walk': { p: ['Glutes'], s: [] },
+        'side walks': { p: ['Glutes'], s: [] },
+        'step-up': { p: ['Quadriceps', 'Glutes'], s: [] },
+        'stepup': { p: ['Quadriceps', 'Glutes'], s: [] },
+        'step up': { p: ['Quadriceps', 'Glutes'], s: [] },
+        'forearms back': { p: ['Forearms'], s: [] },
+        'forearms front': { p: ['Forearms'], s: [] },
+        'wrist': { p: ['Forearms'], s: [] },
+        'pullup': { p: ['Lats'], s: ['Biceps', 'Rear Delts', 'Forearms'] },
+        'pull-up': { p: ['Lats'], s: ['Biceps', 'Rear Delts', 'Forearms'] },
+        'pullups': { p: ['Lats'], s: ['Biceps', 'Rear Delts', 'Forearms'] },
+        'pull machine': { p: ['Lats'], s: ['Biceps'] },
         'dip': { p: ['Chest', 'Triceps'], s: ['Front Delts'] },
         'dips': { p: ['Chest', 'Triceps'], s: ['Front Delts'] },
+        'sissy squat': { p: ['Quadriceps'], s: [] },
         'squat': { p: ['Quadriceps', 'Glutes'], s: ['Hamstrings'] },
         'squats': { p: ['Quadriceps', 'Glutes'], s: ['Hamstrings'] },
-        'sissy': { p: ['Quadriceps'], s: [] },
         'stiff': { p: ['Hamstrings', 'Glutes'], s: ['Lower Back'] },
         'rdl': { p: ['Hamstrings', 'Glutes'], s: ['Lower Back'] },
         'romanian': { p: ['Hamstrings', 'Glutes'], s: ['Lower Back'] },
-        'deadlift': { p: ['Lower Back', 'Hamstrings'], s: ['Glutes', 'Traps'] },
+        'deadlift': { p: ['Lower Back', 'Hamstrings'], s: ['Glutes', 'Upper Back', 'Forearms'] },
         'calf': { p: ['Calves'], s: [] },
         'calves': { p: ['Calves'], s: [] },
         'calfs': { p: ['Calves'], s: [] },
+        'lateral raise': { p: ['Side Delts'], s: [] },
+        'lateral': { p: ['Side Delts'], s: [] },
         'shoulder': { p: ['Side Delts', 'Front Delts'], s: ['Triceps'] },
         'shoulders': { p: ['Side Delts', 'Front Delts'], s: ['Triceps'] },
-        'lateral': { p: ['Side Delts'], s: [] },
-        'upright row': { p: ['Side Delts', 'Traps'], s: ['Biceps'] },
-        'head press': { p: ['Front Delts'], s: ['Triceps'] },
-        'facepull': { p: ['Rear Delts'], s: ['Traps'] },
-        'face pull': { p: ['Rear Delts'], s: ['Traps'] },
         'forarm': { p: ['Forearms'], s: [] },
         'forearm': { p: ['Forearms'], s: [] },
         'foarms': { p: ['Forearms'], s: [] },
         'forarmos': { p: ['Forearms'], s: [] },
-        'wrist': { p: ['Forearms'], s: [] },
-        'row': { p: ['Upper Back', 'Lats'], s: ['Biceps'] },
+        'row': { p: ['Upper Back', 'Lats'], s: ['Biceps', 'Rear Delts'] },
         'bench': { p: ['Chest'], s: ['Triceps', 'Front Delts'] },
         'press': { p: ['Chest'], s: ['Triceps', 'Front Delts'] },
-        'lunge': { p: ['Quadriceps'], s: ['Glutes'] },
+        'lunge': { p: ['Quadriceps'], s: ['Glutes', 'Hamstrings'] },
         'curl': { p: ['Biceps'], s: ['Forearms'] },
         'pushdown': { p: ['Triceps'], s: [] },
-        'run': { p: [], s: ['Calves', 'Quadriceps'] },
+        'run': { p: ['Calves'], s: ['Quadriceps', 'Hamstrings'] },
         'goblet': { p: ['Quadriceps', 'Glutes'], s: ['Abs'] },
         'abductor': { p: ['Glutes'], s: [] },
-        'swing': { p: ['Glutes', 'Lower Back'], s: ['Abs', 'Rear Delts'] },
-        'halo': { p: ['Side Delts'], s: ['Abs'] },
+        'abductors': { p: ['Glutes'], s: [] },
+        'swing': { p: ['Glutes', 'Lower Back'], s: ['Side Delts'] },
         'plank': { p: ['Abs'], s: ['Obliques'] },
         'extensor': { p: ['Quadriceps'], s: [] },
-        'side walk': { p: ['Glutes'], s: [] },
-        'step-up': { p: ['Quadriceps'], s: ['Glutes'] },
-        'stepup': { p: ['Quadriceps'], s: ['Glutes'] },
-        'walk': { p: ['Glutes'], s: ['Quadriceps'] },
       };
+      // Longest key first so multi-word phrases win over a generic word they contain.
+      const EXERCISE_MUSCLE_KEYWORD_ENTRIES = Object.entries(EXERCISE_MUSCLE_KEYWORDS).sort((a, b) => b[0].length - a[0].length);
 
       // Resolve {primary, secondary} muscle names for an exercise: prefer the explicit
       // lists (set for built-in EXERCISES_DB picks), otherwise infer from the name —
       // this is what makes imported/custom exercises count toward the Muscle Split.
+      // Only the first (most specific) keyword match is used, so e.g. "Head Press"
+      // resolves to its own entry instead of also picking up the generic "press" one.
       function getExerciseMuscles(ex) {
         if (ex.primary && ex.primary.length) {
           return { primary: ex.primary, secondary: ex.secondary || [] };
         }
         const exLow = (ex.name || '').toLowerCase();
-        const primary = new Set();
-        const secondary = new Set();
-        Object.entries(EXERCISE_MUSCLE_KEYWORDS).forEach(([key, val]) => {
+        for (const [key, val] of EXERCISE_MUSCLE_KEYWORD_ENTRIES) {
           if (exLow.includes(key)) {
-            val.p.forEach(m => primary.add(m));
-            val.s.forEach(m => secondary.add(m));
+            return { primary: [...val.p], secondary: [...val.s] };
           }
-        });
-        return { primary: [...primary], secondary: [...secondary] };
+        }
+        return { primary: [], secondary: [] };
       }
 
       // ── Variations (set tags) ──
@@ -2337,12 +2372,12 @@
         userName: 'Athlete',
         currentMetric: 'duration',
         currentFilter: 'week',
-        muscleFilter: 'all',
         prevScreen: 'home',
         returnTo: 'home', // last main tab (home/progress/you) visited — used to know where to land after cancel/finish
         weeklyDetailOffset: 0, // 0 = this week, -1 = last week, etc.
         editingWorkoutId: null,
         customTags: [],
+        activeRestRow: null, // the one <tr> whose rest clock is currently ticking, across all exercises
       };
 
       let chartInstance = null;
@@ -2463,6 +2498,7 @@
       //  WORKOUT
       // ═══════════════════════════════════════════
       function startWorkout() {
+        clearAllRestTimers();
         state.activeWorkout = { name: '', note: '', exercises: [], startTime: Date.now() };
         state.editingWorkoutId = null; // Clear edit state
         document.getElementById('no-workout').style.display = 'none';
@@ -2489,6 +2525,7 @@
       function finishWorkout() {
         if (!state.activeWorkout && !state.editingWorkoutId) return;
         clearInterval(state.timerInterval);
+        clearAllRestTimers();
 
         const name = document.getElementById('workout-name').value.trim() || 'Workout';
         const note = document.getElementById('workout-note').value.trim();
@@ -2508,26 +2545,39 @@
           const exDef = EXERCISES_DB.find(e => e.id === exId) || { name: 'Unknown', icon: '❓', primary: [], secondary: [] };
           const noteEl = block.querySelector('.ex-note-ta');
           const exNote = noteEl ? noteEl.value : '';
-          const restEl = block.querySelector('.ex-rest-input');
-          const restSeconds = restEl && restEl.value ? parseInt(restEl.value) : null;
           const linkEl = block.querySelector('.ex-link-input');
           const linkGroup = linkEl ? linkEl.value.trim() : '';
-          const sets = [];
-          block.querySelectorAll('.set-row').forEach(row => {
+          const rows = Array.from(block.querySelectorAll('.set-row'));
+          const sets = rows.map(row => {
             const isWarmup = row.dataset.warmup === 'true';
             const wEl = row.querySelector('.w-input');
             const rEl = row.querySelector('.r-input');
             const rirEl = row.querySelector('.rir-input');
             let variations = [];
             try { variations = JSON.parse(row.dataset.variations || '[]'); } catch (e) { variations = []; }
-            sets.push({
+            // Live workout: rest was ticking on row.dataset.restSeconds (stopped once the
+            // next set was added). Editing a saved workout: rest comes from the editable input.
+            let restSeconds = null;
+            if (state.editingWorkoutId) {
+              const restInputEl = row.querySelector('.rest-input');
+              restSeconds = (restInputEl && restInputEl.value !== '') ? parseInt(restInputEl.value) : null;
+            } else {
+              restSeconds = row.dataset.restSeconds !== undefined ? parseInt(row.dataset.restSeconds) : null;
+            }
+            return {
               warmup: isWarmup,
               weight: parseFloat(wEl?.value) || 0,
               reps: parseInt(rEl?.value) || 0,
               rir: parseInt(rirEl?.value) || 0,
               variations,
-            });
+              restSeconds: (restSeconds !== null && !isNaN(restSeconds)) ? restSeconds : null,
+            };
           });
+          // Only a set that was followed by another set has a real "rest after it" —
+          // the trailing set's timer (or field) never got a chance to stop, so it's
+          // excluded from the exercise's averaged rest time.
+          const restValuesForAvg = sets.slice(0, -1).map(s => s.restSeconds).filter(v => v !== null && !isNaN(v) && v >= 0);
+          const restSeconds = restValuesForAvg.length ? Math.round(restValuesForAvg.reduce((a, b) => a + b, 0) / restValuesForAvg.length) : null;
           exercises.push({
             exId, name: exDef.name, icon: exDef.icon,
             primary: exDef.primary, secondary: exDef.secondary,
@@ -2688,7 +2738,8 @@
   `).join('');
       }
 
-      function addExercise(exId, containerOverride, linkGroupPrefill) {
+      function addExercise(exId, containerOverride, linkGroupPrefill, trackRest) {
+        if (trackRest === undefined) trackRest = true;
         closeExPicker();
         const def = EXERCISES_DB.find(e => e.id === exId);
         if (!def) return;
@@ -2697,6 +2748,7 @@
         const blockId = 'ex-' + Date.now() + Math.random().toString(36).slice(2, 6);
         const div = document.createElement('div');
         div.className = 'ex-block'; div.id = blockId; div.dataset.exId = exId;
+        div.dataset.trackRest = trackRest ? 'true' : 'false';
         div.innerHTML = `
     <div class="ex-block-header">
       <div class="ex-thumb">${def.icon}</div>
@@ -2709,7 +2761,6 @@
       <textarea class="ex-note-ta" placeholder="Add notes…" rows="1"></textarea>
     </div>
     <div style="display:flex;gap:8px;padding:8px 14px;border-bottom:1px solid var(--border);">
-      <input class="ex-rest-input" type="number" min="0" placeholder="Rest (sec)" style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:6px;font-size:12px;font-family:inherit;outline:none;">
       ${isCombo
             ? `<input class="ex-link-input" type="hidden" value="${linkGroupPrefill}">`
             : `<input class="ex-link-input" type="text" placeholder="Superset group (optional)" value="" style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:6px;font-size:12px;font-family:inherit;outline:none;">`}
@@ -2722,6 +2773,7 @@
         <th>Reps</th>
         <th>Variations</th>
         <th style="width:44px">RIR</th>
+        <th style="width:54px">Rest</th>
         <th style="width:28px"></th>
       </tr></thead>
       <tbody id="sets-${blockId}"></tbody>
@@ -2738,6 +2790,8 @@
         return blockId;
       }
 
+      // Combined-exercise members are performed back-to-back with no rest between them —
+      // only the first exercise in the combo tracks a real rest clock; the rest show 0:00.
       function createComboBlock(exIds) {
         const comboId = 'combo-' + Date.now() + Math.random().toString(36).slice(2, 5);
         const container = document.getElementById('exercises-container');
@@ -2751,14 +2805,58 @@
       <span class="combo-header-sub">${exIds.length} exercises · stacked as one set</span>
     </div>`;
         container.appendChild(wrapper);
-        exIds.forEach(id => addExercise(id, wrapper, comboId));
+        exIds.forEach((id, idx) => addExercise(id, wrapper, comboId, idx === 0));
       }
 
       function removeComboBlock(comboId) {
         document.getElementById(comboId)?.remove();
       }
 
+      // ── Per-set rest timers (live workout) ──
+      // Only ONE rest clock ever runs at a time across the whole workout — it's whatever
+      // set was most recently added. Adding another set anywhere (same exercise, a brand
+      // new exercise, or a new combined exercise) stops that clock and starts a fresh one,
+      // so switching exercises mid-workout correctly ends the previous exercise's rest.
+      // The last set added overall never gets "stopped" by a following set, so it's
+      // excluded from the averaged rest time shown on its exercise (see finishWorkout).
+      function formatMinSec(totalSeconds) {
+        const s = Math.max(0, totalSeconds | 0);
+        const m = Math.floor(s / 60);
+        return m + ':' + String(s % 60).padStart(2, '0');
+      }
+      function startSetRestTimer(row) {
+        if (state.activeRestRow && state.activeRestRow !== row && state.activeRestRow.dataset.restRunning === 'true') {
+          stopSetRestTimer(state.activeRestRow);
+        }
+        row.dataset.restSeconds = '0';
+        row.dataset.restRunning = 'true';
+        const span = row.querySelector('.rest-timer');
+        if (span) { span.textContent = '0:00'; span.classList.remove('stopped'); }
+        row.restInterval = setInterval(() => {
+          const s = (parseInt(row.dataset.restSeconds) || 0) + 1;
+          row.dataset.restSeconds = s;
+          const el = row.querySelector('.rest-timer');
+          if (el) el.textContent = formatMinSec(s);
+        }, 1000);
+        state.activeRestRow = row;
+      }
+      function stopSetRestTimer(row) {
+        if (row.restInterval) { clearInterval(row.restInterval); row.restInterval = null; }
+        row.dataset.restRunning = 'false';
+        const span = row.querySelector('.rest-timer');
+        if (span) span.classList.add('stopped');
+        if (state.activeRestRow === row) state.activeRestRow = null;
+      }
+      function clearAllRestTimers() {
+        document.querySelectorAll('.set-row').forEach(row => {
+          if (row.restInterval) { clearInterval(row.restInterval); row.restInterval = null; }
+        });
+        state.activeRestRow = null;
+      }
+
       function addSet(blockId, isWarmup) {
+        const blockEl = document.getElementById(blockId);
+        const tracksRest = !blockEl || blockEl.dataset.trackRest !== 'false';
         const tbody = document.getElementById('sets-' + blockId);
         const existing = tbody.querySelectorAll('tr');
         const warmupCount = tbody.querySelectorAll('[data-warmup="true"]').length;
@@ -2768,16 +2866,52 @@
         tr.className = 'set-row' + (isWarmup ? ' warmup' : '');
         tr.dataset.warmup = isWarmup;
         tr.dataset.variations = '[]';
+        tr.dataset.restSeconds = '0';
+        tr.dataset.restRunning = 'false';
         const badgeClass = isWarmup ? 'warmup' : 'numbered';
+        let restCellHTML;
+        if (!tracksRest) {
+          // A non-first member of a combined exercise — performed back-to-back with no
+          // rest of its own, so it's always shown (and saved) as a fixed 0:00.
+          restCellHTML = `<span class="rest-timer stopped">0:00</span>`;
+        } else if (state.editingWorkoutId) {
+          // Editing a saved workout: rest becomes a plain editable field (no ticking clock).
+          restCellHTML = `<input class="rest-input" type="number" min="0" placeholder="sec">`;
+        } else {
+          restCellHTML = `<span class="rest-timer">0:00</span>`;
+        }
         tr.innerHTML = `
     <td><span class="set-badge ${badgeClass}" style="cursor:pointer" onclick="toggleSetType(this)" title="Click to toggle Warmup/Normal">${label}</span></td>
     <td><input class="set-input w-input" type="number" min="0" step="0.5" placeholder="kg"></td>
     <td><input class="set-input r-input" type="number" min="0" placeholder="reps"></td>
     <td><button type="button" class="variations-btn" onclick="openVariationsPicker(this)">+ Tag</button></td>
     <td><input class="rir-input" type="number" min="0" max="10" placeholder="0"></td>
-    <td><button class="set-del-btn" onclick="const b='${blockId}'; this.closest('tr').remove(); recalculateSets(b)">✕</button></td>
+    <td class="rest-cell">${restCellHTML}</td>
+    <td><button class="set-del-btn" onclick="deleteSetRow('${blockId}', this)">✕</button></td>
   `;
         tbody.appendChild(tr);
+        if (tracksRest && !state.editingWorkoutId) startSetRestTimer(tr);
+      }
+
+      // Removing a set: if it was the globally active (ticking) row, the new last row of
+      // that same exercise picks up the running clock instead — but only if that exercise
+      // actually tracks rest (not a non-first combined-exercise member).
+      function deleteSetRow(blockId, btnEl) {
+        const tr = btnEl.closest('tr');
+        const wasActive = (tr === state.activeRestRow);
+        if (tr.restInterval) clearInterval(tr.restInterval);
+        tr.remove();
+        recalculateSets(blockId);
+        if (wasActive) state.activeRestRow = null;
+        if (wasActive && !state.editingWorkoutId) {
+          const blockEl = document.getElementById(blockId);
+          const tracksRest = !blockEl || blockEl.dataset.trackRest !== 'false';
+          if (tracksRest) {
+            const tbody = document.getElementById('sets-' + blockId);
+            const rows = tbody.querySelectorAll('tr');
+            if (rows.length) startSetRestTimer(rows[rows.length - 1]);
+          }
+        }
       }
 
       function removeExBlock(blockId) {
@@ -3228,11 +3362,13 @@
         const primaryMuscles = Object.entries(muscleMap).filter(([, v]) => v === 'primary').map(([k]) => k);
         const secondaryMuscles = Object.entries(muscleMap).filter(([, v]) => v === 'secondary').map(([k]) => k);
 
+        const workoutActivation = computeMuscleActivation([w]);
         const musclesHTML = (primaryMuscles.length || secondaryMuscles.length) ? `
     <div style="padding: 14px 20px; border-bottom: 1px solid var(--border);">
       <div style="font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">Muscles Targeted</div>
-      ${primaryMuscles.length ? `<div style="margin-bottom:8px;"><span style="font-size:11px;color:var(--red);margin-right:6px;">● Primary</span>${primaryMuscles.map(m => `<span style="background:var(--surface2);border-radius:20px;padding:3px 10px;font-size:12px;margin-right:4px;margin-bottom:4px;display:inline-block;">${m}</span>`).join('')}</div>` : ''}
-      ${secondaryMuscles.length ? `<div><span style="font-size:11px;color:var(--accent-blue);margin-right:6px;">● Secondary</span>${secondaryMuscles.map(m => `<span style="background:var(--surface2);border-radius:20px;padding:3px 10px;font-size:12px;margin-right:4px;margin-bottom:4px;display:inline-block;">${m}</span>`).join('')}</div>` : ''}
+      <div style="display:flex;gap:10px;justify-content:center;margin-bottom:12px;">${buildBodySVGs('small', workoutActivation)}</div>
+      ${primaryMuscles.length ? `<div style="margin-bottom:8px;"><span style="font-size:11px;color:var(--red);margin-right:6px;">● Primary</span>${primaryMuscles.map(m => `<span style="background:var(--surface2);border-radius:20px;padding:3px 10px;font-size:12px;margin-right:4px;margin-bottom:4px;display:inline-block;cursor:pointer" onclick="openMuscleDetail('${m}')">${m}</span>`).join('')}</div>` : ''}
+      ${secondaryMuscles.length ? `<div><span style="font-size:11px;color:var(--accent-blue);margin-right:6px;">● Secondary</span>${secondaryMuscles.map(m => `<span style="background:var(--surface2);border-radius:20px;padding:3px 10px;font-size:12px;margin-right:4px;margin-bottom:4px;display:inline-block;cursor:pointer" onclick="openMuscleDetail('${m}')">${m}</span>`).join('')}</div>` : ''}
     </div>
   ` : '';
 
@@ -3382,37 +3518,32 @@
       }
 
       function switchFilter(btn, f) {
-        document.querySelectorAll('#overview-time-filters .time-filter').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.time-filter').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         state.currentFilter = f;
         renderChart();
-        renderProgressMuscleMap();
       }
 
-      function getWorkoutsForFilter(filter) {
+      function getFilteredWorkouts() {
         const now = new Date();
         const cutoff = new Date();
-        if (filter === 'week') {
+        if (state.currentFilter === 'week') {
           cutoff.setDate(now.getDate() - now.getDay());
           cutoff.setHours(0, 0, 0, 0);
-        } else if (filter === 'month') {
+        } else if (state.currentFilter === 'month') {
           cutoff.setDate(1); cutoff.setHours(0, 0, 0, 0);
-        } else if (filter === '3m') {
+        } else if (state.currentFilter === '3m') {
           cutoff.setMonth(now.getMonth() - 3);
-        } else if (filter === '6m') {
+        } else if (state.currentFilter === '6m') {
           cutoff.setMonth(now.getMonth() - 6);
-        } else if (filter === 'year') {
+        } else if (state.currentFilter === 'year') {
           cutoff.setFullYear(now.getFullYear(), 0, 1); cutoff.setHours(0, 0, 0, 0);
-        } else if (filter === 'all') {
+        } else if (state.currentFilter === 'all') {
           cutoff.setFullYear(2000);
         } else {
           cutoff.setMonth(now.getMonth() - 3);
         }
         return state.workouts.filter(w => new Date(w.date) >= cutoff);
-      }
-
-      function getFilteredWorkouts() {
-        return getWorkoutsForFilter(state.currentFilter);
       }
 
       function renderChart() {
@@ -3549,19 +3680,10 @@
       }
 
       function renderProgressMuscleMap() {
-        const workouts = getFilteredWorkouts();
-        const stats = computeMuscleActivation(workouts);
-        const periodLabels = {
-          week: 'This Week', month: 'This Month',
-          '3m': 'Last 3 Months', '6m': 'Last 6 Months',
-          year: 'This Year', all: 'All Time'
-        };
-        const titleEl = document.getElementById('muscle-map-title');
-        const subEl = document.getElementById('muscle-map-sub');
-        if (titleEl && subEl) {
-          titleEl.textContent = periodLabels[state.currentFilter] || 'Muscle Coverage';
-          subEl.textContent = workouts.length ? 'Your muscle coverage' : 'No workouts logged in this period';
-        }
+        const now = new Date();
+        const weekStart = new Date(now); weekStart.setDate(now.getDate() - now.getDay()); weekStart.setHours(0, 0, 0, 0);
+        const weekWorkouts = state.workouts.filter(w => new Date(w.date) >= weekStart);
+        const stats = computeMuscleActivation(weekWorkouts);
         document.getElementById('progress-muscle-map').innerHTML = buildBodySVGs('small', stats);
       }
 
@@ -3591,32 +3713,12 @@
       // ═══════════════════════════════════════════
       //  MUSCLE SPLIT
       // ═══════════════════════════════════════════
-      function switchMuscleFilter(btn, f) {
-        document.querySelectorAll('#muscle-time-filters .time-filter').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        state.muscleFilter = f;
-        renderMuscleSplit();
-      }
-
       function renderMuscleSplit() {
-        const workouts = getWorkoutsForFilter(state.muscleFilter || 'all');
-        document.getElementById('muscle-map-full').innerHTML = buildBodySVGs('full', computeMuscleActivation(workouts));
-
-        const periodLabels = {
-          week: 'This week', month: 'This month',
-          '3m': 'Last 3 months', '6m': 'Last 6 months',
-          year: 'This year', all: 'All time'
-        };
-        const subEl = document.getElementById('muscle-split-sub');
-        if (subEl) {
-          subEl.textContent = workouts.length
-            ? `Distribution · ${periodLabels[state.muscleFilter] || 'All time'}`
-            : `No workouts logged · ${periodLabels[state.muscleFilter] || 'All time'}`;
-        }
+        document.getElementById('muscle-map-full').innerHTML = buildBodySVGs('full', computeMuscleActivation(state.workouts));
 
         const stats = {};
         MUSCLE_GROUPS.forEach(m => { stats[m.name] = { kg: 0, sets: 0, color: m.color }; });
-        workouts.forEach(w => {
+        state.workouts.forEach(w => {
           w.exercises.forEach(ex => {
             const workSets = (ex.sets || []).filter(s => !s.warmup);
             if (!workSets.length) return;
@@ -3704,10 +3806,10 @@
         return stats;
       }
 
-      // Detailed front/back muscle-map illustration. `stats` (optional) is the output
-      // of computeMuscleActivation() — muscle regions matching a MUSCLE_GROUPS name get
-      // shaded red (primary) or blue (secondary) by relative intensity; everything else
-      // (skin, joints, shins — not tracked as a group) stays neutral dark gray.
+      // Detailed anatomical front/back muscle-map illustration. `stats` (optional) is
+      // the output of computeMuscleActivation() — muscle regions matching a MUSCLE_GROUPS
+      // name get shaded red (primary) or blue (secondary) by relative intensity; everything
+      // else (skin, joints, forearms — not tracked as a group) stays neutral dark gray.
       function buildBodySVGs(size, stats) {
         const w = size === 'small' ? 130 : 175;
         const skin = 'fill="#1b1b1b" stroke="#333" stroke-width="1"';
@@ -3719,34 +3821,27 @@
       <rect x="45" y="21" width="10" height="8" rx="3" ${skin}/>
       <path d="M31 28 Q50 23 69 28 L72 62 Q50 70 28 62 Z" ${skin}/>
       <path d="M30 92 Q50 98 70 92 L67 110 Q50 115 33 110 Z" ${skin}/>
-
-      <path d="M20 27 C16 29 14 34 15 40 L24 41 C25 35 24 30 22 27 Z" ${muscleAttrs('Front Delts', stats)}/>
-      <path d="M80 27 C84 29 86 34 85 40 L76 41 C75 35 76 30 78 27 Z" ${muscleAttrs('Front Delts', stats)}/>
-      <ellipse cx="18" cy="35" rx="6" ry="8" ${muscleAttrs('Side Delts', stats)}/>
-      <ellipse cx="82" cy="35" rx="6" ry="8" ${muscleAttrs('Side Delts', stats)}/>
-
+      <ellipse cx="26" cy="34" rx="7.5" ry="9" ${muscleAttrs('Shoulders', stats)}/>
+      <ellipse cx="74" cy="34" rx="7.5" ry="9" ${muscleAttrs('Shoulders', stats)}/>
       <path d="M33 29 C27 29 25 38 28 46 C33 50 43 48 45 41 C46 34 41 29 33 29 Z" ${muscleAttrs('Chest', stats)}/>
       <path d="M67 29 C73 29 75 38 72 46 C67 50 57 48 55 41 C54 34 59 29 67 29 Z" ${muscleAttrs('Chest', stats)}/>
-
-      <path d="M13 41 C9 46 8 55 11 62 C14 64 18 63 19 58 C20 52 19 46 20 42 Z" ${muscleAttrs('Biceps', stats)}/>
-      <path d="M87 41 C91 46 92 55 89 62 C86 64 82 63 81 58 C80 52 81 46 80 42 Z" ${muscleAttrs('Biceps', stats)}/>
-      <path d="M11 62 Q9 78 12 92 L20 92 Q19 78 20 62 Z" ${muscleAttrs('Forearms', stats)}/>
-      <path d="M89 62 Q91 78 88 92 L80 92 Q81 78 80 62 Z" ${muscleAttrs('Forearms', stats)}/>
-
-      <rect x="42" y="50" width="16" height="34" rx="4" ${muscleAttrs('Abs', stats)}/>
-      <line x1="50" y1="50" x2="50" y2="84" stroke="#00000055" stroke-width="1"/>
-      <line x1="43" y1="59" x2="57" y2="59" stroke="#00000055" stroke-width="1"/>
-      <line x1="43" y1="68" x2="57" y2="68" stroke="#00000055" stroke-width="1"/>
-      <line x1="43" y1="77" x2="57" y2="77" stroke="#00000055" stroke-width="1"/>
-      <path d="M35 51 C32 62 32 74 36 84 L41 84 C39 73 39 61 40 51 Z" ${muscleAttrs('Obliques', stats)}/>
-      <path d="M65 51 C68 62 68 74 64 84 L59 84 C61 73 61 61 60 51 Z" ${muscleAttrs('Obliques', stats)}/>
-
+      <path d="M15 34 C10 40 9 52 12 62 C15 65 20 64 21 58 C22 49 22 40 24 35 Z" ${neutral}/>
+      <path d="M85 34 C90 40 91 52 88 62 C85 65 80 64 79 58 C78 49 78 40 76 35 Z" ${neutral}/>
+      <path d="M11 62 Q9 78 12 92 L20 92 Q19 78 20 62 Z" ${neutral}/>
+      <path d="M89 62 Q91 78 88 92 L80 92 Q81 78 80 62 Z" ${neutral}/>
+      <rect x="42" y="50" width="16" height="38" rx="4" ${muscleAttrs('Abs', stats)}/>
+      <line x1="50" y1="50" x2="50" y2="88" stroke="#00000055" stroke-width="1"/>
+      <line x1="43" y1="60" x2="57" y2="60" stroke="#00000055" stroke-width="1"/>
+      <line x1="43" y1="70" x2="57" y2="70" stroke="#00000055" stroke-width="1"/>
+      <line x1="43" y1="80" x2="57" y2="80" stroke="#00000055" stroke-width="1"/>
       <path d="M30 110 L46 110 L44 158 L32 158 Z" ${muscleAttrs('Quadriceps', stats)}/>
       <path d="M70 110 L54 110 L56 158 L68 158 Z" ${muscleAttrs('Quadriceps', stats)}/>
       <path d="M32 160 L44 160 L43 196 L33 196 Z" ${neutral}/>
       <path d="M68 160 L56 160 L57 196 L67 196 Z" ${neutral}/>
       <ellipse cx="38" cy="205" rx="8" ry="5" ${skin}/>
       <ellipse cx="62" cy="205" rx="8" ry="5" ${skin}/>
+      <ellipse cx="12" cy="65" rx="4" ry="5" ${neutral}/>
+      <ellipse cx="88" cy="65" rx="4" ry="5" ${neutral}/>
     </svg>`;
 
         const back = `
@@ -3755,24 +3850,16 @@
       <rect x="45" y="21" width="10" height="8" rx="3" ${skin}/>
       <path d="M31 28 Q50 23 69 28 L72 62 Q50 70 28 62 Z" ${skin}/>
       <path d="M30 92 Q50 98 70 92 L67 110 Q50 115 33 110 Z" ${skin}/>
-
-      <path d="M50 24 L60 30 L54 44 L50 47 L46 44 L40 30 Z" ${muscleAttrs('Traps', stats)}/>
-      <path d="M20 27 C16 29 14 34 15 40 L24 41 C25 35 24 30 22 27 Z" ${muscleAttrs('Rear Delts', stats)}/>
-      <path d="M80 27 C84 29 86 34 85 40 L76 41 C75 35 76 30 78 27 Z" ${muscleAttrs('Rear Delts', stats)}/>
-      <ellipse cx="18" cy="35" rx="6" ry="8" ${muscleAttrs('Side Delts', stats)}/>
-      <ellipse cx="82" cy="35" rx="6" ry="8" ${muscleAttrs('Side Delts', stats)}/>
-
-      <path d="M40 30 L36 46 C38 52 43 55 46 52 L47 32 Z" ${muscleAttrs('Upper Back', stats)}/>
-      <path d="M60 30 L64 46 C62 52 57 55 54 52 L53 32 Z" ${muscleAttrs('Upper Back', stats)}/>
-      <path d="M30 32 C25 42 24 54 30 62 C35 60 38 52 37 44 C37 39 34 34 30 32 Z" ${muscleAttrs('Lats', stats)}/>
-      <path d="M70 32 C75 42 76 54 70 62 C65 60 62 52 63 44 C63 39 66 34 70 32 Z" ${muscleAttrs('Lats', stats)}/>
-      <rect x="43" y="54" width="14" height="28" rx="4" ${muscleAttrs('Lower Back', stats)}/>
-
-      <path d="M13 41 C9 46 8 55 11 62 C14 64 18 63 19 58 C20 52 19 46 20 42 Z" ${muscleAttrs('Triceps', stats)}/>
-      <path d="M87 41 C91 46 92 55 89 62 C86 64 82 63 81 58 C80 52 81 46 80 42 Z" ${muscleAttrs('Triceps', stats)}/>
-      <path d="M11 62 Q9 78 12 92 L20 92 Q19 78 20 62 Z" ${muscleAttrs('Forearms', stats)}/>
-      <path d="M89 62 Q91 78 88 92 L80 92 Q81 78 80 62 Z" ${muscleAttrs('Forearms', stats)}/>
-
+      <path d="M50 24 L61 31 L53 51 L50 55 L47 51 L39 31 Z" ${muscleAttrs('Traps', stats)}/>
+      <ellipse cx="26" cy="34" rx="7.5" ry="9" ${muscleAttrs('Shoulders', stats)}/>
+      <ellipse cx="74" cy="34" rx="7.5" ry="9" ${muscleAttrs('Shoulders', stats)}/>
+      <path d="M31 32 C24 44 23 58 30 68 C36 65 40 54 39 42 C39 37 36 33 31 32 Z" ${muscleAttrs('Lats', stats)}/>
+      <path d="M69 32 C76 44 77 58 70 68 C64 65 60 54 61 42 C61 37 64 33 69 32 Z" ${muscleAttrs('Lats', stats)}/>
+      <rect x="44" y="52" width="12" height="32" rx="4" ${muscleAttrs('Back', stats)}/>
+      <path d="M15 34 C10 40 9 52 12 62 C15 65 20 64 21 58 C22 49 22 40 24 35 Z" ${muscleAttrs('Triceps', stats)}/>
+      <path d="M85 34 C90 40 91 52 88 62 C85 65 80 64 79 58 C78 49 78 40 76 35 Z" ${muscleAttrs('Triceps', stats)}/>
+      <path d="M11 62 Q9 78 12 92 L20 92 Q19 78 20 62 Z" ${neutral}/>
+      <path d="M89 62 Q91 78 88 92 L80 92 Q81 78 80 62 Z" ${neutral}/>
       <path d="M31 94 Q50 100 69 94 L67 112 Q50 118 33 112 Z" ${muscleAttrs('Glutes', stats)}/>
       <path d="M31 113 L46 113 L44 158 L33 158 Z" ${muscleAttrs('Hamstrings', stats)}/>
       <path d="M69 113 L54 113 L56 158 L67 158 Z" ${muscleAttrs('Hamstrings', stats)}/>
@@ -3780,6 +3867,8 @@
       <ellipse cx="62" cy="178" rx="7.5" ry="18" ${muscleAttrs('Calves', stats)}/>
       <ellipse cx="38" cy="205" rx="8" ry="5" ${skin}/>
       <ellipse cx="62" cy="205" rx="8" ry="5" ${skin}/>
+      <ellipse cx="12" cy="65" rx="4" ry="5" ${neutral}/>
+      <ellipse cx="88" cy="65" rx="4" ry="5" ${neutral}/>
     </svg>`;
 
         const legend = stats ? `<div class="muscle-legend" style="padding:10px 0 0;justify-content:center;">
@@ -4037,13 +4126,15 @@
       // ═══════════════════════════════════════════
       //  EDITING ENGINE
       // ═══════════════════════════════════════════
-      function populateExBlock(ex, container) {
+      function populateExBlock(ex, container, trackRest) {
+        if (trackRest === undefined) trackRest = true;
         const blockId = 'ex-' + Date.now() + Math.random().toString(36).slice(2, 6);
         const def = EXERCISES_DB.find(e => e.id === ex.exId) || { name: ex.name, icon: ex.icon, muscle: 'Custom' };
         const isCombo = !!ex.linkGroup;
 
         const div = document.createElement('div');
         div.className = 'ex-block'; div.id = blockId; div.dataset.exId = ex.exId;
+        div.dataset.trackRest = trackRest ? 'true' : 'false';
         div.innerHTML = `
       <div class="ex-block-header">
         <div class="ex-thumb">${def.icon}</div>
@@ -4056,14 +4147,13 @@
         <textarea class="ex-note-ta" placeholder="Add notes…" rows="1">${ex.note || ''}</textarea>
       </div>
       <div style="display:flex;gap:8px;padding:8px 14px;border-bottom:1px solid var(--border);">
-        <input class="ex-rest-input" type="number" min="0" placeholder="Rest (sec)" value="${ex.restSeconds || ''}" style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:6px;font-size:12px;font-family:inherit;outline:none;">
         ${isCombo
             ? `<input class="ex-link-input" type="hidden" value="${ex.linkGroup}">`
             : `<input class="ex-link-input" type="text" placeholder="Superset group (optional)" value="${ex.linkGroup || ''}" style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:6px;font-size:12px;font-family:inherit;outline:none;">`}
       </div>
       <div style="overflow-x:auto;">
       <table class="sets-table">
-        <thead><tr><th style="width:34px">Set</th><th>Weight</th><th>Reps</th><th>Variations</th><th style="width:44px">RIR</th><th style="width:28px"></th></tr></thead>
+        <thead><tr><th style="width:34px">Set</th><th>Weight</th><th>Reps</th><th>Variations</th><th style="width:44px">RIR</th><th style="width:54px">Rest</th><th style="width:28px"></th></tr></thead>
         <tbody id="sets-${blockId}"></tbody>
       </table>
       </div>
@@ -4087,6 +4177,18 @@
             if (set.negativeReps) variations.push({ type: 'negatives', value: String(set.negativeReps) });
             if (set.partialReps) variations.push({ type: 'partials', value: set.partialReps });
           }
+          // Sets saved by the new per-set timer carry their own restSeconds. Older/imported
+          // workouts only ever had one aggregate rest value for the whole exercise — for
+          // those, repeat that same average into every set's (now editable) rest field.
+          // Non-first combined-exercise members never had real rest — always fixed 0.
+          const restCellHTML = !trackRest
+            ? `<span class="rest-timer stopped">0:00</span>`
+            : (() => {
+              const restVal = (set.restSeconds !== undefined && set.restSeconds !== null)
+                ? set.restSeconds
+                : (ex.restSeconds != null ? ex.restSeconds : '');
+              return `<input class="rest-input" type="number" min="0" placeholder="sec" value="${restVal}">`;
+            })();
           const tr = document.createElement('tr');
           tr.className = 'set-row' + (isWarmup ? ' warmup' : '');
           tr.dataset.warmup = isWarmup;
@@ -4097,7 +4199,8 @@
         <td><input class="set-input r-input" type="number" min="0" value="${set.reps}"></td>
         <td><button type="button" class="variations-btn" onclick="openVariationsPicker(this)">+ Tag</button></td>
         <td><input class="rir-input" type="number" min="0" max="10" value="${set.rir || ''}"></td>
-        <td><button class="set-del-btn" onclick="const b='${blockId}'; this.closest('tr').remove(); recalculateSets(b)">✕</button></td>
+        <td class="rest-cell">${restCellHTML}</td>
+        <td><button class="set-del-btn" onclick="deleteSetRow('${blockId}', this)">✕</button></td>
       `;
           tbody.appendChild(tr);
           updateVariationsBtn(tr);
@@ -4110,6 +4213,7 @@
 
         state.editingWorkoutId = id;
         clearInterval(state.timerInterval);
+        clearAllRestTimers();
 
         // Switch screens
         document.getElementById('no-workout').style.display = 'none';
@@ -4159,7 +4263,7 @@
         <span class="combo-header-sub">${members.length} exercises · stacked as one set</span>
       </div>`;
             container.appendChild(wrapper);
-            members.forEach(idx => populateExBlock(w.exercises[idx], wrapper));
+            members.forEach((idx, i) => populateExBlock(w.exercises[idx], wrapper, i === 0));
           } else {
             populateExBlock(w.exercises[members[0]], container);
           }
@@ -4200,6 +4304,7 @@
 
       function cancelWorkout() {
         clearInterval(state.timerInterval);
+        clearAllRestTimers();
         const wasEditing = !!state.editingWorkoutId;
         state.activeWorkout = null;
         state.editingWorkoutId = null;
