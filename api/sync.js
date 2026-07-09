@@ -82,7 +82,11 @@ module.exports = async function handler(req, res) {
         return;
       }
 
-      const merged = mergeState(current, incoming);
+      // The client now pushes right after every local mutation (add, edit, delete,
+      // import) with its full, already-authoritative state — so we overwrite rather
+      // than union-merge. Union-merging would resurrect workouts the client just
+      // deleted, since they'd still be sitting in the GitHub-stored "current" copy.
+      const merged = { ...incoming, timestamp: Date.now() };
       const newContentB64 = Buffer.from(JSON.stringify(merged, null, 2)).toString('base64');
 
       const putResp = await fetch(apiUrl, {

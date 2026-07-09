@@ -2377,24 +2377,13 @@
       }
     }
 
-    // Auto-sync every 2 minutes (only if tab is visible)
-    setInterval(() => {
-      if (!document.hidden) pushSync();
-    }, 120000);
-
-    // Pull updates when tab regains focus
-    document.addEventListener('visibilitychange', () => {
-      if (!document.hidden) {
-        setTimeout(() => pullSync(), 500);
-      }
-    });
-
-    // Initial sync on page load
+    // No interval/visibility-based auto-sync — syncing only happens when data actually
+    // changes: after a workout is added/edited (finishWorkout), imported (confirmImport),
+    // or deleted (deleteWorkoutFromFeed). Each of those calls pushSync() directly.
+    // We still do a one-time pull on page load so a fresh device/browser picks up
+    // whatever's already on GitHub before the person starts logging.
     window.addEventListener('load', () => {
-      setTimeout(() => {
-        pullSync();
-        setTimeout(() => pushSync(), 1000);
-      }, 800);
+      setTimeout(() => pullSync(), 800);
     });
 
     // ═══════════════════════════════════════════
@@ -2805,6 +2794,7 @@
       state.workouts.sort((a, b) => new Date(b.date) - new Date(a.date));
 
       saveState();
+      pushSync();
       state.activeWorkout = null;
       state.editingWorkoutId = null;
 
@@ -4613,6 +4603,7 @@
       // Remove from state
       state.workouts = state.workouts.filter(w => w.id !== id);
       saveState();
+      pushSync();
 
       // Refresh wherever this workout could be listed, without forcing navigation
       // away from whichever screen (Home or You) the person was actually on.
@@ -5236,7 +5227,7 @@
       <div class="import-step" style="text-align:center;">
         <div style="font-size:48px;margin-bottom:12px;">🎉</div>
         <h3>${data.count} workouts imported!</h3>
-        <p>Your charts, progress, and muscle split have been updated.</p>
+        <p>Your charts, progress, and muscle split have been updated.${data.skipped ? ` ${data.skipped} duplicate${data.skipped === 1 ? '' : 's'} already in your history ${data.skipped === 1 ? 'was' : 'were'} skipped.` : ''}</p>
         <button class="btn-primary" onclick="closeImportModal()">Done</button>
       </div>
     `;
@@ -5247,15 +5238,30 @@
       document.getElementById('import-modal').classList.remove('open');
     }
 
+    // A workout counts as a duplicate of an already-stored one if it falls on the same
+    // calendar day and has the same name — covers re-importing the same file (or an
+    // overlapping date range) without creating repeated entries.
+    function isDuplicateWorkout(w, existingList) {
+      const day = new Date(w.date).toDateString();
+      return existingList.some(e => new Date(e.date).toDateString() === day && e.name === w.name);
+    }
+
     function confirmImport() {
       if (!pendingImportWorkouts) return;
-      state.workouts = [...pendingImportWorkouts, ...state.workouts];
+      const toAdd = [];
+      let skipped = 0;
+      pendingImportWorkouts.forEach(w => {
+        if (isDuplicateWorkout(w, state.workouts) || isDuplicateWorkout(w, toAdd)) skipped++;
+        else toAdd.push(w);
+      });
+      state.workouts = [...toAdd, ...state.workouts];
       state.workouts.sort((a, b) => new Date(b.date) - new Date(a.date));
       saveState();
-      const count = pendingImportWorkouts.length;
+      pushSync();
+      const count = toAdd.length;
       pendingImportWorkouts = null;
       refreshHome();
-      showImportModal('success', { count });
+      showImportModal('success', { count, skipped });
     }
 
     // ═══════════════════════════════════════════
