@@ -1,113 +1,128 @@
 // api/sync.js
-// No npm packages required — uses only Node's built-in fs/path modules.
-// Storage lives in /tmp, which Vercel serverless functions can write to.
-// NOTE: /tmp is ephemeral — it can be wiped between deployments or cold starts.
-// This is fine for basic cross-device sync but is not durable long-term storage.
-
-const fs = require('fs').promises;
-const path = require('path');
-
-const DATA_FILE = path.join('/tmp', 'twp_sync_data.json');
-
-async function readData() {
-  try {
-    const content = await fs.readFile(DATA_FILE, 'utf8');
-    return JSON.parse(content);
-  } catch (e) {
-    return {
-      workouts: [],
-      userName: null,
-      profile: {},
-      customTags: [],
-      lastSync: null,
-      deviceSyncs: {},
-    };
-  }
-}
-
-async function writeData(data) {
-  await fs.writeFile(DATA_FILE, JSON.stringify(data));
-}
-
-// Merge by workout id — newest `date` wins per id, union of both sets otherwise.
-function mergeWorkouts(serverWorkouts, deviceWorkouts) {
-  const map = new Map();
-  (serverWorkouts || []).forEach(w => map.set(w.id, w));
-  (deviceWorkouts || []).forEach(w => {
-    const existing = map.get(w.id);
-    if (!existing || new Date(w.date) > new Date(existing.date)) {
-      map.set(w.id, w);
-    }
-  });
-  return Array.from(map.values()).sort((a, b) => new Date(b.date) - new Date(a.date));
-}
-
-// Union, de-duplicated, case-insensitive
-function mergeTags(serverTags, deviceTags) {
-  const set = new Set([...(serverTags || []), ...(deviceTags || [])]);
-  return Array.from(set);
-}
+// Persists TWP tracker state as a single JSON file committed to a GitHub repo,
+// using the GitHub Contents API. Requires these Vercel Environment Variables:
+//
+//   GITHUB_TOKEN   - a GitHub Personal Access Token (classic) with "repo" scope,
+//                    or a fine-grained token with Contents: Read & Write on the repo
+//   GITHUB_OWNER   - your GitHub username or org, e.g. "natural-set"
+//   GITHUB_REPO    - the repo name, e.g. "twp-beta"
+//   GITHUB_PATH    - (optional) path to the JSON file in the repo,
+//                    defaults to "data/twp-sync.json"
+//   GITHUB_BRANCH  - (optional) branch to commit to, defaults to "main"
+//
+// GET  /api/sync  -> returns the current state JSON ({ workouts, userName, profile, customTags, timestamp })
+// POST /api/sync  -> body: { deviceId, state: { workouts, userName, profile, customTags, timestamp } }
+//                    merges into the stored file and commits it to GitHub.
+// https://github.com/settings/tokens
 
 module.exports = async function handler(req, res) {
-  // CORS — allows the static index.html (same origin, but harmless to allow all)
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  const {
+    GITHUB_TOKEN,
+    GITHUB_OWNER = 'natural-set',
+    GITHUB_REPO = 'twp-beta',
+    GITHUB_PATH = 'data/twp-sync.json',
+    GITHUB_BRANCH = 'main',
+  } = process.env;
 
-  if (req.method === 'OPTIONS') {
-    res.status(200).end();
+  if (!GITHUB_TOKEN || !GITHUB_OWNER || !GITHUB_REPO) {
+    res.status(500).json({
+      message: 'Server misconfigured: set GITHUB_TOKEN, GITHUB_OWNER, GITHUB_REPO in Vercel env vars',
+    });
     return;
   }
 
+  const apiUrl = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${encodeURIComponent(GITHUB_PATH)}`;
+  const ghHeaders = {
+    Authorization: `token ${GITHUB_TOKEN}`,
+    Accept: 'application/vnd.github+json',
+    'User-Agent': 'twp-sync-function',
+  };
+
+  const emptyState = { workouts: [], userName: 'Athlete', profile: {}, customTags: [], timestamp: 0 };
+
   try {
-    const data = await readData();
+    if (req.method === 'GET') {
+      const fileResp = await fetch(`${apiUrl}?ref=${GITHUB_BRANCH}`, { headers: ghHeaders });
 
-    if (req.method === 'POST') {
-      const { deviceId, state } = req.body || {};
-
-      if (!deviceId || !state || !Array.isArray(state.workouts)) {
-        res.status(400).json({ error: 'Missing deviceId or state.workouts' });
+      if (fileResp.status === 404) {
+        res.status(200).json(emptyState);
+        return;
+      }
+      if (!fileResp.ok) {
+        const t = await fileResp.text();
+        res.status(502).json({ message: 'GitHub read failed: ' + t });
         return;
       }
 
-      data.workouts = mergeWorkouts(data.workouts, state.workouts);
-      if (state.userName) data.userName = state.userName;
-      if (state.profile) data.profile = { ...(data.profile || {}), ...state.profile };
-      data.customTags = mergeTags(data.customTags, state.customTags);
-      data.lastSync = new Date().toISOString();
-      data.deviceSyncs = data.deviceSyncs || {};
-      data.deviceSyncs[deviceId] = data.lastSync;
-
-      await writeData(data);
-
-      res.json({
-        success: true,
-        data: {
-          workouts: data.workouts,
-          userName: data.userName,
-          profile: data.profile,
-          customTags: data.customTags,
-          lastSync: data.lastSync,
-        },
-      });
+      const fileJson = await fileResp.json();
+      const content = Buffer.from(fileJson.content, 'base64').toString('utf-8');
+      let data;
+      try { data = JSON.parse(content); } catch (e) { data = emptyState; }
+      res.status(200).json(data);
       return;
     }
 
-    if (req.method === 'GET') {
-      res.json({
-        workouts: data.workouts || [],
-        userName: data.userName || null,
-        profile: data.profile || {},
-        customTags: data.customTags || [],
-        lastSync: data.lastSync || null,
-        deviceCount: Object.keys(data.deviceSyncs || {}).length,
+    if (req.method === 'POST') {
+      const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
+      const incoming = body.state || body;
+
+      // Fetch current file for its sha (needed to update) and to merge instead of clobber.
+      let sha;
+      let current = emptyState;
+      const fileResp = await fetch(`${apiUrl}?ref=${GITHUB_BRANCH}`, { headers: ghHeaders });
+      if (fileResp.ok) {
+        const fileJson = await fileResp.json();
+        sha = fileJson.sha;
+        try {
+          current = JSON.parse(Buffer.from(fileJson.content, 'base64').toString('utf-8'));
+        } catch (e) { /* keep emptyState */ }
+      } else if (fileResp.status !== 404) {
+        const t = await fileResp.text();
+        res.status(502).json({ message: 'GitHub read failed: ' + t });
+        return;
+      }
+
+      const merged = mergeState(current, incoming);
+      const newContentB64 = Buffer.from(JSON.stringify(merged, null, 2)).toString('base64');
+
+      const putResp = await fetch(apiUrl, {
+        method: 'PUT',
+        headers: { ...ghHeaders, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: `Sync update ${new Date().toISOString()} (device ${body.deviceId || 'unknown'})`,
+          content: newContentB64,
+          branch: GITHUB_BRANCH,
+          ...(sha ? { sha } : {}),
+        }),
       });
+
+      if (!putResp.ok) {
+        const t = await putResp.text();
+        res.status(502).json({ message: 'GitHub write failed: ' + t });
+        return;
+      }
+
+      res.status(200).json({ ok: true, workouts: merged.workouts.length });
       return;
     }
 
-    res.status(405).json({ error: 'Method not allowed' });
-  } catch (error) {
-    console.error('Sync error:', error);
-    res.status(500).json({ error: 'Server error', message: error.message });
+    res.setHeader('Allow', ['GET', 'POST']);
+    res.status(405).json({ message: 'Method not allowed' });
+  } catch (err) {
+    res.status(500).json({ message: err && err.message ? err.message : 'Unknown server error' });
   }
 };
+
+function mergeState(current, incoming) {
+  const byId = new Map();
+  (current.workouts || []).forEach(w => byId.set(w.id, w));
+  (incoming.workouts || []).forEach(w => byId.set(w.id, w)); // incoming (client) wins on same id
+  const workouts = Array.from(byId.values()).sort((a, b) => new Date(b.date) - new Date(a.date));
+  return {
+    workouts,
+    userName: incoming.userName || current.userName || 'Athlete',
+    profile: { ...(current.profile || {}), ...(incoming.profile || {}) },
+    customTags: Array.from(new Set([...(current.customTags || []), ...(incoming.customTags || [])])),
+    timestamp: Date.now(),
+  };
+}
