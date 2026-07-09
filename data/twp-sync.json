@@ -1,6 +1,87 @@
 {
   "workouts": [
     {
+      "id": 1783559695398,
+      "name": "Workout",
+      "note": "",
+      "exercises": [
+        {
+          "exId": "bench",
+          "name": "Bench Press",
+          "icon": "🏋️",
+          "primary": [
+            "Chest"
+          ],
+          "secondary": [
+            "Triceps",
+            "Front Delts"
+          ],
+          "note": "",
+          "sets": [
+            {
+              "warmup": false,
+              "weight": 0,
+              "reps": 0,
+              "rir": 0,
+              "variations": [],
+              "restSeconds": 2,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 0,
+              "reps": 0,
+              "rir": 0,
+              "variations": [],
+              "restSeconds": 2,
+              "prs": []
+            }
+          ],
+          "restSeconds": 2,
+          "linkGroup": ""
+        },
+        {
+          "exId": "ohp",
+          "name": "Overhead Press",
+          "icon": "🙌",
+          "primary": [
+            "Front Delts",
+            "Side Delts"
+          ],
+          "secondary": [
+            "Triceps"
+          ],
+          "note": "",
+          "sets": [
+            {
+              "warmup": false,
+              "weight": 0,
+              "reps": 0,
+              "rir": 0,
+              "variations": [],
+              "restSeconds": 1,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 0,
+              "reps": 0,
+              "rir": 0,
+              "variations": [],
+              "restSeconds": 4,
+              "prs": []
+            }
+          ],
+          "restSeconds": 1,
+          "linkGroup": ""
+        }
+      ],
+      "volume": 0,
+      "duration": 0,
+      "date": "2026-07-09T01:14:55.397Z",
+      "records": 0
+    },
+    {
       "id": 1783359907068,
       "name": "Pull-Up & Dips",
       "note": "",
@@ -9889,5 +9970,5 @@
   "userName": "Athlete",
   "profile": {},
   "customTags": [],
-  "timestamp": 1783559616758
+  "timestamp": 1783559696429
 }
