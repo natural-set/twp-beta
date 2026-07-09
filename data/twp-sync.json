@@ -77,8 +77,8 @@
         }
       ],
       "volume": 0,
-      "duration": 0,
-      "date": "2026-07-09T01:14:55.397Z",
+      "duration": 58,
+      "date": "2026-07-09T01:14:00.000Z",
       "records": 0
     },
     {
@@ -9970,5 +9970,5 @@
   "userName": "Athlete",
   "profile": {},
   "customTags": [],
-  "timestamp": 1783559696429
+  "timestamp": 1783559719055
 }
