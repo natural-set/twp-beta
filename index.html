@@ -2831,11 +2831,18 @@
       return best;
     }
 
+    // Swapping exercises in a workout.
+    let isSwappingExercise = false;
+    let swapExerciseIndex = null;
+
     // ── Exercise Picker (single-select + combined-set multi-select) ──
     let exPickerMultiMode = false;
     let exPickerSelected = new Set();
+    let swappingBlockId = null;
 
-    function openExPicker() {
+    function openExPicker(blockId = null) {
+      swappingBlockId = blockId;
+
       document.getElementById('ex-picker').classList.add('open');
       document.getElementById('ex-search').value = '';
       exPickerMultiMode = false;
@@ -2845,7 +2852,10 @@
       renderExList('');
       document.getElementById('ex-search').focus();
     }
-    function closeExPicker() { document.getElementById('ex-picker').classList.remove('open'); }
+    function closeExPicker() {
+      document.getElementById('ex-picker').classList.remove('open');
+      swappingBlockId = null; // Reset if the user cancels
+    }
     function filterExercises(q) { renderExList(q); }
 
     function toggleComboMode() {
@@ -2909,6 +2919,21 @@
       closeExPicker();
       const def = EXERCISES_DB.find(e => e.id === exId);
       if (!def) return;
+
+      // --- NEW SWAP LOGIC ---
+      if (swappingBlockId) {
+        const block = document.getElementById(swappingBlockId);
+        if (block) {
+          block.dataset.exId = exId; // Update the ID for saving
+          block.querySelector('.ex-thumb').textContent = def.icon; // Update Icon
+          block.querySelector('.ex-block-name').textContent = def.name; // Update Name
+          block.querySelector('.ex-block-name').nextElementSibling.textContent = def.muscle || 'Custom'; // Update Muscle
+        }
+        swappingBlockId = null;
+        return; // Stop here so it doesn't create a new block
+      }
+      // ----------------------
+
       const container = containerOverride || document.getElementById('exercises-container');
       const isCombo = !!linkGroupPrefill;
       const blockId = 'ex-' + Date.now() + Math.random().toString(36).slice(2, 6);
@@ -2916,13 +2941,20 @@
       div.className = 'ex-block'; div.id = blockId; div.dataset.exId = exId;
       div.dataset.trackRest = trackRest ? 'true' : 'false';
       div.innerHTML = `
-    <div class="ex-block-header">
+      <div class="ex-block-header">
       <div class="ex-thumb">${def.icon}</div>
-      <div>
+      <div style="flex:1;">
         <div class="ex-block-name">${def.name}</div>
         <div style="font-size:11px;color:var(--text-muted)">${def.muscle}</div>
       </div>
-    </div>
+      <button class="icon-btn" onclick="openExPicker('${blockId}')" title="Change Exercise" style="color:var(--text-muted); margin-left: auto;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-square-pen-icon lucide-square-pen">
+          <path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+          <path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/>
+        </svg>
+      </button>
+      </div>
+
     <div class="ex-block-note">
       <textarea class="ex-note-ta" placeholder="Add notes…" rows="1"></textarea>
     </div>
@@ -4304,11 +4336,18 @@
       div.innerHTML = `
       <div class="ex-block-header">
         <div class="ex-thumb">${def.icon}</div>
-        <div>
+        <div style="flex:1;">
           <div class="ex-block-name">${def.name}</div>
           <div style="font-size:11px;color:var(--text-muted)">${def.muscle || ''}</div>
         </div>
+        <button class="icon-btn" onclick="openExPicker('${blockId}')" title="Change Exercise" style="color:var(--text-muted); margin-left: auto;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-square-pen-icon lucide-square-pen">
+            <path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+            <path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/>
+          </svg>
+        </button>
       </div>
+
       <div class="ex-block-note">
         <textarea class="ex-note-ta" placeholder="Add notes…" rows="1">${ex.note || ''}</textarea>
       </div>
