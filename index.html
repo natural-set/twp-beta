@@ -2279,13 +2279,14 @@
   <script>
 
     // ═══════════════════════════════════════════
-    //  CLOUD SYNC
+    //  CLOUD SYNC  (backed by a JSON file committed to GitHub — see api/sync.js)
     // ═══════════════════════════════════════════
-    const SYNC_ENDPOINT = 'https://twp-beta-three.vercel.app/api/sync';
+    // Relative path — works on whatever origin the app is served from, so this
+    // doesn't silently break if the Vercel URL ever changes.
+    const SYNC_ENDPOINT = '/api/sync';
     const DEVICE_ID = localStorage.getItem('deviceId') ||
       ('device-' + Math.random().toString(36).slice(2, 9));
 
-    // Persist device ID
     if (!localStorage.getItem('deviceId')) {
       localStorage.setItem('deviceId', DEVICE_ID);
     }
@@ -2293,8 +2294,42 @@
     let syncInProgress = false;
     let lastSyncTime = localStorage.getItem('lastSyncTime') || null;
 
-    async function pushSync() {
+    // Safely parses a fetch Response as JSON. If the server returned an error
+    // page (e.g. Vercel's HTML 404) instead of JSON, this throws a clear error
+    // instead of crashing on `Unexpected token 'T' ... is not valid JSON`.
+    async function safeJson(resp) {
+      const raw = await resp.text();
+      try {
+        return JSON.parse(raw);
+      } catch (e) {
+        throw new Error(
+          resp.status === 404
+            ? 'Sync endpoint not found (404) — check the api/sync.js deployment'
+            : `Server returned non-JSON response (${resp.status})`
+        );
+      }
+    }
+
+    // Skip redundant pushes: only hit the network (and create a GitHub commit)
+    // when the payload actually differs from what we last successfully pushed.
+    function buildSyncPayload() {
+      return {
+        workouts: state.workouts,
+        userName: state.userName,
+        profile: state.profile || {},
+        customTags: state.customTags || [],
+      };
+    }
+
+    async function pushSync(force) {
       if (syncInProgress) return;
+
+      const payload = buildSyncPayload();
+      const payloadStr = JSON.stringify(payload);
+      if (!force && payloadStr === localStorage.getItem('lastPushedPayload')) {
+        return true; // nothing changed since last successful push
+      }
+
       syncInProgress = true;
       const btn = document.getElementById('sync-btn');
       if (btn) btn.classList.add('syncing');
@@ -2303,24 +2338,13 @@
         const resp = await fetch(SYNC_ENDPOINT, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            deviceId: DEVICE_ID,
-            state: {
-              workouts: state.workouts,
-              userName: state.userName,
-              profile: state.profile || {},
-              customTags: state.customTags || [],
-              timestamp: Date.now()
-            }
-          })
+          body: JSON.stringify({ deviceId: DEVICE_ID, state: payload })
         });
 
-        if (!resp.ok) {
-          const err = await resp.json();
-          throw new Error(err.message || 'Sync failed');
-        }
+        const result = await safeJson(resp);
+        if (!resp.ok) throw new Error(result.message || result.error || 'Sync failed');
 
-        const result = await resp.json();
+        localStorage.setItem('lastPushedPayload', payloadStr);
         lastSyncTime = new Date().toISOString();
         localStorage.setItem('lastSyncTime', lastSyncTime);
 
@@ -2350,12 +2374,10 @@
 
       try {
         const resp = await fetch(SYNC_ENDPOINT);
-        if (!resp.ok) throw new Error('Sync failed');
-        const serverData = await resp.json();
+        const serverData = await safeJson(resp);
+        if (!resp.ok) throw new Error(serverData.message || serverData.error || 'Sync failed');
 
-        // Simple merge: add any workouts from server that aren't local
-        const serverIds = new Set(serverData.workouts.map(w => w.id));
-        const newWorkouts = serverData.workouts.filter(w =>
+        const newWorkouts = (serverData.workouts || []).filter(w =>
           !state.workouts.find(lw => lw.id === w.id)
         );
 
@@ -2374,7 +2396,7 @@
 
       } catch (err) {
         console.error('Pull sync error:', err);
-        // Silently fail on pull (don't spam user)
+        // Silently fail on pull (don't spam user on every auto-check)
         return false;
 
       } finally {
@@ -2382,13 +2404,25 @@
       }
     }
 
-    // No interval/visibility-based auto-sync — syncing only happens when data actually
-    // changes: after a workout is added/edited (finishWorkout), imported (confirmImport),
-    // or deleted (deleteWorkoutFromFeed). Each of those calls pushSync() directly.
-    // We still do a one-time pull on page load so a fresh device/browser picks up
-    // whatever's already on GitHub before the person starts logging.
+    // Auto-sync every 5 minutes (only if tab is visible). Since pushSync() no-ops
+    // when nothing changed, this is cheap and won't spam GitHub with empty commits.
+    setInterval(() => {
+      if (!document.hidden) pushSync();
+    }, 300000);
+
+    // Pull updates when tab regains focus
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) {
+        setTimeout(() => pullSync(), 500);
+      }
+    });
+
+    // Initial sync on page load
     window.addEventListener('load', () => {
-      setTimeout(() => pullSync(), 800);
+      setTimeout(() => {
+        pullSync();
+        setTimeout(() => pushSync(), 1000);
+      }, 800);
     });
 
     // ═══════════════════════════════════════════
@@ -2799,7 +2833,6 @@
       state.workouts.sort((a, b) => new Date(b.date) - new Date(a.date));
 
       saveState();
-      pushSync();
       state.activeWorkout = null;
       state.editingWorkoutId = null;
 
@@ -2831,30 +2864,42 @@
       return best;
     }
 
-    // Swapping exercises in a workout.
-    let isSwappingExercise = false;
-    let swapExerciseIndex = null;
-
-    // ── Exercise Picker (single-select + combined-set multi-select) ──
+    // ── Exercise Picker (single-select + combined-set multi-select + replace) ──
     let exPickerMultiMode = false;
     let exPickerSelected = new Set();
-    let swappingBlockId = null;
+    let exReplaceTargetBlockId = null; // set when picker is opened to swap an existing block's exercise
 
-    function openExPicker(blockId = null) {
-      swappingBlockId = blockId;
-
+    function openExPicker() {
+      exReplaceTargetBlockId = null;
       document.getElementById('ex-picker').classList.add('open');
       document.getElementById('ex-search').value = '';
       exPickerMultiMode = false;
       exPickerSelected.clear();
       document.getElementById('ex-picker-footer').style.display = 'none';
+      document.getElementById('combo-toggle-btn').style.display = '';
       document.getElementById('combo-toggle-btn').style.color = '';
       renderExList('');
       document.getElementById('ex-search').focus();
     }
+
+    // Opens the same picker to swap the exercise on an existing block, keeping
+    // its sets/notes/rest data intact — combo toggle is hidden since replacing
+    // is always a single-exercise swap.
+    function openExReplacePicker(blockId) {
+      exReplaceTargetBlockId = blockId;
+      document.getElementById('ex-picker').classList.add('open');
+      document.getElementById('ex-search').value = '';
+      exPickerMultiMode = false;
+      exPickerSelected.clear();
+      document.getElementById('ex-picker-footer').style.display = 'none';
+      document.getElementById('combo-toggle-btn').style.display = 'none';
+      renderExList('');
+      document.getElementById('ex-search').focus();
+    }
+
     function closeExPicker() {
       document.getElementById('ex-picker').classList.remove('open');
-      swappingBlockId = null; // Reset if the user cancels
+      exReplaceTargetBlockId = null;
     }
     function filterExercises(q) { renderExList(q); }
 
@@ -2903,8 +2948,9 @@
         }).join('');
         return;
       }
+      const clickFn = exReplaceTargetBlockId ? 'replaceExercise' : 'addExercise';
       el.innerHTML = filtered.map(ex => `
-    <div class="ex-list-item" onclick="addExercise('${ex.id}')">
+    <div class="ex-list-item" onclick="${clickFn}('${ex.id}')">
       <div class="ex-list-icon">${ex.icon}</div>
       <div>
         <div class="ex-list-name">${ex.name}</div>
@@ -2914,26 +2960,30 @@
   `).join('');
     }
 
+    // Swaps the exercise definition (id/name/icon/muscle) on an existing block
+    // while leaving every set row, note, rest data, and linkGroup untouched.
+    function replaceExercise(exId) {
+      const blockId = exReplaceTargetBlockId;
+      closeExPicker();
+      if (!blockId) return;
+      const def = EXERCISES_DB.find(e => e.id === exId);
+      const block = document.getElementById(blockId);
+      if (!def || !block) return;
+      block.dataset.exId = exId;
+      const thumb = block.querySelector('.ex-thumb');
+      const nameEl = block.querySelector('.ex-block-name');
+      const muscleEl = block.querySelector('.ex-block-muscle');
+      if (thumb) thumb.textContent = def.icon;
+      if (nameEl) nameEl.textContent = def.name;
+      if (muscleEl) muscleEl.textContent = def.muscle;
+      showToast('Exercise changed to ' + def.name);
+    }
+
     function addExercise(exId, containerOverride, linkGroupPrefill, trackRest) {
       if (trackRest === undefined) trackRest = true;
       closeExPicker();
       const def = EXERCISES_DB.find(e => e.id === exId);
       if (!def) return;
-
-      // --- NEW SWAP LOGIC ---
-      if (swappingBlockId) {
-        const block = document.getElementById(swappingBlockId);
-        if (block) {
-          block.dataset.exId = exId; // Update the ID for saving
-          block.querySelector('.ex-thumb').textContent = def.icon; // Update Icon
-          block.querySelector('.ex-block-name').textContent = def.name; // Update Name
-          block.querySelector('.ex-block-name').nextElementSibling.textContent = def.muscle || 'Custom'; // Update Muscle
-        }
-        swappingBlockId = null;
-        return; // Stop here so it doesn't create a new block
-      }
-      // ----------------------
-
       const container = containerOverride || document.getElementById('exercises-container');
       const isCombo = !!linkGroupPrefill;
       const blockId = 'ex-' + Date.now() + Math.random().toString(36).slice(2, 6);
@@ -2941,20 +2991,18 @@
       div.className = 'ex-block'; div.id = blockId; div.dataset.exId = exId;
       div.dataset.trackRest = trackRest ? 'true' : 'false';
       div.innerHTML = `
-      <div class="ex-block-header">
+    <div class="ex-block-header">
       <div class="ex-thumb">${def.icon}</div>
-      <div style="flex:1;">
+      <div style="flex:1">
         <div class="ex-block-name">${def.name}</div>
-        <div style="font-size:11px;color:var(--text-muted)">${def.muscle}</div>
+        <div class="ex-block-muscle" style="font-size:11px;color:var(--text-muted)">${def.muscle}</div>
       </div>
-      <button class="icon-btn" onclick="openExPicker('${blockId}')" title="Change Exercise" style="color:var(--text-muted); margin-left: auto;">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-square-pen-icon lucide-square-pen">
-          <path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-          <path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/>
+      <button type="button" class="icon-btn" style="width:30px;height:30px;padding:5px;" onclick="openExReplacePicker('${blockId}')" title="Change exercise">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width:18px;height:18px;">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
         </svg>
       </button>
-      </div>
-
+    </div>
     <div class="ex-block-note">
       <textarea class="ex-note-ta" placeholder="Add notes…" rows="1"></textarea>
     </div>
@@ -4336,18 +4384,16 @@
       div.innerHTML = `
       <div class="ex-block-header">
         <div class="ex-thumb">${def.icon}</div>
-        <div style="flex:1;">
+        <div style="flex:1">
           <div class="ex-block-name">${def.name}</div>
-          <div style="font-size:11px;color:var(--text-muted)">${def.muscle || ''}</div>
+          <div class="ex-block-muscle" style="font-size:11px;color:var(--text-muted)">${def.muscle || ''}</div>
         </div>
-        <button class="icon-btn" onclick="openExPicker('${blockId}')" title="Change Exercise" style="color:var(--text-muted); margin-left: auto;">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-square-pen-icon lucide-square-pen">
-            <path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-            <path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/>
+        <button type="button" class="icon-btn" style="width:30px;height:30px;padding:5px;" onclick="openExReplacePicker('${blockId}')" title="Change exercise">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width:18px;height:18px;">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
           </svg>
         </button>
       </div>
-
       <div class="ex-block-note">
         <textarea class="ex-note-ta" placeholder="Add notes…" rows="1">${ex.note || ''}</textarea>
       </div>
@@ -4647,7 +4693,6 @@
       // Remove from state
       state.workouts = state.workouts.filter(w => w.id !== id);
       saveState();
-      pushSync();
 
       // Refresh wherever this workout could be listed, without forcing navigation
       // away from whichever screen (Home or You) the person was actually on.
@@ -5271,7 +5316,7 @@
       <div class="import-step" style="text-align:center;">
         <div style="font-size:48px;margin-bottom:12px;">🎉</div>
         <h3>${data.count} workouts imported!</h3>
-        <p>Your charts, progress, and muscle split have been updated.${data.skipped ? ` ${data.skipped} duplicate${data.skipped === 1 ? '' : 's'} already in your history ${data.skipped === 1 ? 'was' : 'were'} skipped.` : ''}</p>
+        <p>Your charts, progress, and muscle split have been updated.</p>
         <button class="btn-primary" onclick="closeImportModal()">Done</button>
       </div>
     `;
@@ -5282,30 +5327,15 @@
       document.getElementById('import-modal').classList.remove('open');
     }
 
-    // A workout counts as a duplicate of an already-stored one if it falls on the same
-    // calendar day and has the same name — covers re-importing the same file (or an
-    // overlapping date range) without creating repeated entries.
-    function isDuplicateWorkout(w, existingList) {
-      const day = new Date(w.date).toDateString();
-      return existingList.some(e => new Date(e.date).toDateString() === day && e.name === w.name);
-    }
-
     function confirmImport() {
       if (!pendingImportWorkouts) return;
-      const toAdd = [];
-      let skipped = 0;
-      pendingImportWorkouts.forEach(w => {
-        if (isDuplicateWorkout(w, state.workouts) || isDuplicateWorkout(w, toAdd)) skipped++;
-        else toAdd.push(w);
-      });
-      state.workouts = [...toAdd, ...state.workouts];
+      state.workouts = [...pendingImportWorkouts, ...state.workouts];
       state.workouts.sort((a, b) => new Date(b.date) - new Date(a.date));
       saveState();
-      pushSync();
-      const count = toAdd.length;
+      const count = pendingImportWorkouts.length;
       pendingImportWorkouts = null;
       refreshHome();
-      showImportModal('success', { count, skipped });
+      showImportModal('success', { count });
     }
 
     // ═══════════════════════════════════════════
