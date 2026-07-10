@@ -1839,7 +1839,7 @@
                 d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
             </svg>
           </button>
-          <button class="icon-btn" id="sync-btn" title="Sync with cloud" onclick="pushSync()">
+          <button class="icon-btn" id="sync-btn" title="Sync with cloud" onclick="pushSync(true)">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
               class="lucide lucide-cloud-sync-icon lucide-cloud-sync">
@@ -2321,17 +2321,24 @@
       };
     }
 
-    async function pushSync(force) {
+    async function pushSync(manual) {
       if (syncInProgress) return;
 
       const payload = buildSyncPayload();
       const payloadStr = JSON.stringify(payload);
-      if (!force && payloadStr === localStorage.getItem('lastPushedPayload')) {
-        return true; // nothing changed since last successful push
+      const btn = document.getElementById('sync-btn');
+
+      // Nothing changed since our last confirmed push — skip the network call
+      // entirely rather than creating a redundant commit.
+      if (payloadStr === localStorage.getItem('lastPushedPayload')) {
+        if (manual) {
+          if (btn) { btn.classList.add('synced'); setTimeout(() => btn.classList.remove('synced'), 1500); }
+          showToast('☁️ Already up to date');
+        }
+        return true;
       }
 
       syncInProgress = true;
-      const btn = document.getElementById('sync-btn');
       if (btn) btn.classList.add('syncing');
 
       try {
@@ -2354,7 +2361,10 @@
           setTimeout(() => btn.classList.remove('synced'), 2000);
         }
 
-        showToast('✅ Synced to cloud');
+        // The backend may also independently determine nothing actually
+        // changed (e.g. this device's local cache was stale/cleared) — in
+        // that case it skips the commit too, so reflect that in the toast.
+        showToast(result.unchanged ? '☁️ Already up to date' : '✅ Synced to cloud');
         return true;
 
       } catch (err) {

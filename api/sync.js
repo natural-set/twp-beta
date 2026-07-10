@@ -86,6 +86,28 @@ module.exports = async function handler(req, res) {
       // import) with its full, already-authoritative state — so we overwrite rather
       // than union-merge. Union-merging would resurrect workouts the client just
       // deleted, since they'd still be sitting in the GitHub-stored "current" copy.
+
+      // Compare content only — `timestamp` is bookkeeping that changes on every
+      // request, so it's excluded here to avoid creating a commit (and a
+      // duplicate-looking entry) when nothing about the actual data changed.
+      const beforeStr = JSON.stringify({
+        workouts: current.workouts || [],
+        userName: current.userName,
+        profile: current.profile || {},
+        customTags: current.customTags || [],
+      });
+      const afterStr = JSON.stringify({
+        workouts: incoming.workouts || [],
+        userName: incoming.userName,
+        profile: incoming.profile || {},
+        customTags: incoming.customTags || [],
+      });
+
+      if (afterStr === beforeStr) {
+        res.status(200).json({ ok: true, unchanged: true, workouts: (incoming.workouts || []).length });
+        return;
+      }
+
       const merged = { ...incoming, timestamp: Date.now() };
       const newContentB64 = Buffer.from(JSON.stringify(merged, null, 2)).toString('base64');
 
@@ -106,7 +128,7 @@ module.exports = async function handler(req, res) {
         return;
       }
 
-      res.status(200).json({ ok: true, workouts: merged.workouts.length });
+      res.status(200).json({ ok: true, unchanged: false, workouts: merged.workouts.length });
       return;
     }
 
