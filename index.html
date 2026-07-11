@@ -4981,6 +4981,11 @@
     }
 
     function cancelWorkout() {
+      const hasData = document.querySelectorAll('#exercises-container .w-input, #exercises-container .r-input')
+        .length > 0 && Array.from(document.querySelectorAll('#exercises-container .w-input, #exercises-container .r-input'))
+        .some(el => el.value.trim() !== '');
+      if (hasData && !confirm('Discard this workout? Everything you entered will be lost.')) return;
+
       clearInterval(state.timerInterval);
       clearAllRestTimers();
       const wasEditing = !!state.editingWorkoutId;
