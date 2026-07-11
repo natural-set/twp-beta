@@ -2103,10 +2103,10 @@
             </svg>
           </div>
           <div class="goal-text">
-            <div class="title">3 Workouts per week</div>
+            <div class="title" id="goal-title">3 Workouts per week</div>
             <div class="sub" id="goal-sub">0/3 Completed</div>
           </div>
-          <button class="goal-btn">Set Goal</button>
+          <button class="goal-btn" onclick="openGoalPicker()">Set Goal</button>
         </div>
 
         <div class="section-title" style="padding-top: 8px;">This Week</div>
@@ -2168,6 +2168,10 @@
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
           </svg>
+        </div>
+        <div class="settings-item" onclick="pushSync(true)">
+          <span>Cloud Sync</span>
+          <span style="color:var(--text-muted);font-size:13px;" id="sync-status-text">Never synced</span>
         </div>
         <div class="settings-item" onclick="clearData()">
           <span style="color: var(--red)">Clear All Data</span>
@@ -2355,6 +2359,28 @@
     let syncInProgress = false;
     let lastSyncTime = localStorage.getItem('lastSyncTime') || null;
 
+    // Renders lastSyncTime as a human-friendly relative string (e.g. "Synced 2m ago")
+    // for the Cloud Sync row in the You tab.
+    function formatRelativeTime(iso) {
+      if (!iso) return 'Never synced';
+      const diffSec = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+      if (diffSec < 60) return 'Synced just now';
+      const min = Math.floor(diffSec / 60);
+      if (min < 60) return `Synced ${min}m ago`;
+      const hr = Math.floor(min / 60);
+      if (hr < 24) return `Synced ${hr}h ago`;
+      return `Synced ${Math.floor(hr / 24)}d ago`;
+    }
+
+    function updateSyncStatusDisplay() {
+      const el = document.getElementById('sync-status-text');
+      if (!el) return;
+      el.textContent = syncInProgress ? 'Syncing…' : formatRelativeTime(lastSyncTime);
+    }
+
+    // Keeps the relative time fresh (e.g. "just now" -> "2m ago") while the You tab is open.
+    setInterval(updateSyncStatusDisplay, 30000);
+
     // Safely parses a fetch Response as JSON. If the server returned an error
     // page (e.g. Vercel's HTML 404) instead of JSON, this throws a clear error
     // instead of crashing on `Unexpected token 'T' ... is not valid JSON`.
@@ -2404,6 +2430,7 @@
 
       syncInProgress = true;
       if (btn) btn.classList.add('syncing');
+      updateSyncStatusDisplay();
 
       try {
         const resp = await fetch(SYNC_ENDPOINT, {
@@ -2418,6 +2445,7 @@
         localStorage.setItem('lastPushedPayload', payloadStr);
         lastSyncTime = new Date().toISOString();
         localStorage.setItem('lastSyncTime', lastSyncTime);
+        updateSyncStatusDisplay();
 
         if (btn) {
           btn.classList.remove('syncing');
@@ -2439,12 +2467,14 @@
 
       } finally {
         syncInProgress = false;
+        updateSyncStatusDisplay();
       }
     }
 
     async function pullSync() {
       if (syncInProgress) return;
       syncInProgress = true;
+      updateSyncStatusDisplay();
 
       try {
         const resp = await fetch(SYNC_ENDPOINT);
@@ -2481,6 +2511,7 @@
 
         lastSyncTime = new Date().toISOString();
         localStorage.setItem('lastSyncTime', lastSyncTime);
+        updateSyncStatusDisplay();
 
         // Union-merge custom exercises (by id) and hidden-exercise ids so a
         // new custom exercise or a hide/unhide action made on another device
@@ -2507,6 +2538,7 @@
 
       } finally {
         syncInProgress = false;
+        updateSyncStatusDisplay();
       }
     }
 
@@ -2849,6 +2881,7 @@
       timerInterval: null,
       timerSeconds: 0,
       userName: 'Athlete',
+      weeklyGoal: 3,
       currentMetric: 'duration',
       currentFilter: 'week',
       prevScreen: 'home',
@@ -2909,6 +2942,7 @@
         state.customExercises = parsed.customExercises || [];
         state.hiddenExerciseIds = parsed.hiddenExerciseIds || [];
         state.exerciseOverrides = parsed.exerciseOverrides || {};
+        state.weeklyGoal = parsed.weeklyGoal || 3;
         // Existing duplicates (e.g. from a prior sync bug) get silently
         // cleaned up and persisted right away so they don't keep reappearing.
         if (state.workouts.length !== rawWorkouts.length) saveState();
@@ -2924,6 +2958,7 @@
         customExercises: state.customExercises,
         hiddenExerciseIds: state.hiddenExerciseIds,
         exerciseOverrides: state.exerciseOverrides,
+        weeklyGoal: state.weeklyGoal,
       }));
     }
 
@@ -3154,6 +3189,10 @@
       state.workouts.sort((a, b) => new Date(b.date) - new Date(a.date));
 
       saveState();
+      // Push immediately rather than waiting on the 5-min auto-sync interval —
+      // otherwise closing the tab right after finishing a workout can lose it
+      // if this device dies before the interval fires.
+      pushSync();
       state.activeWorkout = null;
       state.editingWorkoutId = null;
 
@@ -4243,7 +4282,22 @@
       const now = new Date();
       const weekStart = new Date(now); weekStart.setDate(now.getDate() - now.getDay()); weekStart.setHours(0, 0, 0, 0);
       const done = state.workouts.filter(w => new Date(w.date) >= weekStart).length;
-      document.getElementById('goal-sub').textContent = `${Math.min(done, 3)}/3 Completed`;
+      const goal = state.weeklyGoal || 3;
+      const titleEl = document.getElementById('goal-title');
+      if (titleEl) titleEl.textContent = `${goal} Workout${goal === 1 ? '' : 's'} per week`;
+      document.getElementById('goal-sub').textContent = `${Math.min(done, goal)}/${goal} Completed`;
+    }
+
+    function openGoalPicker() {
+      const cur = state.weeklyGoal || 3;
+      const v = prompt('Workouts per week goal:', cur);
+      if (v === null) return;
+      const n = parseInt(v);
+      if (isNaN(n) || n < 1) { showToast('Enter a number 1 or higher'); return; }
+      state.weeklyGoal = Math.min(n, 14);
+      saveState();
+      renderGoal();
+      showToast('Goal set to ' + state.weeklyGoal + '/week 🎯');
     }
 
     function renderProgressMuscleMap() {
@@ -4720,6 +4774,7 @@
       document.getElementById('you-prs').textContent = prs;
       renderProfile();
       renderYouHistory();
+      updateSyncStatusDisplay();
     }
 
     function editName() {
@@ -4731,6 +4786,10 @@
       if (confirm('Clear all workout data? This cannot be undone.')) {
         state.workouts = [];
         saveState();
+        // Without an immediate push, the next pullSync (on focus/launch) would
+        // just pull the old cloud copy back down before the 5-min interval
+        // ever gets a chance to propagate the clear.
+        pushSync();
         refreshHome();
         refreshYou();
         showToast('All data cleared');
@@ -5061,6 +5120,9 @@
       // Remove from state
       state.workouts = state.workouts.filter(w => w.id !== id);
       saveState();
+      // Push immediately — otherwise a pull before the next 5-min interval
+      // would fetch the old cloud copy and resurrect the "deleted" workout.
+      pushSync();
 
       // Refresh wherever this workout could be listed, without forcing navigation
       // away from whichever screen (Home or You) the person was actually on.
