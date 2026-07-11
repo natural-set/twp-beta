@@ -4381,61 +4381,108 @@
       const w = size === 'small' ? 130 : 175;
       const skin = 'fill="#1b1b1b" stroke="#333" stroke-width="1"';
       const neutral = 'fill="#242424" stroke="#3a3a3a" stroke-width="1"';
+      const cut = 'stroke="#00000050" stroke-width="0.7" fill="none" stroke-linecap="round"';
 
       const front = `
     <svg viewBox="0 0 100 220" xmlns="http://www.w3.org/2000/svg" style="width:${w}px;">
-      <ellipse cx="50" cy="12" rx="9" ry="11" ${skin}/>
-      <rect x="45" y="21" width="10" height="8" rx="3" ${skin}/>
-      <path d="M31 28 Q50 23 69 28 L72 62 Q50 70 28 62 Z" ${skin}/>
-      <path d="M30 92 Q50 98 70 92 L67 110 Q50 115 33 110 Z" ${skin}/>
-      <ellipse cx="26" cy="34" rx="7.5" ry="9" ${muscleAttrs('Shoulders', stats)}/>
-      <ellipse cx="74" cy="34" rx="7.5" ry="9" ${muscleAttrs('Shoulders', stats)}/>
-      <path d="M33 29 C27 29 25 38 28 46 C33 50 43 48 45 41 C46 34 41 29 33 29 Z" ${muscleAttrs('Chest', stats)}/>
-      <path d="M67 29 C73 29 75 38 72 46 C67 50 57 48 55 41 C54 34 59 29 67 29 Z" ${muscleAttrs('Chest', stats)}/>
-      <path d="M15 34 C10 40 9 52 12 62 C15 65 20 64 21 58 C22 49 22 40 24 35 Z" ${neutral}/>
-      <path d="M85 34 C90 40 91 52 88 62 C85 65 80 64 79 58 C78 49 78 40 76 35 Z" ${neutral}/>
-      <path d="M11 62 Q9 78 12 92 L20 92 Q19 78 20 62 Z" ${neutral}/>
-      <path d="M89 62 Q91 78 88 92 L80 92 Q81 78 80 62 Z" ${neutral}/>
-      <rect x="42" y="50" width="16" height="38" rx="4" ${muscleAttrs('Abs', stats)}/>
-      <line x1="50" y1="50" x2="50" y2="88" stroke="#00000055" stroke-width="1"/>
-      <line x1="43" y1="60" x2="57" y2="60" stroke="#00000055" stroke-width="1"/>
-      <line x1="43" y1="70" x2="57" y2="70" stroke="#00000055" stroke-width="1"/>
-      <line x1="43" y1="80" x2="57" y2="80" stroke="#00000055" stroke-width="1"/>
-      <path d="M30 110 L46 110 L44 158 L32 158 Z" ${muscleAttrs('Quadriceps', stats)}/>
-      <path d="M70 110 L54 110 L56 158 L68 158 Z" ${muscleAttrs('Quadriceps', stats)}/>
-      <path d="M32 160 L44 160 L43 196 L33 196 Z" ${neutral}/>
-      <path d="M68 160 L56 160 L57 196 L67 196 Z" ${neutral}/>
-      <ellipse cx="38" cy="205" rx="8" ry="5" ${skin}/>
-      <ellipse cx="62" cy="205" rx="8" ry="5" ${skin}/>
-      <ellipse cx="12" cy="65" rx="4" ry="5" ${neutral}/>
-      <ellipse cx="88" cy="65" rx="4" ry="5" ${neutral}/>
+      <ellipse cx="50" cy="11" rx="8" ry="10" ${skin}/>
+      <path d="M46 19 Q50 22 54 19 L54 26 Q50 29 46 26 Z" ${skin}/>
+      <path d="M33 26 Q50 21 67 26 Q71 38 64 50 Q59 60 55 64 L45 64 Q41 60 36 50 Q29 38 33 26 Z" ${skin}/>
+      <path d="M40 63 Q50 60 60 63 Q67 79 64 95 Q56 105 50 107 Q44 105 36 95 Q33 79 40 63 Z" ${skin}/>
+      <path d="M40 25 L46 24 L43 32 L37 31 Z" ${muscleAttrs('Traps', stats)}/>
+      <path d="M60 25 L54 24 L57 32 L63 31 Z" ${muscleAttrs('Traps', stats)}/>
+      <ellipse cx="25" cy="31" rx="7.5" ry="9.5" ${muscleAttrs('Front Delts', stats)}/>
+      <ellipse cx="75" cy="31" rx="7.5" ry="9.5" ${muscleAttrs('Front Delts', stats)}/>
+      <path d="M21 23 Q17 31 21 39" ${cut}/>
+      <path d="M79 23 Q83 31 79 39" ${cut}/>
+      <path d="M34 27 C28 27 26 36 29 44 C34 48 43 46 45 39 C46 32 40 27 34 27 Z" ${muscleAttrs('Chest', stats)}/>
+      <path d="M66 27 C72 27 74 36 71 44 C66 48 57 46 55 39 C54 32 60 27 66 27 Z" ${muscleAttrs('Chest', stats)}/>
+      <path d="M32 31 Q39 36 43 43" ${cut}/>
+      <path d="M68 31 Q61 36 57 43" ${cut}/>
+      <path d="M30 46 L34 50 M32 51 L36 55 M34 56 L38 60" ${cut}/>
+      <path d="M70 46 L66 50 M68 51 L64 55 M66 56 L62 60" ${cut}/>
+      <path d="M16 32 C11 38 10 49 13 58 C16 61 20 60 21 54 C22 46 23 38 25 33 Z" ${muscleAttrs('Biceps', stats)}/>
+      <path d="M84 32 C89 38 90 49 87 58 C84 61 80 60 79 54 C78 46 77 38 75 33 Z" ${muscleAttrs('Biceps', stats)}/>
+      <path d="M15 36 Q12 46 15 56" ${cut}/>
+      <path d="M85 36 Q88 46 85 56" ${cut}/>
+      <path d="M12 59 Q10 74 13 88 L19 87 Q17 74 19 60 Z" ${muscleAttrs('Forearms', stats)}/>
+      <path d="M88 59 Q90 74 87 88 L81 87 Q83 74 81 60 Z" ${muscleAttrs('Forearms', stats)}/>
+      <path d="M15 62 L15 85" ${cut}/>
+      <path d="M85 62 L85 85" ${cut}/>
+      <rect x="37" y="48" width="5" height="34" rx="2" ${muscleAttrs('Obliques', stats)}/>
+      <rect x="58" y="48" width="5" height="34" rx="2" ${muscleAttrs('Obliques', stats)}/>
+      <path d="M39 52 L41 59 M39 64 L41 71 M39 75 L41 81" ${cut}/>
+      <path d="M61 52 L59 59 M61 64 L59 71 M61 75 L59 81" ${cut}/>
+      <rect x="44" y="48" width="12" height="34" rx="4" ${muscleAttrs('Abs', stats)}/>
+      <line x1="50" y1="48" x2="50" y2="82" stroke="#00000055" stroke-width="1"/>
+      <line x1="45" y1="57" x2="55" y2="57" stroke="#00000055" stroke-width="1"/>
+      <line x1="45" y1="66" x2="55" y2="66" stroke="#00000055" stroke-width="1"/>
+      <line x1="45" y1="75" x2="55" y2="75" stroke="#00000055" stroke-width="1"/>
+      <path d="M33 107 Q28 130 30 151 Q32 159 38 159 Q45 158 44 149 Q47 128 44 107 Q38 103 33 107 Z" ${muscleAttrs('Quadriceps', stats)}/>
+      <path d="M67 107 Q72 130 70 151 Q68 159 62 159 Q55 158 56 149 Q53 128 56 107 Q62 103 67 107 Z" ${muscleAttrs('Quadriceps', stats)}/>
+      <path d="M38 109 Q35 130 37 152" ${cut}/>
+      <path d="M62 109 Q65 130 63 152" ${cut}/>
+      <path d="M34 146 Q32 153 36 158" ${cut}/>
+      <path d="M66 146 Q68 153 64 158" ${cut}/>
+      <ellipse cx="38" cy="159" rx="3.5" ry="3" ${skin}/>
+      <ellipse cx="62" cy="159" rx="3.5" ry="3" ${skin}/>
+      <path d="M35 161 Q31 175 33 189 Q34 197 38 198 Q42 197 43 189 Q45 175 41 161 Q38 158 35 161 Z" ${muscleAttrs('Calves', stats)}/>
+      <path d="M65 161 Q69 175 67 189 Q66 197 62 198 Q58 197 57 189 Q55 175 59 161 Q62 158 65 161 Z" ${muscleAttrs('Calves', stats)}/>
+      <path d="M38 164 L38 191" ${cut}/>
+      <path d="M62 164 L62 191" ${cut}/>
+      <ellipse cx="38" cy="206" rx="6.5" ry="4.5" ${skin}/>
+      <ellipse cx="62" cy="206" rx="6.5" ry="4.5" ${skin}/>
+      <ellipse cx="12" cy="62" rx="3.5" ry="4.5" ${skin}/>
+      <ellipse cx="88" cy="62" rx="3.5" ry="4.5" ${skin}/>
     </svg>`;
 
       const back = `
     <svg viewBox="0 0 100 220" xmlns="http://www.w3.org/2000/svg" style="width:${w}px;">
-      <ellipse cx="50" cy="12" rx="9" ry="11" ${skin}/>
-      <rect x="45" y="21" width="10" height="8" rx="3" ${skin}/>
-      <path d="M31 28 Q50 23 69 28 L72 62 Q50 70 28 62 Z" ${skin}/>
-      <path d="M30 92 Q50 98 70 92 L67 110 Q50 115 33 110 Z" ${skin}/>
-      <path d="M50 24 L61 31 L53 51 L50 55 L47 51 L39 31 Z" ${muscleAttrs('Traps', stats)}/>
-      <ellipse cx="26" cy="34" rx="7.5" ry="9" ${muscleAttrs('Shoulders', stats)}/>
-      <ellipse cx="74" cy="34" rx="7.5" ry="9" ${muscleAttrs('Shoulders', stats)}/>
-      <path d="M31 32 C24 44 23 58 30 68 C36 65 40 54 39 42 C39 37 36 33 31 32 Z" ${muscleAttrs('Lats', stats)}/>
-      <path d="M69 32 C76 44 77 58 70 68 C64 65 60 54 61 42 C61 37 64 33 69 32 Z" ${muscleAttrs('Lats', stats)}/>
-      <rect x="44" y="52" width="12" height="32" rx="4" ${muscleAttrs('Back', stats)}/>
-      <path d="M15 34 C10 40 9 52 12 62 C15 65 20 64 21 58 C22 49 22 40 24 35 Z" ${muscleAttrs('Triceps', stats)}/>
-      <path d="M85 34 C90 40 91 52 88 62 C85 65 80 64 79 58 C78 49 78 40 76 35 Z" ${muscleAttrs('Triceps', stats)}/>
-      <path d="M11 62 Q9 78 12 92 L20 92 Q19 78 20 62 Z" ${neutral}/>
-      <path d="M89 62 Q91 78 88 92 L80 92 Q81 78 80 62 Z" ${neutral}/>
-      <path d="M31 94 Q50 100 69 94 L67 112 Q50 118 33 112 Z" ${muscleAttrs('Glutes', stats)}/>
-      <path d="M31 113 L46 113 L44 158 L33 158 Z" ${muscleAttrs('Hamstrings', stats)}/>
-      <path d="M69 113 L54 113 L56 158 L67 158 Z" ${muscleAttrs('Hamstrings', stats)}/>
-      <ellipse cx="38" cy="178" rx="7.5" ry="18" ${muscleAttrs('Calves', stats)}/>
-      <ellipse cx="62" cy="178" rx="7.5" ry="18" ${muscleAttrs('Calves', stats)}/>
-      <ellipse cx="38" cy="205" rx="8" ry="5" ${skin}/>
-      <ellipse cx="62" cy="205" rx="8" ry="5" ${skin}/>
-      <ellipse cx="12" cy="65" rx="4" ry="5" ${neutral}/>
-      <ellipse cx="88" cy="65" rx="4" ry="5" ${neutral}/>
+      <ellipse cx="50" cy="11" rx="8" ry="10" ${skin}/>
+      <path d="M46 19 Q50 22 54 19 L54 26 Q50 29 46 26 Z" ${skin}/>
+      <path d="M33 26 Q50 21 67 26 Q71 38 64 50 Q59 60 55 64 L45 64 Q41 60 36 50 Q29 38 33 26 Z" ${skin}/>
+      <path d="M40 63 Q50 60 60 63 Q67 79 64 95 Q56 105 50 107 Q44 105 36 95 Q33 79 40 63 Z" ${skin}/>
+      <path d="M50 23 L61 30 L53 50 L50 54 L47 50 L39 30 Z" ${muscleAttrs('Traps', stats)}/>
+      <path d="M50 27 L50 51" ${cut}/>
+      <path d="M42 31 L58 31" ${cut}/>
+      <ellipse cx="25" cy="31" rx="7.5" ry="9.5" ${muscleAttrs('Rear Delts', stats)}/>
+      <ellipse cx="75" cy="31" rx="7.5" ry="9.5" ${muscleAttrs('Rear Delts', stats)}/>
+      <path d="M21 24 Q17 31 21 38" ${cut}/>
+      <path d="M79 24 Q83 31 79 38" ${cut}/>
+      <path d="M31 30 C24 42 23 57 30 67 C36 64 40 53 39 41 C39 36 36 31 31 30 Z" ${muscleAttrs('Lats', stats)}/>
+      <path d="M69 30 C76 42 77 57 70 67 C64 64 60 53 61 41 C61 36 64 31 69 30 Z" ${muscleAttrs('Lats', stats)}/>
+      <path d="M33 35 L38 58 M35 32 L40 53" ${cut}/>
+      <path d="M67 35 L62 58 M65 32 L60 53" ${cut}/>
+      <rect x="44" y="50" width="12" height="16" rx="3" ${muscleAttrs('Upper Back', stats)}/>
+      <rect x="44" y="68" width="12" height="15" rx="3" ${muscleAttrs('Lower Back', stats)}/>
+      <path d="M50 51 L50 82" ${cut}/>
+      <path d="M46 69 Q45 80 46 92" ${cut}/>
+      <path d="M54 69 Q55 80 54 92" ${cut}/>
+      <path d="M16 32 C11 38 10 49 13 58 C16 61 20 60 21 54 C22 46 23 38 25 33 Z" ${muscleAttrs('Triceps', stats)}/>
+      <path d="M84 32 C89 38 90 49 87 58 C84 61 80 60 79 54 C78 46 77 38 75 33 Z" ${muscleAttrs('Triceps', stats)}/>
+      <path d="M17 38 Q13 48 16 58" ${cut}/>
+      <path d="M83 38 Q87 48 84 58" ${cut}/>
+      <path d="M12 59 Q10 74 13 88 L19 87 Q17 74 19 60 Z" ${muscleAttrs('Forearms', stats)}/>
+      <path d="M88 59 Q90 74 87 88 L81 87 Q83 74 81 60 Z" ${muscleAttrs('Forearms', stats)}/>
+      <path d="M15 62 L15 85" ${cut}/>
+      <path d="M85 62 L85 85" ${cut}/>
+      <path d="M36 93 Q50 99 64 93 L64 111 Q50 117 36 111 Z" ${muscleAttrs('Glutes', stats)}/>
+      <path d="M50 94 L50 114" ${cut}/>
+      <path d="M38 95 Q50 101 62 95" ${cut}/>
+      <path d="M33 110 L46 110 L44 152 L34 152 Z" ${muscleAttrs('Hamstrings', stats)}/>
+      <path d="M67 110 L54 110 L56 152 L66 152 Z" ${muscleAttrs('Hamstrings', stats)}/>
+      <path d="M40 112 Q38 131 39 150" ${cut}/>
+      <path d="M60 112 Q62 131 61 150" ${cut}/>
+      <ellipse cx="38" cy="159" rx="3.5" ry="3" ${skin}/>
+      <ellipse cx="62" cy="159" rx="3.5" ry="3" ${skin}/>
+      <path d="M35 161 Q30 172 32 184 Q34 195 38 197 Q42 195 44 184 Q46 172 41 161 Q38 158 35 161 Z" ${muscleAttrs('Calves', stats)}/>
+      <path d="M65 161 Q70 172 68 184 Q66 195 62 197 Q58 195 56 184 Q54 172 59 161 Q62 158 65 161 Z" ${muscleAttrs('Calves', stats)}/>
+      <path d="M38 164 Q37 178 38 190" ${cut}/>
+      <path d="M62 164 Q63 178 62 190" ${cut}/>
+      <ellipse cx="38" cy="206" rx="6.5" ry="4.5" ${skin}/>
+      <ellipse cx="62" cy="206" rx="6.5" ry="4.5" ${skin}/>
+      <ellipse cx="12" cy="62" rx="3.5" ry="4.5" ${skin}/>
+      <ellipse cx="88" cy="62" rx="3.5" ry="4.5" ${skin}/>
     </svg>`;
 
       const legend = stats ? `<div class="muscle-legend" style="padding:10px 0 0;justify-content:center;">
