@@ -1839,6 +1839,18 @@
                 d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
             </svg>
           </button>
+          <button class="icon-btn" title="Manage exercises" onclick="openExerciseManager()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14.4 14.4 9.6 9.6" />
+              <path
+                d="M18.657 21.485a2 2 0 1 1-2.829-2.828l-1.767 1.768a2 2 0 1 1-2.829-2.829l6.364-6.364a2 2 0 1 1 2.829 2.829l-1.768 1.767a2 2 0 1 1 2.828 2.829z" />
+              <path d="m21.5 21.5-1.4-1.4" />
+              <path d="M3.9 3.9 2.5 2.5" />
+              <path
+                d="M6.404 12.768a2 2 0 1 1-2.829-2.829l1.768-1.767a2 2 0 1 1-2.828-2.829l2.828-2.828a2 2 0 1 1 2.829 2.828l1.767-1.768a2 2 0 1 1 2.829 2.829z" />
+            </svg>
+          </button>
           <button class="icon-btn" id="sync-btn" title="Sync with cloud" onclick="pushSync(true)">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
@@ -1978,6 +1990,55 @@
         </button>
       </div>
       <div id="weekly-detail-content"></div>
+    </div>
+
+    <!-- ══════════════════ EXERCISE MANAGER ══════════════════ -->
+    <div id="screen-exercise-manager" class="screen">
+      <div class="page-header" style="padding-bottom: 0;">
+        <button class="back-btn" onclick="navigate('home', document.querySelectorAll('.nav-btn')[0])">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+          </svg>
+          <span>Home</span>
+        </button>
+      </div>
+      <div class="section-title">Exercises</div>
+      <div class="section-sub">Tap an exercise to edit, or add your own</div>
+      <button class="add-ex-btn" style="margin:0 16px 16px;" onclick="openExerciseForm()">+ Add Exercise</button>
+      <div id="exercise-manager-list" style="padding:0 16px;"></div>
+    </div>
+
+    <!-- Add/Edit Exercise Modal -->
+    <div class="modal-overlay" id="exercise-form-modal">
+      <div class="modal-sheet" style="max-height:88vh;">
+        <div class="modal-header">
+          <div style="font-size:16px;font-weight:800;flex:1;" id="exercise-form-title">Add Exercise</div>
+          <button class="modal-close-btn" onclick="closeExerciseForm()">✕</button>
+        </div>
+        <div style="padding:16px 20px 24px;">
+          <input type="hidden" id="ef-id">
+          <div style="margin-bottom:14px;">
+            <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:6px;">Icon (emoji)</label>
+            <input id="ef-icon" type="text" maxlength="4" placeholder="💪"
+              style="width:60px;text-align:center;font-size:20px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:8px;font-family:inherit;outline:none;">
+          </div>
+          <div style="margin-bottom:14px;">
+            <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:6px;">Name</label>
+            <input id="ef-name" type="text" placeholder="e.g. Cable Fly"
+              style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:10px;font-family:inherit;font-size:14px;outline:none;">
+          </div>
+          <div style="margin-bottom:14px;">
+            <label style="font-size:12px;color:var(--red);display:block;margin-bottom:6px;">Primary muscles</label>
+            <div id="ef-primary-list" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+          </div>
+          <div style="margin-bottom:20px;">
+            <label style="font-size:12px;color:var(--accent-blue);display:block;margin-bottom:6px;">Secondary muscles</label>
+            <div id="ef-secondary-list" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+          </div>
+          <div id="ef-builtin-note" style="display:none;font-size:12px;color:var(--text-dim);margin-bottom:14px;">Built-in exercises can't be edited. Hide it (from the list) and add your own custom version instead.</div>
+          <button class="btn-primary" id="ef-save-btn" onclick="saveExerciseForm()">Save Exercise</button>
+        </div>
+      </div>
     </div>
 
     <!-- ══════════════════ PROGRESS ══════════════════ -->
@@ -2318,6 +2379,8 @@
         userName: state.userName,
         profile: state.profile || {},
         customTags: state.customTags || [],
+        customExercises: state.customExercises || [],
+        hiddenExerciseIds: state.hiddenExerciseIds || [],
       };
     }
 
@@ -2417,6 +2480,19 @@
 
         lastSyncTime = new Date().toISOString();
         localStorage.setItem('lastSyncTime', lastSyncTime);
+
+        // Union-merge custom exercises (by id) and hidden-exercise ids so a
+        // new custom exercise or a hide/unhide action made on another device
+        // shows up here too.
+        if (Array.isArray(serverData.customExercises)) {
+          const localIds = new Set((state.customExercises || []).map(e => e.id));
+          const newCustom = serverData.customExercises.filter(e => !localIds.has(e.id));
+          if (newCustom.length) { state.customExercises = [...(state.customExercises || []), ...newCustom]; saveState(); }
+        }
+        if (Array.isArray(serverData.hiddenExerciseIds)) {
+          state.hiddenExerciseIds = Array.from(new Set([...(state.hiddenExerciseIds || []), ...serverData.hiddenExerciseIds]));
+        }
+
         return true;
 
       } catch (err) {
@@ -2492,6 +2568,146 @@
       { name: 'Glutes', icon: '🍑', color: 'secondary' },
       { name: 'Calves', icon: '🦶', color: 'secondary' },
     ];
+
+    // Built-ins + user-added exercises, minus anything hidden. Every picker in
+    // the app (workout logging, exercise swap) should read from this instead
+    // of EXERCISES_DB directly, so custom exercises show up everywhere and
+    // hidden ones disappear everywhere.
+    function getAllExercises() {
+      const hidden = new Set(state.hiddenExerciseIds || []);
+      return [...EXERCISES_DB, ...(state.customExercises || [])].filter(e => !hidden.has(e.id));
+    }
+
+    // ═══════════════════════════════════════════
+    //  EXERCISE MANAGER  (add/remove exercises, view primary/secondary muscles)
+    // ═══════════════════════════════════════════
+    function openExerciseManager() {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById('screen-exercise-manager').classList.add('active');
+      renderExerciseManagerList();
+    }
+
+    function isExerciseInUse(exId) {
+      return state.workouts.some(w => w.exercises.some(e => e.exId === exId));
+    }
+
+    function renderExerciseManagerList() {
+      const hidden = new Set(state.hiddenExerciseIds || []);
+      const customIds = new Set((state.customExercises || []).map(e => e.id));
+      const all = [...EXERCISES_DB, ...(state.customExercises || [])];
+
+      document.getElementById('exercise-manager-list').innerHTML = all.map(ex => {
+        const isHidden = hidden.has(ex.id);
+        const isCustom = customIds.has(ex.id);
+        const primary = (ex.primary || []).join(', ') || '—';
+        const secondary = (ex.secondary || []).join(', ') || '—';
+        return `<div class="muscle-item" style="${isHidden ? 'opacity:.4;' : ''}">
+      <div class="muscle-item-icon" style="cursor:pointer" onclick="openExerciseForm('${ex.id}')">${ex.icon}</div>
+      <div style="flex:1;cursor:pointer" onclick="openExerciseForm('${ex.id}')">
+        <div class="muscle-item-name">${ex.name}${isHidden ? ' (hidden)' : ''}</div>
+        <div class="muscle-item-stats"><span style="color:var(--red)">●</span> ${primary} &nbsp; <span style="color:var(--accent-blue)">●</span> ${secondary}</div>
+      </div>
+      <button class="ex-del-btn" style="flex-shrink:0" onclick="event.stopPropagation(); ${isCustom ? `deleteCustomExercise('${ex.id}')` : `toggleHiddenExercise('${ex.id}')`}">${isCustom ? 'Delete' : (isHidden ? 'Unhide' : 'Hide')}</button>
+    </div>`;
+      }).join('');
+    }
+
+    // Built-in exercises can be hidden from pickers (not deleted, since past
+    // workout history still references them by id). Custom exercises can be
+    // deleted outright, but only once nothing in history uses them.
+    function toggleHiddenExercise(exId) {
+      const hidden = new Set(state.hiddenExerciseIds || []);
+      if (hidden.has(exId)) hidden.delete(exId); else hidden.add(exId);
+      state.hiddenExerciseIds = Array.from(hidden);
+      saveState();
+      renderExerciseManagerList();
+    }
+
+    function deleteCustomExercise(exId) {
+      if (isExerciseInUse(exId)) {
+        showToast("Can't delete — used in workout history. Hiding instead.");
+        toggleHiddenExercise(exId);
+        return;
+      }
+      if (!confirm('Delete this exercise?')) return;
+      state.customExercises = (state.customExercises || []).filter(e => e.id !== exId);
+      saveState();
+      renderExerciseManagerList();
+    }
+
+    let efMuscleSelection = { primary: new Set(), secondary: new Set() };
+
+    function openExerciseForm(exId) {
+      const existing = exId ? [...EXERCISES_DB, ...(state.customExercises || [])].find(e => e.id === exId) : null;
+      const isBuiltin = exId && EXERCISES_DB.some(e => e.id === exId);
+
+      document.getElementById('exercise-form-title').textContent = existing
+        ? (isBuiltin ? 'Built-in Exercise (read-only)' : 'Edit Exercise')
+        : 'Add Exercise';
+      document.getElementById('ef-id').value = exId || '';
+      document.getElementById('ef-icon').value = existing ? existing.icon : '💪';
+      document.getElementById('ef-icon').disabled = !!isBuiltin;
+      document.getElementById('ef-name').value = existing ? existing.name : '';
+      document.getElementById('ef-name').disabled = !!isBuiltin;
+
+      efMuscleSelection = {
+        primary: new Set(existing ? existing.primary || [] : []),
+        secondary: new Set(existing ? existing.secondary || [] : []),
+      };
+      renderEfMuscleLists(isBuiltin);
+      const saveBtn = document.getElementById('ef-save-btn');
+      saveBtn.style.display = isBuiltin ? 'none' : 'block';
+      document.getElementById('ef-builtin-note').style.display = isBuiltin ? 'block' : 'none';
+      document.getElementById('exercise-form-modal').classList.add('open');
+    }
+
+    function closeExerciseForm() {
+      document.getElementById('exercise-form-modal').classList.remove('open');
+    }
+
+    function renderEfMuscleLists(readOnly) {
+      const chip = (name, level) => {
+        const active = efMuscleSelection[level].has(name);
+        const color = level === 'primary' ? 'var(--red)' : 'var(--accent-blue)';
+        const click = readOnly ? '' : `onclick="toggleEfMuscle('${name}','${level}')"`;
+        return `<span ${click} style="cursor:${readOnly ? 'default' : 'pointer'};padding:5px 10px;border-radius:14px;font-size:12px;border:1px solid ${active ? color : 'var(--border)'};background:${active ? color : 'transparent'};color:${active ? '#fff' : 'var(--text-muted)'};">${name}</span>`;
+      };
+      document.getElementById('ef-primary-list').innerHTML = MUSCLE_GROUPS.map(m => chip(m.name, 'primary')).join('');
+      document.getElementById('ef-secondary-list').innerHTML = MUSCLE_GROUPS.map(m => chip(m.name, 'secondary')).join('');
+    }
+
+    // A muscle can only be primary OR secondary at once for a given exercise.
+    function toggleEfMuscle(name, level) {
+      const other = level === 'primary' ? 'secondary' : 'primary';
+      if (efMuscleSelection[level].has(name)) efMuscleSelection[level].delete(name);
+      else { efMuscleSelection[level].add(name); efMuscleSelection[other].delete(name); }
+      renderEfMuscleLists(false);
+    }
+
+    function saveExerciseForm() {
+      const id = document.getElementById('ef-id').value;
+      const icon = document.getElementById('ef-icon').value.trim() || '💪';
+      const name = document.getElementById('ef-name').value.trim();
+      if (!name) { showToast('Enter a name'); return; }
+      if (!efMuscleSelection.primary.size) { showToast('Select at least one primary muscle'); return; }
+
+      const primary = Array.from(efMuscleSelection.primary);
+      const secondary = Array.from(efMuscleSelection.secondary);
+
+      if (id) {
+        const ex = state.customExercises.find(e => e.id === id);
+        if (ex) { ex.icon = icon; ex.name = name; ex.primary = primary; ex.secondary = secondary; ex.muscle = primary.join(', '); }
+      } else {
+        const newId = 'custom-' + name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') + '-' + Date.now().toString(36).slice(-4);
+        state.customExercises.push({ id: newId, name, icon, muscle: primary.join(', '), primary, secondary });
+      }
+
+      saveState();
+      pushSync();
+      closeExerciseForm();
+      renderExerciseManagerList();
+      showToast('Exercise saved');
+    }
 
     // Keyword-based muscle inference for exercises that don't carry an explicit
     // primary/secondary list (e.g. custom exercises created via log import).
@@ -2601,6 +2817,8 @@
       weeklyDetailOffset: 0, // 0 = this week, -1 = last week, etc.
       editingWorkoutId: null,
       customTags: [],
+      customExercises: [], // user-added exercises: { id, name, icon, muscle, primary, secondary }
+      hiddenExerciseIds: [], // built-in or custom exercise ids hidden from pickers
       activeRestRow: null, // the one <tr> whose rest clock is currently ticking, across all exercises
     };
 
@@ -2648,6 +2866,8 @@
         state.userName = parsed.userName || 'Athlete';
         state.profile = parsed.profile || {};
         state.customTags = parsed.customTags || [];
+        state.customExercises = parsed.customExercises || [];
+        state.hiddenExerciseIds = parsed.hiddenExerciseIds || [];
         // Existing duplicates (e.g. from a prior sync bug) get silently
         // cleaned up and persisted right away so they don't keep reappearing.
         if (state.workouts.length !== rawWorkouts.length) saveState();
@@ -2660,6 +2880,8 @@
         userName: state.userName,
         profile: state.profile,
         customTags: state.customTags,
+        customExercises: state.customExercises,
+        hiddenExerciseIds: state.hiddenExerciseIds,
       }));
     }
 
@@ -2798,7 +3020,7 @@
       const exercises = [];
       exBlocks.forEach(block => {
         const exId = block.dataset.exId;
-        const exDef = EXERCISES_DB.find(e => e.id === exId) || { name: 'Unknown', icon: '❓', primary: [], secondary: [] };
+        const exDef = getAllExercises().find(e => e.id === exId) || { name: 'Unknown', icon: '❓', primary: [], secondary: [] };
         const noteEl = block.querySelector('.ex-note-ta');
         const exNote = noteEl ? noteEl.value : '';
         const linkEl = block.querySelector('.ex-link-input');
@@ -2988,8 +3210,8 @@
 
     function renderExList(q) {
       const q2 = q.toLowerCase();
-      const filtered = EXERCISES_DB.filter(e =>
-        e.name.toLowerCase().includes(q2) || e.muscle.toLowerCase().includes(q2));
+      const filtered = getAllExercises().filter(e =>
+        e.name.toLowerCase().includes(q2) || (e.muscle || '').toLowerCase().includes(q2));
       const el = document.getElementById('ex-list');
       if (exPickerMultiMode) {
         el.innerHTML = filtered.map(ex => {
@@ -3023,7 +3245,7 @@
       const blockId = exReplaceTargetBlockId;
       closeExPicker();
       if (!blockId) return;
-      const def = EXERCISES_DB.find(e => e.id === exId);
+      const def = getAllExercises().find(e => e.id === exId);
       const block = document.getElementById(blockId);
       if (!def || !block) return;
       block.dataset.exId = exId;
@@ -3039,7 +3261,7 @@
     function addExercise(exId, containerOverride, linkGroupPrefill, trackRest) {
       if (trackRest === undefined) trackRest = true;
       closeExPicker();
-      const def = EXERCISES_DB.find(e => e.id === exId);
+      const def = getAllExercises().find(e => e.id === exId);
       if (!def) return;
       const container = containerOverride || document.getElementById('exercises-container');
       const isCombo = !!linkGroupPrefill;
@@ -4432,7 +4654,7 @@
     function populateExBlock(ex, container, trackRest) {
       if (trackRest === undefined) trackRest = true;
       const blockId = 'ex-' + Date.now() + Math.random().toString(36).slice(2, 6);
-      const def = EXERCISES_DB.find(e => e.id === ex.exId) || { name: ex.name, icon: ex.icon, muscle: 'Custom' };
+      const def = getAllExercises().find(e => e.id === ex.exId) || { name: ex.name, icon: ex.icon, muscle: 'Custom' };
       const isCombo = !!ex.linkGroup;
 
       const div = document.createElement('div');
