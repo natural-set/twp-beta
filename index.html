@@ -2387,17 +2387,32 @@
         const serverData = await safeJson(resp);
         if (!resp.ok) throw new Error(serverData.message || serverData.error || 'Sync failed');
 
+        // Clean up any duplicates already sitting in local storage first (from
+        // a prior sync bug), then only pull in server workouts that aren't
+        // already present locally — matched by id OR by content fingerprint,
+        // since the same workout can end up with different ids across devices.
+        const cleanedLocal = dedupeWorkouts(state.workouts);
+        const localFingerprints = new Set(cleanedLocal.map(workoutFingerprint));
+        const localIds = new Set(cleanedLocal.map(w => w.id));
+
         const newWorkouts = (serverData.workouts || []).filter(w =>
-          !state.workouts.find(lw => lw.id === w.id)
+          !localIds.has(w.id) && !localFingerprints.has(workoutFingerprint(w))
         );
 
-        if (newWorkouts.length > 0) {
-          state.workouts = [...newWorkouts, ...state.workouts].sort((a, b) =>
-            new Date(b.date) - new Date(a.date)
-          );
+        const dupesRemoved = state.workouts.length - cleanedLocal.length;
+        const combined = dedupeWorkouts(
+          [...newWorkouts, ...cleanedLocal].sort((a, b) => new Date(b.date) - new Date(a.date))
+        );
+
+        if (newWorkouts.length > 0 || dupesRemoved > 0) {
+          state.workouts = combined;
           saveState();
           refreshHome();
-          showToast(`✅ Fetched ${newWorkouts.length} workout(s) from cloud`);
+          if (newWorkouts.length > 0) {
+            showToast(`✅ Fetched ${newWorkouts.length} workout(s) from cloud`);
+          } else if (dupesRemoved > 0) {
+            showToast(`🧹 Cleaned up ${dupesRemoved} duplicate workout(s)`);
+          }
         }
 
         lastSyncTime = new Date().toISOString();
@@ -2596,14 +2611,46 @@
     let detailModalState = { type: null, key: null, filter: 'all', metric: 'volume' };
 
     // ── Load from localStorage ──
+    // A workout is considered "the same" as another if it falls on the same
+    // calendar day, has the same name, and the same duration/volume — this is
+    // what lets us catch duplicates that ended up with different `id`s (e.g.
+    // the same cloud workout pulled in more than once, or the same log
+    // imported twice) even though a plain id-match would miss them.
+    function workoutFingerprint(w) {
+      const day = new Date(w.date).toDateString();
+      const name = (w.name || '').trim().toLowerCase();
+      const vol = Math.round(w.volume || 0);
+      const dur = Math.round(w.duration || 0);
+      return `${day}|${name}|${vol}|${dur}`;
+    }
+
+    // Keeps the first occurrence of each fingerprint; list is expected
+    // newest-first, so "first occurrence" naturally keeps the most recently
+    // sorted copy.
+    function dedupeWorkouts(list) {
+      const seen = new Set();
+      const out = [];
+      (list || []).forEach(w => {
+        const fp = workoutFingerprint(w);
+        if (seen.has(fp)) return;
+        seen.add(fp);
+        out.push(w);
+      });
+      return out;
+    }
+
     function loadState() {
       const saved = localStorage.getItem('twp_state');
       if (saved) {
         const parsed = JSON.parse(saved);
-        state.workouts = parsed.workouts || [];
+        const rawWorkouts = parsed.workouts || [];
+        state.workouts = dedupeWorkouts(rawWorkouts);
         state.userName = parsed.userName || 'Athlete';
         state.profile = parsed.profile || {};
         state.customTags = parsed.customTags || [];
+        // Existing duplicates (e.g. from a prior sync bug) get silently
+        // cleaned up and persisted right away so they don't keep reappearing.
+        if (state.workouts.length !== rawWorkouts.length) saveState();
       }
     }
 
