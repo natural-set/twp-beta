@@ -2035,7 +2035,7 @@
             <label style="font-size:12px;color:var(--accent-blue);display:block;margin-bottom:6px;">Secondary muscles</label>
             <div id="ef-secondary-list" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
           </div>
-          <div id="ef-builtin-note" style="display:none;font-size:12px;color:var(--text-dim);margin-bottom:14px;">Built-in exercises can't be edited. Hide it (from the list) and add your own custom version instead.</div>
+          <div id="ef-builtin-note" style="display:none;font-size:12px;color:var(--text-dim);margin-bottom:14px;">Editing a built-in exercise saves your own version. Workouts already logged keep the muscles/name recorded at the time.</div>
           <button class="btn-primary" id="ef-save-btn" onclick="saveExerciseForm()">Save Exercise</button>
         </div>
       </div>
@@ -2381,6 +2381,7 @@
         customTags: state.customTags || [],
         customExercises: state.customExercises || [],
         hiddenExerciseIds: state.hiddenExerciseIds || [],
+        exerciseOverrides: state.exerciseOverrides || {},
       };
     }
 
@@ -2492,6 +2493,10 @@
         if (Array.isArray(serverData.hiddenExerciseIds)) {
           state.hiddenExerciseIds = Array.from(new Set([...(state.hiddenExerciseIds || []), ...serverData.hiddenExerciseIds]));
         }
+        if (serverData.exerciseOverrides && typeof serverData.exerciseOverrides === 'object') {
+          // Server's overrides win per-id on conflict — simplest resolution for a rare edit case.
+          state.exerciseOverrides = { ...(state.exerciseOverrides || {}), ...serverData.exerciseOverrides };
+        }
 
         return true;
 
@@ -2573,9 +2578,20 @@
     // the app (workout logging, exercise swap) should read from this instead
     // of EXERCISES_DB directly, so custom exercises show up everywhere and
     // hidden ones disappear everywhere.
+    // Built-in exercises can be edited — the edit is stored as an "override"
+    // (keyed by id) layered on top of the hardcoded default, so past workout
+    // history (which stores its own copy of name/icon/muscles at log time)
+    // is unaffected.
+    function withExerciseOverride(ex) {
+      const o = (state.exerciseOverrides || {})[ex.id];
+      return o ? { ...ex, ...o } : ex;
+    }
+
     function getAllExercises() {
       const hidden = new Set(state.hiddenExerciseIds || []);
-      return [...EXERCISES_DB, ...(state.customExercises || [])].filter(e => !hidden.has(e.id));
+      return [...EXERCISES_DB, ...(state.customExercises || [])]
+        .map(withExerciseOverride)
+        .filter(e => !hidden.has(e.id));
     }
 
     // ═══════════════════════════════════════════
@@ -2594,20 +2610,26 @@
     function renderExerciseManagerList() {
       const hidden = new Set(state.hiddenExerciseIds || []);
       const customIds = new Set((state.customExercises || []).map(e => e.id));
-      const all = [...EXERCISES_DB, ...(state.customExercises || [])];
+      const overrides = state.exerciseOverrides || {};
+      const all = [...EXERCISES_DB, ...(state.customExercises || [])].map(withExerciseOverride);
 
       document.getElementById('exercise-manager-list').innerHTML = all.map(ex => {
         const isHidden = hidden.has(ex.id);
         const isCustom = customIds.has(ex.id);
+        const isOverridden = !isCustom && !!overrides[ex.id];
         const primary = (ex.primary || []).join(', ') || '—';
         const secondary = (ex.secondary || []).join(', ') || '—';
+        const actions = isCustom
+          ? `<button class="ex-del-btn" style="flex-shrink:0" onclick="event.stopPropagation(); deleteCustomExercise('${ex.id}')">Delete</button>`
+          : `${isOverridden ? `<button class="ex-del-btn" style="flex-shrink:0" onclick="event.stopPropagation(); resetExerciseOverride('${ex.id}')">Reset</button>` : ''}
+             <button class="ex-del-btn" style="flex-shrink:0" onclick="event.stopPropagation(); toggleHiddenExercise('${ex.id}')">${isHidden ? 'Unhide' : 'Hide'}</button>`;
         return `<div class="muscle-item" style="${isHidden ? 'opacity:.4;' : ''}">
       <div class="muscle-item-icon" style="cursor:pointer" onclick="openExerciseForm('${ex.id}')">${ex.icon}</div>
       <div style="flex:1;cursor:pointer" onclick="openExerciseForm('${ex.id}')">
-        <div class="muscle-item-name">${ex.name}${isHidden ? ' (hidden)' : ''}</div>
+        <div class="muscle-item-name">${ex.name}${isHidden ? ' (hidden)' : ''}${isOverridden ? ' (edited)' : ''}</div>
         <div class="muscle-item-stats"><span style="color:var(--red)">●</span> ${primary} &nbsp; <span style="color:var(--accent-blue)">●</span> ${secondary}</div>
       </div>
-      <button class="ex-del-btn" style="flex-shrink:0" onclick="event.stopPropagation(); ${isCustom ? `deleteCustomExercise('${ex.id}')` : `toggleHiddenExercise('${ex.id}')`}">${isCustom ? 'Delete' : (isHidden ? 'Unhide' : 'Hide')}</button>
+      <div style="display:flex;gap:6px;flex-shrink:0">${actions}</div>
     </div>`;
       }).join('');
     }
@@ -2620,7 +2642,17 @@
       if (hidden.has(exId)) hidden.delete(exId); else hidden.add(exId);
       state.hiddenExerciseIds = Array.from(hidden);
       saveState();
+      pushSync();
       renderExerciseManagerList();
+    }
+
+    function resetExerciseOverride(exId) {
+      if (!state.exerciseOverrides || !state.exerciseOverrides[exId]) return;
+      delete state.exerciseOverrides[exId];
+      saveState();
+      pushSync();
+      renderExerciseManagerList();
+      showToast('Reset to default');
     }
 
     function deleteCustomExercise(exId) {
@@ -2638,25 +2670,26 @@
     let efMuscleSelection = { primary: new Set(), secondary: new Set() };
 
     function openExerciseForm(exId) {
-      const existing = exId ? [...EXERCISES_DB, ...(state.customExercises || [])].find(e => e.id === exId) : null;
+      const existing = exId
+        ? [...EXERCISES_DB, ...(state.customExercises || [])].map(withExerciseOverride).find(e => e.id === exId)
+        : null;
       const isBuiltin = exId && EXERCISES_DB.some(e => e.id === exId);
 
       document.getElementById('exercise-form-title').textContent = existing
-        ? (isBuiltin ? 'Built-in Exercise (read-only)' : 'Edit Exercise')
+        ? (isBuiltin ? 'Edit Built-in Exercise' : 'Edit Exercise')
         : 'Add Exercise';
       document.getElementById('ef-id').value = exId || '';
       document.getElementById('ef-icon').value = existing ? existing.icon : '💪';
-      document.getElementById('ef-icon').disabled = !!isBuiltin;
+      document.getElementById('ef-icon').disabled = false;
       document.getElementById('ef-name').value = existing ? existing.name : '';
-      document.getElementById('ef-name').disabled = !!isBuiltin;
+      document.getElementById('ef-name').disabled = false;
 
       efMuscleSelection = {
         primary: new Set(existing ? existing.primary || [] : []),
         secondary: new Set(existing ? existing.secondary || [] : []),
       };
-      renderEfMuscleLists(isBuiltin);
-      const saveBtn = document.getElementById('ef-save-btn');
-      saveBtn.style.display = isBuiltin ? 'none' : 'block';
+      renderEfMuscleLists(false);
+      document.getElementById('ef-save-btn').style.display = 'block';
       document.getElementById('ef-builtin-note').style.display = isBuiltin ? 'block' : 'none';
       document.getElementById('exercise-form-modal').classList.add('open');
     }
@@ -2695,8 +2728,14 @@
       const secondary = Array.from(efMuscleSelection.secondary);
 
       if (id) {
-        const ex = state.customExercises.find(e => e.id === id);
-        if (ex) { ex.icon = icon; ex.name = name; ex.primary = primary; ex.secondary = secondary; ex.muscle = primary.join(', '); }
+        const isBuiltin = EXERCISES_DB.some(e => e.id === id);
+        if (isBuiltin) {
+          state.exerciseOverrides = state.exerciseOverrides || {};
+          state.exerciseOverrides[id] = { name, icon, muscle: primary.join(', '), primary, secondary };
+        } else {
+          const ex = state.customExercises.find(e => e.id === id);
+          if (ex) { ex.icon = icon; ex.name = name; ex.primary = primary; ex.secondary = secondary; ex.muscle = primary.join(', '); }
+        }
       } else {
         const newId = 'custom-' + name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') + '-' + Date.now().toString(36).slice(-4);
         state.customExercises.push({ id: newId, name, icon, muscle: primary.join(', '), primary, secondary });
@@ -2819,6 +2858,7 @@
       customTags: [],
       customExercises: [], // user-added exercises: { id, name, icon, muscle, primary, secondary }
       hiddenExerciseIds: [], // built-in or custom exercise ids hidden from pickers
+      exerciseOverrides: {}, // built-in exercise edits, keyed by id: { name, icon, muscle, primary, secondary }
       activeRestRow: null, // the one <tr> whose rest clock is currently ticking, across all exercises
     };
 
@@ -2868,6 +2908,7 @@
         state.customTags = parsed.customTags || [];
         state.customExercises = parsed.customExercises || [];
         state.hiddenExerciseIds = parsed.hiddenExerciseIds || [];
+        state.exerciseOverrides = parsed.exerciseOverrides || {};
         // Existing duplicates (e.g. from a prior sync bug) get silently
         // cleaned up and persisted right away so they don't keep reappearing.
         if (state.workouts.length !== rawWorkouts.length) saveState();
@@ -2882,6 +2923,7 @@
         customTags: state.customTags,
         customExercises: state.customExercises,
         hiddenExerciseIds: state.hiddenExerciseIds,
+        exerciseOverrides: state.exerciseOverrides,
       }));
     }
 
