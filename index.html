@@ -1824,22 +1824,22 @@
     <div id="screen-home" class="screen active">
       <div class="page-header">
         <div>
-          <h1>Home</h1>
+          <h1 data-i18n="header_home">Home</h1>
         </div>
         <div class="header-icons">
-          <button class="icon-btn">
+          <button class="icon-btn" aria-label="Notifications">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round"
                 d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
             </svg>
           </button>
-          <button class="icon-btn">
+          <button class="icon-btn" aria-label="Alerts">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round"
                 d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
             </svg>
           </button>
-          <button class="icon-btn" title="Manage exercises" onclick="openExerciseManager()">
+          <button class="icon-btn" title="Manage exercises" aria-label="Manage exercises" onclick="openExerciseManager()">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M14.4 14.4 9.6 9.6" />
@@ -1851,7 +1851,7 @@
                 d="M6.404 12.768a2 2 0 1 1-2.829-2.829l1.768-1.767a2 2 0 1 1-2.828-2.829l2.828-2.828a2 2 0 1 1 2.829 2.828l1.767-1.768a2 2 0 1 1 2.829 2.829z" />
             </svg>
           </button>
-          <button class="icon-btn" id="sync-btn" title="Sync with cloud" onclick="pushSync(true)">
+          <button class="icon-btn" id="sync-btn" title="Sync with cloud" aria-label="Sync with cloud" onclick="pushSync(true)">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
               class="lucide lucide-cloud-sync-icon lucide-cloud-sync">
@@ -1868,39 +1868,39 @@
       <div class="snapshot-card">
         <div class="snapshot-header">
           <div style="display:flex;align-items:center;gap:8px;">
-            <span>Your weekly snapshot</span>
+            <span data-i18n="weekly_snapshot">Your weekly snapshot</span>
             <span id="streak-badge" style="display:none;font-size:12px;font-weight:700;color:var(--accent);"></span>
           </div>
-          <a onclick="openWeeklyDetail(0)">See more</a>
+          <a onclick="openWeeklyDetail(0)" data-i18n="see_more">See more</a>
         </div>
         <div class="snapshot-stats">
           <div class="stat-item">
             <div class="val" id="home-workouts">0</div>
-            <div class="lbl">Workouts</div>
+            <div class="lbl" data-i18n="lbl_workouts">Workouts</div>
             <div class="stat-delta" id="home-delta-workouts">▲ 0</div>
           </div>
           <div class="stat-item">
             <div class="val" id="home-duration">0min</div>
-            <div class="lbl">Duration</div>
+            <div class="lbl" data-i18n="lbl_duration">Duration</div>
             <div class="stat-delta" id="home-delta-duration">▲ 0min</div>
           </div>
           <div class="stat-item">
             <div class="val" id="home-volume">0kg</div>
-            <div class="lbl">Volume</div>
+            <div class="lbl" data-i18n="lbl_volume">Volume</div>
             <div class="stat-delta" id="home-delta-volume">▲ 0 kg</div>
           </div>
         </div>
       </div>
 
       <div id="home-cta" class="cta-card">
-        <h2>Ready to start lifting?</h2>
-        <p>Start your workout and add your exercises. Your stats will be ready when you finish.</p>
-        <button class="btn-primary" onclick="goToWorkout()">Start my first workout</button>
+        <h2 data-i18n="cta_title">Ready to start lifting?</h2>
+        <p data-i18n="cta_desc">Start your workout and add your exercises. Your stats will be ready when you finish.</p>
+        <button class="btn-primary" onclick="goToWorkout()" data-i18n="cta_btn">Start my first workout</button>
       </div>
 
       <div class="import-card" id="import-export-card" onclick="handleImportExportClick()" style="position:relative;">
         <button class="icon-btn" onclick="event.stopPropagation(); toggleImportExportMode();"
-          title="Switch Import/Export"
+          title="Switch Import/Export" aria-label="Switch between import and export"
           style="position:absolute; top:8px; right:8px; background:var(--surface2); border-radius:50%; padding:6px;">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
             style="width:16px;height:16px;">
@@ -1915,13 +1915,17 @@
           </svg>
         </div>
         <div class="import-text">
-          <div class="title" id="import-export-title">Import training log</div>
-          <div class="sub" id="import-export-sub">Upload a PDF, Excel, or text file to populate your data</div>
+          <div class="title" id="import-export-title" data-i18n="import_title">Import training log</div>
+          <div class="sub" id="import-export-sub" data-i18n="import_sub">Upload a PDF, Excel, or text file to populate your data</div>
+          <div id="import-format-help-link" style="margin-top:4px;">
+            <a onclick="event.stopPropagation(); showImportFormatHelp();"
+              style="font-size:12px;color:var(--accent-blue);text-decoration:none;cursor:pointer;" data-i18n="see_format">See expected format →</a>
+          </div>
         </div>
       </div>
       <input type="file" id="file-input" accept=".pdf,.xlsx,.xls,.csv,.txt" onchange="handleFileUpload(event)">
 
-      <div class="section-title">Recent Workouts</div>
+      <div class="section-title" data-i18n="recent_workouts">Recent Workouts</div>
       <div id="home-feed"></div>
     </div>
 
@@ -1929,15 +1933,15 @@
     <div id="screen-workout" class="screen">
       <div id="no-workout">
         <div class="page-header">
-          <h1>Workout</h1>
+          <h1 data-i18n="header_workout">Workout</h1>
         </div>
         <div style="padding: 40px 20px; text-align: center;">
           <div style="font-size: 48px; margin-bottom: 16px;">💪</div>
-          <h2 style="font-size: 20px; font-weight: 800; margin-bottom: 8px;">No active workout</h2>
-          <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 24px;">Start a new session to log your
+          <h2 style="font-size: 20px; font-weight: 800; margin-bottom: 8px;" data-i18n="no_active_workout">No active workout</h2>
+          <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 24px;" data-i18n="start_new_session">Start a new session to log your
             exercises.</p>
           <button class="btn-primary" style="max-width: 280px; margin: 0 auto; display: block;"
-            onclick="startWorkout()">Start Empty Workout</button>
+            onclick="startWorkout()" data-i18n="start_empty_workout">Start Empty Workout</button>
         </div>
       </div>
 
@@ -1945,11 +1949,11 @@
         <div class="workout-top-bar">
           <div class="workout-timer" id="workout-timer">00:00</div>
           <div style="display: flex; gap: 8px;">
-            <button onclick="cancelWorkout()"
+            <button onclick="cancelWorkout()" data-i18n="btn_cancel"
               style="background: transparent; border: 1px solid var(--border); color: var(--text); padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background .15s;"
               onmouseover="this.style.background='var(--surface3)'"
               onmouseout="this.style.background='transparent'">Cancel</button>
-            <button class="btn-finish" onclick="finishWorkout()">Finish</button>
+            <button class="btn-finish" onclick="finishWorkout()" data-i18n="btn_finish">Finish</button>
           </div>
         </div>
 
@@ -1957,15 +1961,18 @@
           <input type="datetime-local" id="workout-date"
             style="flex: 1; background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 8px; border-radius: 6px; font-family: inherit; font-size: 13px; outline: none;">
           <input type="number" id="workout-duration-input" placeholder="Duration (min)"
-            style="width: 110px; background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 8px; border-radius: 6px; font-family: inherit; font-size: 13px; outline: none;">
+            style="width: 100px; background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 8px; border-radius: 6px; font-family: inherit; font-size: 13px; outline: none;">
+          <input type="number" step="0.1" id="workout-bodyweight-input" placeholder="Weight (kg)"
+            title="Logging this also updates your bodyweight history in the You tab"
+            style="width: 100px; background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 8px; border-radius: 6px; font-family: inherit; font-size: 13px; outline: none;">
         </div>
 
-        <input class="workout-name-input" id="workout-name" placeholder="Workout name…" />
-        <textarea class="workout-note-input" id="workout-note" placeholder="Add notes…" rows="1"></textarea>
+        <input class="workout-name-input" id="workout-name" placeholder="Workout name…" data-i18n-placeholder="ph_workout_name" />
+        <textarea class="workout-note-input" id="workout-note" placeholder="Add notes…" rows="1" data-i18n-placeholder="ph_add_notes"></textarea>
 
         <div id="exercises-container"></div>
 
-        <button class="add-ex-btn" onclick="openExPicker()">+ Add Exercise</button>
+        <button class="add-ex-btn" onclick="openExPicker()" data-i18n="btn_add_exercise">+ Add Exercise</button>
       </div>
     </div>
 
@@ -2016,7 +2023,7 @@
       <div class="modal-sheet" style="max-height:88vh;">
         <div class="modal-header">
           <div style="font-size:16px;font-weight:800;flex:1;" id="exercise-form-title">Add Exercise</div>
-          <button class="modal-close-btn" onclick="closeExerciseForm()">✕</button>
+          <button class="modal-close-btn" onclick="closeExerciseForm()" aria-label="Close">✕</button>
         </div>
         <div style="padding:16px 20px 24px;">
           <input type="hidden" id="ef-id">
@@ -2047,23 +2054,23 @@
     <!-- ══════════════════ PROGRESS ══════════════════ -->
     <div id="screen-progress" class="screen">
       <div class="page-header">
-        <h1>Progress</h1>
+        <h1 data-i18n="header_progress">Progress</h1>
       </div>
 
       <div class="progress-tabs">
-        <button class="progress-tab active" onclick="switchProgressTab(this,'overview')">Overview</button>
-        <button class="progress-tab" onclick="switchProgressTab(this,'exercises')">Exercises</button>
-        <button class="progress-tab" onclick="switchProgressTab(this,'muscles')">Muscles</button>
+        <button class="progress-tab active" onclick="switchProgressTab(this,'overview')" data-i18n="tab_overview">Overview</button>
+        <button class="progress-tab" onclick="switchProgressTab(this,'exercises')" data-i18n="tab_exercises">Exercises</button>
+        <button class="progress-tab" onclick="switchProgressTab(this,'muscles')" data-i18n="tab_muscles">Muscles</button>
       </div>
 
       <div id="ptab-overview">
         <div class="time-filters">
-          <button class="time-filter active" onclick="switchFilter(this,'week')">Week</button>
-          <button class="time-filter" onclick="switchFilter(this,'month')">Month</button>
+          <button class="time-filter active" onclick="switchFilter(this,'week')" data-i18n="f_week">Week</button>
+          <button class="time-filter" onclick="switchFilter(this,'month')" data-i18n="f_month">Month</button>
           <button class="time-filter" onclick="switchFilter(this,'3m')">3M</button>
           <button class="time-filter" onclick="switchFilter(this,'6m')">6M</button>
-          <button class="time-filter" onclick="switchFilter(this,'year')">Year</button>
-          <button class="time-filter" onclick="switchFilter(this,'all')">All</button>
+          <button class="time-filter" onclick="switchFilter(this,'year')" data-i18n="f_year">Year</button>
+          <button class="time-filter" onclick="switchFilter(this,'all')" data-i18n="f_all">All</button>
         </div>
 
         <div class="chart-container">
@@ -2097,7 +2104,7 @@
 
         <div id="filter-stats"></div>
 
-        <div class="section-title">Suggested Goal</div>
+        <div class="section-title" data-i18n="suggested_goal">Suggested Goal</div>
         <div class="goal-card">
           <div class="goal-icon">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -2109,11 +2116,11 @@
             <div class="title" id="goal-title">3 Workouts per week</div>
             <div class="sub" id="goal-sub">0/3 Completed</div>
           </div>
-          <button class="goal-btn" onclick="openGoalPicker()">Set Goal</button>
+          <button class="goal-btn" onclick="openGoalPicker()" data-i18n="set_goal">Set Goal</button>
         </div>
 
-        <div class="section-title" style="padding-top: 8px;">This Week</div>
-        <div class="section-sub">Your muscle coverage</div>
+        <div class="section-title" style="padding-top: 8px;" data-i18n="this_week">This Week</div>
+        <div class="section-sub" data-i18n="muscle_coverage">Your muscle coverage</div>
         <div id="progress-muscle-map" class="muscle-body-container"></div>
       </div>
 
@@ -2139,7 +2146,7 @@
     <!-- ══════════════════ YOU ══════════════════ -->
     <div id="screen-you" class="screen">
       <div class="page-header">
-        <h1>You</h1>
+        <h1 data-i18n="header_you">You</h1>
       </div>
       <div class="you-header">
         <div class="avatar" id="you-avatar">W</div>
@@ -2151,33 +2158,43 @@
       <div class="you-stats">
         <div class="you-stat">
           <div class="val" id="you-total-workouts">0</div>
-          <div class="lbl">Workouts</div>
+          <div class="lbl" data-i18n="lbl_workouts">Workouts</div>
         </div>
         <div class="you-stat">
           <div class="val" id="you-total-vol">0</div>
-          <div class="lbl">Total kg</div>
+          <div class="lbl" data-i18n="lbl_total_kg">Total kg</div>
         </div>
         <div class="you-stat">
           <div class="val" id="you-prs">0</div>
-          <div class="lbl">PRs Set</div>
+          <div class="lbl" data-i18n="lbl_prs_set">PRs Set</div>
         </div>
       </div>
       <div class="settings-section">
         <div
-          style="font-size: 11px; color: var(--text-dim); letter-spacing: .08em; text-transform: uppercase; margin-bottom: 8px; padding: 0 4px;">
+          style="font-size: 11px; color: var(--text-dim); letter-spacing: .08em; text-transform: uppercase; margin-bottom: 8px; padding: 0 4px;"
+          data-i18n="section_account">
           Account</div>
         <div class="settings-item" onclick="editName()">
-          <span>Edit Name</span>
+          <span data-i18n="edit_name">Edit Name</span>
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
           </svg>
         </div>
+        <div class="settings-item" style="cursor:default;">
+          <span data-i18n="language">Language</span>
+          <div style="display:flex;gap:6px;">
+            <button onclick="setLanguage('en')" id="lang-btn-en"
+              style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:5px 12px;border-radius:14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">EN</button>
+            <button onclick="setLanguage('pt')" id="lang-btn-pt"
+              style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:5px 12px;border-radius:14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">PT-BR</button>
+          </div>
+        </div>
         <div class="settings-item" onclick="pushSync(true)">
-          <span>Cloud Sync</span>
+          <span data-i18n="cloud_sync">Cloud Sync</span>
           <span style="color:var(--text-muted);font-size:13px;" id="sync-status-text">Never synced</span>
         </div>
         <div class="settings-item" onclick="clearData()">
-          <span style="color: var(--red)">Clear All Data</span>
+          <span style="color: var(--red)" data-i18n="clear_all_data">Clear All Data</span>
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
           </svg>
@@ -2185,15 +2202,18 @@
       </div>
 
       <div
-        style="font-size: 11px; color: var(--text-dim); letter-spacing: .08em; text-transform: uppercase; margin: 8px 20px;">
+        style="font-size: 11px; color: var(--text-dim); letter-spacing: .08em; text-transform: uppercase; margin: 8px 20px;"
+        data-i18n="section_profile_measurements">
         Profile & Measurements</div>
       <div class="settings-section" style="padding-top:0;" id="you-profile-list"></div>
 
       <div
-        style="font-size: 11px; color: var(--text-dim); letter-spacing: .08em; text-transform: uppercase; margin: 8px 20px;">
+        style="font-size: 11px; color: var(--text-dim); letter-spacing: .08em; text-transform: uppercase; margin: 8px 20px;"
+        data-i18n="section_workout_history">
         Workout History</div>
       <div id="you-history-list" style="margin: 0 0 16px;"></div>
     </div>
+
 
     <!-- ══════════════════ BOTTOM NAV ══════════════════ -->
     <nav>
@@ -2202,27 +2222,27 @@
           <path stroke-linecap="round" stroke-linejoin="round"
             d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
         </svg>
-        Home
+        <span data-i18n="nav_home">Home</span>
       </button>
       <button class="nav-btn" onclick="navigate('workout',this)">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
         </svg>
-        Workout
+        <span data-i18n="nav_workout">Workout</span>
       </button>
       <button class="nav-btn" onclick="navigate('progress',this)">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round"
             d="M7.5 14.25v2.25m3-4.5v4.5m3-6.75v6.75m3-9v9M6 20.25h12A2.25 2.25 0 0 0 20.25 18V6A2.25 2.25 0 0 0 18 3.75H6A2.25 2.25 0 0 0 3.75 6v12A2.25 2.25 0 0 0 6 20.25Z" />
         </svg>
-        Progress
+        <span data-i18n="nav_progress">Progress</span>
       </button>
       <button class="nav-btn" onclick="navigate('you',this)">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round"
             d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
         </svg>
-        You
+        <span data-i18n="nav_you">You</span>
       </button>
     </nav>
 
@@ -2233,14 +2253,14 @@
           <input class="modal-search" id="ex-search" placeholder="Search exercises…"
             oninput="filterExercises(this.value)">
           <button class="icon-btn" id="combo-toggle-btn" onclick="toggleComboMode()"
-            title="Combine multiple exercises into one Combined Exercise">
+            title="Combine multiple exercises into one Combined Exercise" aria-label="Combine multiple exercises">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
               style="width:20px;height:20px;">
               <path stroke-linecap="round" stroke-linejoin="round"
                 d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244" />
             </svg>
           </button>
-          <button class="modal-close-btn" onclick="closeExPicker()">✕</button>
+          <button class="modal-close-btn" onclick="closeExPicker()" aria-label="Close">✕</button>
         </div>
         <div id="ex-list"></div>
         <div id="ex-picker-footer"
@@ -2257,7 +2277,7 @@
       <div class="modal-sheet" style="max-height:75vh;">
         <div class="modal-header">
           <div style="font-size:16px;font-weight:800;flex:1;">Set Variations</div>
-          <button class="modal-close-btn" onclick="closeVariationsPicker()">✕</button>
+          <button class="modal-close-btn" onclick="closeVariationsPicker()" aria-label="Close">✕</button>
         </div>
         <div style="padding:16px 20px 24px;">
           <div id="variations-preset-list"></div>
@@ -2289,16 +2309,16 @@
               <div style="font-size:11px;color:var(--text-muted);" id="detail-modal-subtitle">Progression</div>
             </div>
           </div>
-          <button class="modal-close-btn" onclick="closeDetailModal()">✕</button>
+          <button class="modal-close-btn" onclick="closeDetailModal()" aria-label="Close">✕</button>
         </div>
         <div style="padding:16px 20px 20px;">
           <div class="time-filters" id="detail-modal-filters">
-            <button class="time-filter" onclick="switchDetailFilter(this,'week')">Week</button>
-            <button class="time-filter" onclick="switchDetailFilter(this,'month')">Month</button>
+            <button class="time-filter" onclick="switchDetailFilter(this,'week')" data-i18n="f_week">Week</button>
+            <button class="time-filter" onclick="switchDetailFilter(this,'month')" data-i18n="f_month">Month</button>
             <button class="time-filter" onclick="switchDetailFilter(this,'3m')">3M</button>
             <button class="time-filter" onclick="switchDetailFilter(this,'6m')">6M</button>
-            <button class="time-filter" onclick="switchDetailFilter(this,'year')">Year</button>
-            <button class="time-filter active" onclick="switchDetailFilter(this,'all')">All</button>
+            <button class="time-filter" onclick="switchDetailFilter(this,'year')" data-i18n="f_year">Year</button>
+            <button class="time-filter active" onclick="switchDetailFilter(this,'all')" data-i18n="f_all">All</button>
           </div>
           <div class="chart-container" style="margin:0 0 16px;">
             <div class="chart-label" id="detail-modal-period">All time</div>
@@ -2316,7 +2336,7 @@
       <div class="modal-sheet" style="max-height:60vh;">
         <div class="modal-header">
           <div style="font-size:16px;font-weight:800;flex:1;">😖 Soreness</div>
-          <button class="modal-close-btn" onclick="closeSorenessModal()">✕</button>
+          <button class="modal-close-btn" onclick="closeSorenessModal()" aria-label="Close">✕</button>
         </div>
         <div style="padding:18px 20px 22px;">
           <div style="font-size:13px;color:var(--text-muted);margin-bottom:14px;">How sore did you feel after this
@@ -2345,7 +2365,7 @@
       <div class="modal-sheet" style="max-height:50vh;">
         <div class="modal-header">
           <div style="font-size:16px;font-weight:800;flex:1;" id="pf-modal-title">Field</div>
-          <button class="modal-close-btn" onclick="closeProfileFieldModal()">✕</button>
+          <button class="modal-close-btn" onclick="closeProfileFieldModal()" aria-label="Close">✕</button>
         </div>
         <div style="padding:18px 20px 22px;">
           <input id="pf-modal-input" type="text"
@@ -2365,9 +2385,14 @@
       <div class="modal-sheet" style="max-height:70vh;">
         <div class="modal-header">
           <div style="font-size:16px;font-weight:800;flex:1;" id="mh-modal-title">History</div>
-          <button class="modal-close-btn" onclick="closeMeasurementHistoryModal()">✕</button>
+          <button class="modal-close-btn" onclick="closeMeasurementHistoryModal()" aria-label="Close">✕</button>
         </div>
-        <div style="padding:8px 20px 20px;" id="mh-modal-list"></div>
+        <div style="padding:8px 20px 20px;">
+          <div id="mh-modal-chart-wrap" style="display:none;margin-bottom:14px;">
+            <canvas id="mh-modal-chart" height="140"></canvas>
+          </div>
+          <div id="mh-modal-list"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -2596,6 +2621,106 @@
         setTimeout(() => pushSync(), 1000);
       }, 800);
     });
+
+    // ═══════════════════════════════════════════
+    //  LANGUAGE (i18n)
+    // ═══════════════════════════════════════════
+    // Covers static app chrome (nav, headers, buttons, empty states). Workout/exercise
+    // names, notes, and other user-entered data are never auto-translated — only the
+    // UI shell around them.
+    const TRANSLATIONS = {
+      en: {
+        nav_home: 'Home', nav_workout: 'Workout', nav_progress: 'Progress', nav_you: 'You',
+        header_home: 'Home', header_workout: 'Workout', header_progress: 'Progress', header_you: 'You',
+        cta_title: 'Ready to start lifting?',
+        cta_desc: 'Start your workout and add your exercises. Your stats will be ready when you finish.',
+        cta_btn: 'Start my first workout',
+        recent_workouts: 'Recent Workouts', weekly_snapshot: 'Your weekly snapshot', see_more: 'See more',
+        lbl_workouts: 'Workouts', lbl_duration: 'Duration', lbl_volume: 'Volume',
+        lbl_total_kg: 'Total kg', lbl_prs_set: 'PRs Set',
+        no_active_workout: 'No active workout',
+        start_new_session: 'Start a new session to log your exercises.',
+        start_empty_workout: 'Start Empty Workout',
+        btn_cancel: 'Cancel', btn_finish: 'Finish', btn_add_exercise: '+ Add Exercise',
+        ph_workout_name: 'Workout name…', ph_add_notes: 'Add notes…',
+        tab_overview: 'Overview', tab_exercises: 'Exercises', tab_muscles: 'Muscles',
+        f_week: 'Week', f_month: 'Month', f_year: 'Year', f_all: 'All',
+        section_account: 'Account', edit_name: 'Edit Name', language: 'Language',
+        cloud_sync: 'Cloud Sync', clear_all_data: 'Clear All Data',
+        section_profile_measurements: 'Profile & Measurements', section_workout_history: 'Workout History',
+        import_title: 'Import training log', import_sub: 'Upload a PDF, Excel, or text file to populate your data',
+        export_title: 'Export training log', export_sub: 'Download your training history as a .txt file',
+        see_format: 'See expected format →',
+        suggested_goal: 'Suggested Goal', set_goal: 'Set Goal',
+        this_week: 'This Week', muscle_coverage: 'Your muscle coverage',
+      },
+      pt: {
+        nav_home: 'Início', nav_workout: 'Treino', nav_progress: 'Progresso', nav_you: 'Você',
+        header_home: 'Início', header_workout: 'Treino', header_progress: 'Progresso', header_you: 'Você',
+        cta_title: 'Pronto para treinar?',
+        cta_desc: 'Inicie seu treino e adicione seus exercícios. Suas estatísticas ficarão prontas ao finalizar.',
+        cta_btn: 'Começar meu primeiro treino',
+        recent_workouts: 'Treinos Recentes', weekly_snapshot: 'Seu resumo semanal', see_more: 'Ver mais',
+        lbl_workouts: 'Treinos', lbl_duration: 'Duração', lbl_volume: 'Volume',
+        lbl_total_kg: 'Total kg', lbl_prs_set: 'Recordes',
+        no_active_workout: 'Nenhum treino ativo',
+        start_new_session: 'Inicie uma nova sessão para registrar seus exercícios.',
+        start_empty_workout: 'Iniciar Treino Vazio',
+        btn_cancel: 'Cancelar', btn_finish: 'Finalizar', btn_add_exercise: '+ Adicionar Exercício',
+        ph_workout_name: 'Nome do treino…', ph_add_notes: 'Adicionar notas…',
+        tab_overview: 'Visão Geral', tab_exercises: 'Exercícios', tab_muscles: 'Músculos',
+        f_week: 'Semana', f_month: 'Mês', f_year: 'Ano', f_all: 'Tudo',
+        section_account: 'Conta', edit_name: 'Editar Nome', language: 'Idioma',
+        cloud_sync: 'Sincronização', clear_all_data: 'Apagar Todos os Dados',
+        section_profile_measurements: 'Perfil e Medidas', section_workout_history: 'Histórico de Treinos',
+        import_title: 'Importar registro de treinos', import_sub: 'Envie um PDF, Excel ou arquivo de texto para preencher seus dados',
+        export_title: 'Exportar registro de treinos', export_sub: 'Baixe seu histórico de treinos como um arquivo .txt',
+        see_format: 'Ver formato esperado →',
+        suggested_goal: 'Meta Sugerida', set_goal: 'Definir Meta',
+        this_week: 'Esta Semana', muscle_coverage: 'Cobertura muscular',
+      },
+    };
+
+    function t(key) {
+      const lang = state.language || 'en';
+      return (TRANSLATIONS[lang] && TRANSLATIONS[lang][key]) || TRANSLATIONS.en[key] || key;
+    }
+
+    function applyTranslations() {
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        el.textContent = t(el.getAttribute('data-i18n'));
+      });
+      document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+        el.placeholder = t(el.getAttribute('data-i18n-placeholder'));
+      });
+      // These two toggle between two different translated strings depending on
+      // mode/state, so a static data-i18n tag alone can't cover them.
+      const impTitle = document.getElementById('import-export-title');
+      if (impTitle) impTitle.textContent = t(importExportMode === 'import' ? 'import_title' : 'export_title');
+      const impSub = document.getElementById('import-export-sub');
+      if (impSub) impSub.textContent = t(importExportMode === 'import' ? 'import_sub' : 'export_sub');
+      const langEnBtn = document.getElementById('lang-btn-en');
+      const langPtBtn = document.getElementById('lang-btn-pt');
+      if (langEnBtn && langPtBtn) {
+        const lang = state.language || 'en';
+        langEnBtn.style.background = lang === 'en' ? 'var(--accent-blue)' : 'var(--surface2)';
+        langEnBtn.style.color = lang === 'en' ? '#fff' : 'var(--text)';
+        langPtBtn.style.background = lang === 'pt' ? 'var(--accent-blue)' : 'var(--surface2)';
+        langPtBtn.style.color = lang === 'pt' ? '#fff' : 'var(--text)';
+      }
+    }
+
+    function setLanguage(lang) {
+      state.language = lang;
+      saveState();
+      applyTranslations();
+      // Re-render whichever screens build their text at runtime (goal card,
+      // muscle-coverage labels, etc.) so the switch is immediate everywhere,
+      // not just on static chrome.
+      refreshHome();
+      renderGoal();
+      showToast(lang === 'pt' ? 'Idioma alterado para Português' : 'Language switched to English');
+    }
 
     // ═══════════════════════════════════════════
     //  DATA
@@ -2929,6 +3054,7 @@
       favoriteExercises: [], // exercise ids starred in the picker
       recentExerciseIds: [], // exercise ids most recently added, newest first
       measurementHistory: {}, // dated snapshots per measurement field: { key: [{date, value}] }
+      language: 'en', // 'en' | 'pt'
       activeRestRow: null, // the one <tr> whose rest clock is currently ticking, across all exercises
     };
 
@@ -2983,6 +3109,7 @@
         state.favoriteExercises = parsed.favoriteExercises || [];
         state.recentExerciseIds = parsed.recentExerciseIds || [];
         state.measurementHistory = parsed.measurementHistory || {};
+        state.language = parsed.language || (navigator.language && navigator.language.toLowerCase().startsWith('pt') ? 'pt' : 'en');
         // Existing duplicates (e.g. from a prior sync bug) get silently
         // cleaned up and persisted right away so they don't keep reappearing.
         if (state.workouts.length !== rawWorkouts.length) saveState();
@@ -3002,6 +3129,7 @@
         favoriteExercises: state.favoriteExercises,
         recentExerciseIds: state.recentExerciseIds,
         measurementHistory: state.measurementHistory,
+        language: state.language,
       }));
     }
 
@@ -3021,11 +3149,14 @@
     const MEASUREMENT_KEYS = new Set(['weight', 'bodyFat', 'chest', 'waist', 'shoulders', 'lArm', 'rArm', 'lForearm', 'rForearm', 'lThigh', 'rThigh', 'lCalf', 'rCalf']);
 
     let profileFieldEditKey = null;
+    let profileFieldEditMode = 'profile'; // 'profile' | 'name' | 'goal'
 
     function editProfileField(key, label) {
+      profileFieldEditMode = 'profile';
       profileFieldEditKey = key;
       document.getElementById('pf-modal-title').textContent = label;
       document.getElementById('pf-modal-input').value = (state.profile && state.profile[key]) || '';
+      document.getElementById('pf-modal-input').type = 'text';
       document.getElementById('pf-modal-history-btn').style.display = MEASUREMENT_KEYS.has(key) ? 'block' : 'none';
       document.getElementById('profile-field-modal').classList.add('open');
       setTimeout(() => document.getElementById('pf-modal-input').focus(), 50);
@@ -3037,16 +3168,34 @@
     }
 
     function saveProfileFieldModal() {
+      const raw = document.getElementById('pf-modal-input').value.trim();
+
+      if (profileFieldEditMode === 'name') {
+        if (raw) { state.userName = raw; saveState(); refreshYou(); }
+        closeProfileFieldModal();
+        return;
+      }
+      if (profileFieldEditMode === 'goal') {
+        const n = parseInt(raw);
+        if (isNaN(n) || n < 1) { showToast('Enter a number 1 or higher'); return; }
+        state.weeklyGoal = Math.min(n, 14);
+        saveState();
+        renderGoal();
+        showToast('Goal set to ' + state.weeklyGoal + '/week 🎯');
+        closeProfileFieldModal();
+        return;
+      }
+
       const key = profileFieldEditKey;
       if (!key) return;
-      const v = document.getElementById('pf-modal-input').value.trim();
       if (!state.profile) state.profile = {};
-      state.profile[key] = v;
-      if (MEASUREMENT_KEYS.has(key) && v !== '') logMeasurementSnapshot(key, v);
+      state.profile[key] = raw;
+      if (MEASUREMENT_KEYS.has(key) && raw !== '') logMeasurementSnapshot(key, raw);
       saveState();
       renderProfile();
       closeProfileFieldModal();
     }
+
 
     // Records a dated snapshot for a measurement field. If one was already logged today,
     // it's updated in place rather than duplicated.
@@ -3060,6 +3209,8 @@
       else hist.push({ date: new Date().toISOString(), value });
     }
 
+    let measurementChartInstance = null;
+
     function openMeasurementHistory() {
       const key = profileFieldEditKey;
       if (!key) return;
@@ -3067,8 +3218,12 @@
       const hist = ((state.measurementHistory && state.measurementHistory[key]) || []).slice().sort((a, b) => new Date(b.date) - new Date(a.date));
       document.getElementById('mh-modal-title').textContent = label + ' History';
       const el = document.getElementById('mh-modal-list');
+      const chartWrap = document.getElementById('mh-modal-chart-wrap');
+
       if (!hist.length) {
         el.innerHTML = `<div style="padding:16px 0;color:var(--text-muted);font-size:13px;">No history yet — save a value to start tracking it over time.</div>`;
+        chartWrap.style.display = 'none';
+        if (measurementChartInstance) { measurementChartInstance.destroy(); measurementChartInstance = null; }
       } else {
         el.innerHTML = hist.map((entry, i) => {
           const prev = hist[i + 1];
@@ -3084,13 +3239,53 @@
         <span>${entry.value}${delta}</span>
       </div>`;
         }).join('');
+
+        // Only plot a trend line when the values are actually numeric (most
+        // measurement fields are, but a couple like injuries/notes aren't).
+        const chrono = hist.slice().reverse();
+        const numeric = chrono.map(e => parseFloat(e.value));
+        const allNumeric = numeric.length >= 2 && numeric.every(v => !isNaN(v));
+        if (allNumeric) {
+          chartWrap.style.display = 'block';
+          const ctx = document.getElementById('mh-modal-chart').getContext('2d');
+          if (measurementChartInstance) measurementChartInstance.destroy();
+          measurementChartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+              labels: chrono.map(e => new Date(e.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })),
+              datasets: [{
+                data: numeric,
+                borderColor: '#f97316',
+                backgroundColor: 'rgba(249,115,22,0.08)',
+                fill: true,
+                tension: 0.35,
+                pointBackgroundColor: '#f97316',
+                pointRadius: 3,
+                pointHoverRadius: 5,
+              }]
+            },
+            options: {
+              responsive: true,
+              plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ctx.parsed.y } } },
+              scales: {
+                x: { grid: { color: '#1e1e1e' }, ticks: { color: '#555', font: { size: 10 }, maxTicksLimit: 6 } },
+                y: { grid: { color: '#1e1e1e' }, ticks: { color: '#555', font: { size: 10 } } },
+              }
+            }
+          });
+        } else {
+          chartWrap.style.display = 'none';
+          if (measurementChartInstance) { measurementChartInstance.destroy(); measurementChartInstance = null; }
+        }
       }
       document.getElementById('measurement-history-modal').classList.add('open');
     }
 
     function closeMeasurementHistoryModal() {
       document.getElementById('measurement-history-modal').classList.remove('open');
+      if (measurementChartInstance) { measurementChartInstance.destroy(); measurementChartInstance = null; }
     }
+
 
     function renderProfile() {
       const el = document.getElementById('you-profile-list');
@@ -3171,6 +3366,7 @@
       document.getElementById('workout-note').value = '';
       document.getElementById('workout-date').value = '';
       document.getElementById('workout-duration-input').value = '';
+      document.getElementById('workout-bodyweight-input').value = '';
       document.getElementById('exercises-container').innerHTML = '';
       startTimer();
     }
@@ -3200,6 +3396,11 @@
 
       const manualDate = document.getElementById('workout-date').value;
       const finalDate = manualDate ? new Date(manualDate).toISOString() : new Date().toISOString();
+
+      // Logging bodyweight here is the same data point as the "Weight" profile field —
+      // feeding both keeps the two in sync instead of drifting apart as separate sources.
+      const bwInput = parseFloat(document.getElementById('workout-bodyweight-input').value);
+      const bodyWeight = isNaN(bwInput) ? null : bwInput;
 
       // Collect exercises from DOM
       const exBlocks = document.querySelectorAll('.ex-block');
@@ -3275,6 +3476,7 @@
         id: state.editingWorkoutId || Date.now(),
         name, note, exercises, volume, duration,
         date: finalDate,
+        bodyWeight,
         records: exercises.reduce((sum, ex) => sum + ex.sets.filter(s => s.prs && s.prs.length).length, 0),
       };
 
@@ -3283,7 +3485,7 @@
         const index = state.workouts.findIndex(w => w.id === state.editingWorkoutId);
         if (index !== -1) {
           workout.sorenessRange = state.workouts[index].sorenessRange;
-          workout.bodyWeight = state.workouts[index].bodyWeight;
+          if (bodyWeight === null) workout.bodyWeight = state.workouts[index].bodyWeight;
           workout.imported = state.workouts[index].imported;
           state.workouts[index] = workout;
         }
@@ -3292,6 +3494,14 @@
         // It's a new workout
         state.workouts.unshift(workout);
         showToast('Workout saved! 🎉');
+      }
+
+      // Feed into the same measurement history the You tab reads from, so a weight
+      // logged during a workout shows up in the profile's weight trend too.
+      if (bodyWeight !== null) {
+        if (!state.profile) state.profile = {};
+        state.profile.weight = String(bodyWeight);
+        logMeasurementSnapshot('weight', String(bodyWeight));
       }
 
       // Re-sort the array in case the user edited the date to the past
@@ -3543,8 +3753,8 @@
       <button class="set-add-btn" onclick="addSet('${blockId}',false)">+ Add Set</button>
       <button class="set-add-btn" onclick="addSet('${blockId}',true)" style="color:var(--accent)">+ Warmup</button>
       <span style="flex:1"></span>
-      <button class="icon-btn" style="padding:2px 6px;" onclick="moveNodeUpDown('${blockId}',-1)" title="Move up">▲</button>
-      <button class="icon-btn" style="padding:2px 6px;" onclick="moveNodeUpDown('${blockId}',1)" title="Move down">▼</button>
+      <button class="icon-btn" style="padding:2px 6px;" onclick="moveNodeUpDown('${blockId}',-1)" title="Move up" aria-label="Move exercise up">▲</button>
+      <button class="icon-btn" style="padding:2px 6px;" onclick="moveNodeUpDown('${blockId}',1)" title="Move down" aria-label="Move exercise down">▼</button>
       <button class="ex-del-btn" onclick="removeExBlock('${blockId}')">Remove</button>
     </div>
   `;
@@ -3564,8 +3774,8 @@
       <div class="combo-header-top">
         <span class="combo-header-title">🔗 Combined Exercise</span>
         <div>
-          <button class="icon-btn" style="padding:2px 6px;" onclick="moveNodeUpDown('${comboId}',-1)" title="Move up">▲</button>
-          <button class="icon-btn" style="padding:2px 6px;" onclick="moveNodeUpDown('${comboId}',1)" title="Move down">▼</button>
+          <button class="icon-btn" style="padding:2px 6px;" onclick="moveNodeUpDown('${comboId}',-1)" title="Move up" aria-label="Move exercise up">▲</button>
+          <button class="icon-btn" style="padding:2px 6px;" onclick="moveNodeUpDown('${comboId}',1)" title="Move down" aria-label="Move exercise down">▼</button>
           <button class="ex-del-btn" onclick="removeComboBlock('${comboId}')">Remove All</button>
         </div>
       </div>
@@ -3591,12 +3801,32 @@
       const m = Math.floor(s / 60);
       return m + ':' + String(s % 60).padStart(2, '0');
     }
+
+    // Default "you've probably rested enough" checkpoint. Fires once per set — a short
+    // vibration plus a soft beep — so you can look away from the screen between sets
+    // instead of having to watch the clock the whole time.
+    const REST_TARGET_SECONDS = 90;
+    function notifyRestTargetReached() {
+      if (navigator.vibrate) navigator.vibrate(200);
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.frequency.value = 880;
+        gain.gain.setValueAtTime(0.12, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+        osc.start(); osc.stop(ctx.currentTime + 0.35);
+      } catch (e) { /* Web Audio unavailable — vibration-only fallback is fine */ }
+    }
+
     function startSetRestTimer(row) {
       if (state.activeRestRow && state.activeRestRow !== row && state.activeRestRow.dataset.restRunning === 'true') {
         stopSetRestTimer(state.activeRestRow);
       }
       row.dataset.restSeconds = '0';
       row.dataset.restRunning = 'true';
+      row.dataset.restNotified = 'false';
       const span = row.querySelector('.rest-timer');
       if (span) { span.textContent = '0:00'; span.classList.remove('stopped'); }
       row.restInterval = setInterval(() => {
@@ -3604,9 +3834,14 @@
         row.dataset.restSeconds = s;
         const el = row.querySelector('.rest-timer');
         if (el) el.textContent = formatMinSec(s);
+        if (s >= REST_TARGET_SECONDS && row.dataset.restNotified !== 'true') {
+          row.dataset.restNotified = 'true';
+          notifyRestTargetReached();
+        }
       }, 1000);
       state.activeRestRow = row;
     }
+
     function stopSetRestTimer(row) {
       if (row.restInterval) { clearInterval(row.restInterval); row.restInterval = null; }
       row.dataset.restRunning = 'false';
@@ -3667,7 +3902,7 @@
 
     <td><input class="rir-input" type="number" min="0" max="10" placeholder="0"></td>
     <td class="rest-cell">${restCellHTML}</td>
-    <td><button class="set-del-btn" onclick="deleteSetRow('${blockId}', this)">✕</button></td>
+    <td><button class="set-del-btn" onclick="deleteSetRow('${blockId}', this)" aria-label="Delete set">✕</button></td>
   `;
       tbody.appendChild(tr);
       if (tracksRest && !state.editingWorkoutId) startSetRestTimer(tr);
@@ -3929,7 +4164,7 @@
       <div style="display: flex; justify-content: space-between; align-items: flex-start;">
         <div class="workout-name">${w.name}${w.imported ? ' 📥' : ''}</div>
         
-        <div class="kebab-menu" onclick="toggleKebab(event, ${w.id})" style="position: relative; padding: 0 5px; margin-right: -5px; cursor: pointer; color: var(--text-muted); font-size: 18px; line-height: 1;">
+        <div class="kebab-menu" role="button" aria-label="Workout options" onclick="toggleKebab(event, ${w.id})" style="position: relative; padding: 0 5px; margin-right: -5px; cursor: pointer; color: var(--text-muted); font-size: 18px; line-height: 1;">
           ⋮
           <div class="kebab-dropdown" style="display: none; position: absolute; right: 0; top: 100%; margin-top: 5px; background: var(--surface3); border: 1px solid var(--border); border-radius: 8px; padding: 4px; z-index: 10; box-shadow: 0 4px 12px rgba(0,0,0,0.5);">
             <button onclick="repeatWorkout(event, ${w.id})" style="background: transparent; border: none; color: var(--text); cursor: pointer; font-size: 13px; font-weight: 500; font-family: inherit; padding: 8px 16px; width: max-content; border-radius: 4px; transition: background .15s; white-space: nowrap;" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='transparent'">🔁 Repeat Workout</button>
@@ -4491,20 +4726,19 @@
       const done = state.workouts.filter(w => new Date(w.date) >= weekStart).length;
       const goal = state.weeklyGoal || 3;
       const titleEl = document.getElementById('goal-title');
-      if (titleEl) titleEl.textContent = `${goal} Workout${goal === 1 ? '' : 's'} per week`;
-      document.getElementById('goal-sub').textContent = `${Math.min(done, goal)}/${goal} Completed`;
+      const isPt = (state.language || 'en') === 'pt';
+      if (titleEl) titleEl.textContent = isPt ? `${goal} treino${goal === 1 ? '' : 's'} por semana` : `${goal} Workout${goal === 1 ? '' : 's'} per week`;
+      document.getElementById('goal-sub').textContent = isPt ? `${Math.min(done, goal)}/${goal} concluídos` : `${Math.min(done, goal)}/${goal} Completed`;
     }
 
     function openGoalPicker() {
-      const cur = state.weeklyGoal || 3;
-      const v = prompt('Workouts per week goal:', cur);
-      if (v === null) return;
-      const n = parseInt(v);
-      if (isNaN(n) || n < 1) { showToast('Enter a number 1 or higher'); return; }
-      state.weeklyGoal = Math.min(n, 14);
-      saveState();
-      renderGoal();
-      showToast('Goal set to ' + state.weeklyGoal + '/week 🎯');
+      profileFieldEditMode = 'goal';
+      document.getElementById('pf-modal-title').textContent = 'Weekly Goal';
+      document.getElementById('pf-modal-input').type = 'number';
+      document.getElementById('pf-modal-input').value = state.weeklyGoal || 3;
+      document.getElementById('pf-modal-history-btn').style.display = 'none';
+      document.getElementById('profile-field-modal').classList.add('open');
+      setTimeout(() => document.getElementById('pf-modal-input').focus(), 50);
     }
 
     function renderProgressMuscleMap() {
@@ -4985,8 +5219,13 @@
     }
 
     function editName() {
-      const n = prompt('Enter your name:', state.userName);
-      if (n && n.trim()) { state.userName = n.trim(); saveState(); refreshYou(); }
+      profileFieldEditMode = 'name';
+      document.getElementById('pf-modal-title').textContent = 'Your Name';
+      document.getElementById('pf-modal-input').type = 'text';
+      document.getElementById('pf-modal-input').value = state.userName || '';
+      document.getElementById('pf-modal-history-btn').style.display = 'none';
+      document.getElementById('profile-field-modal').classList.add('open');
+      setTimeout(() => document.getElementById('pf-modal-input').focus(), 50);
     }
 
     function clearData() {
@@ -5046,8 +5285,8 @@
         <button class="set-add-btn" onclick="addSet('${blockId}',false)">+ Add Set</button>
         <button class="set-add-btn" onclick="addSet('${blockId}',true)" style="color:var(--accent)">+ Warmup</button>
         <span style="flex:1"></span>
-        <button class="icon-btn" style="padding:2px 6px;" onclick="moveNodeUpDown('${blockId}',-1)" title="Move up">▲</button>
-        <button class="icon-btn" style="padding:2px 6px;" onclick="moveNodeUpDown('${blockId}',1)" title="Move down">▼</button>
+        <button class="icon-btn" style="padding:2px 6px;" onclick="moveNodeUpDown('${blockId}',-1)" title="Move up" aria-label="Move exercise up">▲</button>
+        <button class="icon-btn" style="padding:2px 6px;" onclick="moveNodeUpDown('${blockId}',1)" title="Move down" aria-label="Move exercise down">▼</button>
         <button class="ex-del-btn" onclick="removeExBlock('${blockId}')">Remove</button>
       </div>
     `;
@@ -5088,7 +5327,7 @@
         <td><button type="button" class="variations-btn" onclick="openVariationsPicker(this)">+ Tag</button></td>
         <td><input class="rir-input" type="number" min="0" max="10" value="${set.rir || ''}"></td>
         <td class="rest-cell">${restCellHTML}</td>
-        <td><button class="set-del-btn" onclick="deleteSetRow('${blockId}', this)">✕</button></td>
+        <td><button class="set-del-btn" onclick="deleteSetRow('${blockId}', this)" aria-label="Delete set">✕</button></td>
       `;
         tbody.appendChild(tr);
         updateVariationsBtn(tr);
@@ -5116,6 +5355,7 @@
       document.getElementById('workout-note').value = '';
       document.getElementById('workout-date').value = '';
       document.getElementById('workout-duration-input').value = '';
+      document.getElementById('workout-bodyweight-input').value = '';
 
       const container = document.getElementById('exercises-container');
       container.innerHTML = '';
@@ -5148,8 +5388,8 @@
         <div class="combo-header-top">
           <span class="combo-header-title">🔗 Combined Exercise</span>
           <div>
-            <button class="icon-btn" style="padding:2px 6px;" onclick="moveNodeUpDown('${comboId}',-1)" title="Move up">▲</button>
-            <button class="icon-btn" style="padding:2px 6px;" onclick="moveNodeUpDown('${comboId}',1)" title="Move down">▼</button>
+            <button class="icon-btn" style="padding:2px 6px;" onclick="moveNodeUpDown('${comboId}',-1)" title="Move up" aria-label="Move exercise up">▲</button>
+            <button class="icon-btn" style="padding:2px 6px;" onclick="moveNodeUpDown('${comboId}',1)" title="Move down" aria-label="Move exercise down">▼</button>
             <button class="ex-del-btn" onclick="removeComboBlock('${comboId}')">Remove All</button>
           </div>
         </div>
@@ -5188,6 +5428,7 @@
       const localDateStr = new Date(d.getTime() - (d.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
       document.getElementById('workout-date').value = localDateStr;
       document.getElementById('workout-duration-input').value = w.duration || '';
+      document.getElementById('workout-bodyweight-input').value = w.bodyWeight || '';
 
       // Populate exercises — group by linkGroup so bi-sets/supersets render as
       // "Combined Exercise" cards instead of separate ones.
@@ -5218,8 +5459,8 @@
         <div class="combo-header-top">
           <span class="combo-header-title">🔗 Combined Exercise</span>
           <div>
-            <button class="icon-btn" style="padding:2px 6px;" onclick="moveNodeUpDown('${comboId}',-1)" title="Move up">▲</button>
-            <button class="icon-btn" style="padding:2px 6px;" onclick="moveNodeUpDown('${comboId}',1)" title="Move down">▼</button>
+            <button class="icon-btn" style="padding:2px 6px;" onclick="moveNodeUpDown('${comboId}',-1)" title="Move up" aria-label="Move exercise up">▲</button>
+            <button class="icon-btn" style="padding:2px 6px;" onclick="moveNodeUpDown('${comboId}',1)" title="Move down" aria-label="Move exercise down">▼</button>
             <button class="ex-del-btn" onclick="removeComboBlock('${comboId}')">Remove All</button>
           </div>
         </div>
@@ -5983,6 +6224,20 @@
         <span>${data.message}</span>
       </div>
     `;
+      } else if (step === 'help') {
+        content.innerHTML = `
+      <div class="import-step">
+        <h3>Expected format</h3>
+        <p>Each day starts on its own line, followed by one line per exercise. Sets are separated by "/".</p>
+        <div class="import-summary" style="font-family:monospace;font-size:12px;line-height:1.7;white-space:pre-wrap;">Day 24/06
+Stiff 12c10/12c18/12c18
+Squat 12c10/12c15
+Duration: 46min
+Soreness: 6-7</div>
+        <p style="margin-top:12px;">"12c10" means 12 reps at 10kg. Add "+Nnegatives" for negative reps, "warm-up-set 1-3 3-1/" before working sets for warmups, and "Note:" for anything else. PDF, Excel, and .txt files are all read the same way.</p>
+        <button class="btn-primary" onclick="closeImportModal()">Got it</button>
+      </div>
+    `;
       } else if (step === 'error') {
         content.innerHTML = `
       <div class="import-step">
@@ -6068,18 +6323,28 @@
       const title = document.getElementById('import-export-title');
       const sub = document.getElementById('import-export-sub');
       const icon = document.getElementById('import-export-icon');
+      const helpLink = document.getElementById('import-format-help-link');
       if (importExportMode === 'import') {
-        title.textContent = 'Import training log';
-        sub.textContent = 'Upload a PDF, Excel, or text file to populate your data';
+        title.textContent = t('import_title');
+        sub.textContent = t('import_sub');
         icon.style.background = 'rgba(59, 130, 246, .12)';
         icon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>`;
+        if (helpLink) helpLink.style.display = 'block';
       } else {
-        title.textContent = 'Export training log';
-        sub.textContent = 'Download your training history as a .txt file';
+        title.textContent = t('export_title');
+        sub.textContent = t('export_sub');
         icon.style.background = 'rgba(249, 115, 22, .12)';
         icon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="color:var(--accent);transform:rotate(180deg);"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>`;
+        if (helpLink) helpLink.style.display = 'none';
       }
     }
+
+    // Shown proactively via the "See expected format" link on the import card,
+    // instead of only surfacing this guidance after a failed import.
+    function showImportFormatHelp() {
+      showImportModal('help', {});
+    }
+
 
     function handleImportExportClick() {
       if (importExportMode === 'import') {
@@ -6201,6 +6466,7 @@
 
     // ── Init ──
     loadState();
+    applyTranslations();
     refreshHome();
   </script>
 </body>
