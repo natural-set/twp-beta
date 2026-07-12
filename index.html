@@ -1867,7 +1867,10 @@
 
       <div class="snapshot-card">
         <div class="snapshot-header">
-          <span>Your weekly snapshot</span>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span>Your weekly snapshot</span>
+            <span id="streak-badge" style="display:none;font-size:12px;font-weight:700;color:var(--accent);"></span>
+          </div>
           <a onclick="openWeeklyDetail(0)">See more</a>
         </div>
         <div class="snapshot-stats">
@@ -2336,6 +2339,37 @@
 
     <!-- Toast -->
     <div class="toast" id="toast"></div>
+
+    <!-- Profile Field Edit Modal -->
+    <div class="modal-overlay" id="profile-field-modal">
+      <div class="modal-sheet" style="max-height:50vh;">
+        <div class="modal-header">
+          <div style="font-size:16px;font-weight:800;flex:1;" id="pf-modal-title">Field</div>
+          <button class="modal-close-btn" onclick="closeProfileFieldModal()">✕</button>
+        </div>
+        <div style="padding:18px 20px 22px;">
+          <input id="pf-modal-input" type="text"
+            onkeydown="if(event.key==='Enter')saveProfileFieldModal()"
+            style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:10px;font-family:inherit;font-size:14px;outline:none;margin-bottom:14px;">
+          <button class="btn-secondary" id="pf-modal-history-btn" style="display:none;width:100%;margin-bottom:10px;" onclick="openMeasurementHistory()">📈 View History</button>
+          <div style="display:flex;gap:10px;">
+            <button class="btn-secondary" onclick="closeProfileFieldModal()">Cancel</button>
+            <button class="btn-primary-flex" onclick="saveProfileFieldModal()">Save</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Measurement History Modal -->
+    <div class="modal-overlay" id="measurement-history-modal">
+      <div class="modal-sheet" style="max-height:70vh;">
+        <div class="modal-header">
+          <div style="font-size:16px;font-weight:800;flex:1;" id="mh-modal-title">History</div>
+          <button class="modal-close-btn" onclick="closeMeasurementHistoryModal()">✕</button>
+        </div>
+        <div style="padding:8px 20px 20px;" id="mh-modal-list"></div>
+      </div>
+    </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -2892,6 +2926,9 @@
       customExercises: [], // user-added exercises: { id, name, icon, muscle, primary, secondary }
       hiddenExerciseIds: [], // built-in or custom exercise ids hidden from pickers
       exerciseOverrides: {}, // built-in exercise edits, keyed by id: { name, icon, muscle, primary, secondary }
+      favoriteExercises: [], // exercise ids starred in the picker
+      recentExerciseIds: [], // exercise ids most recently added, newest first
+      measurementHistory: {}, // dated snapshots per measurement field: { key: [{date, value}] }
       activeRestRow: null, // the one <tr> whose rest clock is currently ticking, across all exercises
     };
 
@@ -2943,6 +2980,9 @@
         state.hiddenExerciseIds = parsed.hiddenExerciseIds || [];
         state.exerciseOverrides = parsed.exerciseOverrides || {};
         state.weeklyGoal = parsed.weeklyGoal || 3;
+        state.favoriteExercises = parsed.favoriteExercises || [];
+        state.recentExerciseIds = parsed.recentExerciseIds || [];
+        state.measurementHistory = parsed.measurementHistory || {};
         // Existing duplicates (e.g. from a prior sync bug) get silently
         // cleaned up and persisted right away so they don't keep reappearing.
         if (state.workouts.length !== rawWorkouts.length) saveState();
@@ -2959,6 +2999,9 @@
         hiddenExerciseIds: state.hiddenExerciseIds,
         exerciseOverrides: state.exerciseOverrides,
         weeklyGoal: state.weeklyGoal,
+        favoriteExercises: state.favoriteExercises,
+        recentExerciseIds: state.recentExerciseIds,
+        measurementHistory: state.measurementHistory,
       }));
     }
 
@@ -2972,16 +3015,81 @@
       { k: 'rForearm', l: 'R Forearm' }, { k: 'lThigh', l: 'L Thigh' }, { k: 'rThigh', l: 'R Thigh' },
       { k: 'lCalf', l: 'L Calf' }, { k: 'rCalf', l: 'R Calf' }, { k: 'notes', l: 'Notes' },
     ];
+    // These fields get a dated history entry on every save (in addition to overwriting
+    // the "current" value), so trends over time aren't lost the way a single overwritten
+    // value would lose them — mirroring what the plain-text training log used to capture.
+    const MEASUREMENT_KEYS = new Set(['weight', 'bodyFat', 'chest', 'waist', 'shoulders', 'lArm', 'rArm', 'lForearm', 'rForearm', 'lThigh', 'rThigh', 'lCalf', 'rCalf']);
+
+    let profileFieldEditKey = null;
 
     function editProfileField(key, label) {
-      const cur = (state.profile && state.profile[key]) || '';
-      const v = prompt('Enter ' + label + ':', cur);
-      if (v !== null) {
-        if (!state.profile) state.profile = {};
-        state.profile[key] = v.trim();
-        saveState();
-        renderProfile();
+      profileFieldEditKey = key;
+      document.getElementById('pf-modal-title').textContent = label;
+      document.getElementById('pf-modal-input').value = (state.profile && state.profile[key]) || '';
+      document.getElementById('pf-modal-history-btn').style.display = MEASUREMENT_KEYS.has(key) ? 'block' : 'none';
+      document.getElementById('profile-field-modal').classList.add('open');
+      setTimeout(() => document.getElementById('pf-modal-input').focus(), 50);
+    }
+
+    function closeProfileFieldModal() {
+      document.getElementById('profile-field-modal').classList.remove('open');
+      profileFieldEditKey = null;
+    }
+
+    function saveProfileFieldModal() {
+      const key = profileFieldEditKey;
+      if (!key) return;
+      const v = document.getElementById('pf-modal-input').value.trim();
+      if (!state.profile) state.profile = {};
+      state.profile[key] = v;
+      if (MEASUREMENT_KEYS.has(key) && v !== '') logMeasurementSnapshot(key, v);
+      saveState();
+      renderProfile();
+      closeProfileFieldModal();
+    }
+
+    // Records a dated snapshot for a measurement field. If one was already logged today,
+    // it's updated in place rather than duplicated.
+    function logMeasurementSnapshot(key, value) {
+      if (!state.measurementHistory) state.measurementHistory = {};
+      if (!state.measurementHistory[key]) state.measurementHistory[key] = [];
+      const todayStr = new Date().toDateString();
+      const hist = state.measurementHistory[key];
+      const todayEntry = hist.find(e => new Date(e.date).toDateString() === todayStr);
+      if (todayEntry) todayEntry.value = value;
+      else hist.push({ date: new Date().toISOString(), value });
+    }
+
+    function openMeasurementHistory() {
+      const key = profileFieldEditKey;
+      if (!key) return;
+      const label = (PROFILE_FIELDS.find(f => f.k === key) || {}).l || key;
+      const hist = ((state.measurementHistory && state.measurementHistory[key]) || []).slice().sort((a, b) => new Date(b.date) - new Date(a.date));
+      document.getElementById('mh-modal-title').textContent = label + ' History';
+      const el = document.getElementById('mh-modal-list');
+      if (!hist.length) {
+        el.innerHTML = `<div style="padding:16px 0;color:var(--text-muted);font-size:13px;">No history yet — save a value to start tracking it over time.</div>`;
+      } else {
+        el.innerHTML = hist.map((entry, i) => {
+          const prev = hist[i + 1];
+          let delta = '';
+          const cur = parseFloat(entry.value), prevVal = prev ? parseFloat(prev.value) : NaN;
+          if (!isNaN(cur) && !isNaN(prevVal)) {
+            const diff = Math.round((cur - prevVal) * 100) / 100;
+            if (diff !== 0) delta = `<span style="font-size:11px;color:${diff > 0 ? 'var(--green)' : 'var(--red)'};margin-left:8px;">${diff > 0 ? '▲' : '▼'} ${Math.abs(diff)}</span>`;
+          }
+          const d = new Date(entry.date);
+          return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;">
+        <span style="color:var(--text-muted);">${d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+        <span>${entry.value}${delta}</span>
+      </div>`;
+        }).join('');
       }
+      document.getElementById('measurement-history-modal').classList.add('open');
+    }
+
+    function closeMeasurementHistoryModal() {
+      document.getElementById('measurement-history-modal').classList.remove('open');
     }
 
     function renderProfile() {
@@ -2998,6 +3106,7 @@
     </div>`;
       }).join('');
     }
+
 
     function renderYouHistory() {
       const el = document.getElementById('you-history-list');
@@ -3309,20 +3418,54 @@
         return;
       }
       const clickFn = exReplaceTargetBlockId ? 'replaceExercise' : 'addExercise';
-      el.innerHTML = filtered.map(ex => `
+      const favs = new Set(state.favoriteExercises || []);
+      const star = ex => `<span onclick="event.stopPropagation();toggleFavoriteExercise('${ex.id}')" style="font-size:16px;padding:4px;flex-shrink:0;cursor:pointer;color:${favs.has(ex.id) ? 'var(--gold)' : 'var(--text-dim)'}">${favs.has(ex.id) ? '★' : '☆'}</span>`;
+      const item = ex => `
     <div class="ex-list-item" onclick="${clickFn}('${ex.id}')">
       <div class="ex-list-icon">${ex.icon}</div>
-      <div>
+      <div style="flex:1">
         <div class="ex-list-name">${ex.name}</div>
         <div class="ex-list-muscle">${ex.muscle}</div>
       </div>
-    </div>
-  `).join('');
+      ${star(ex)}
+    </div>`;
+
+      if (!q) {
+        const byId = id => filtered.find(e => e.id === id);
+        const favExs = (state.favoriteExercises || []).map(byId).filter(Boolean);
+        const recentExs = (state.recentExerciseIds || []).map(byId).filter(Boolean).filter(e => !favs.has(e.id));
+        const shownIds = new Set([...favExs, ...recentExs].map(e => e.id));
+        const rest = filtered.filter(e => !shownIds.has(e.id));
+        let html = '';
+        if (favExs.length) html += `<div style="padding:10px 20px 4px;font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.06em;">Favorites</div>${favExs.map(item).join('')}`;
+        if (recentExs.length) html += `<div style="padding:10px 20px 4px;font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.06em;">Recently Used</div>${recentExs.map(item).join('')}`;
+        if (favExs.length || recentExs.length) html += `<div style="padding:10px 20px 4px;font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.06em;">All Exercises</div>`;
+        html += rest.map(item).join('');
+        el.innerHTML = html;
+        return;
+      }
+      el.innerHTML = filtered.map(item).join('');
+    }
+
+    function toggleFavoriteExercise(exId) {
+      if (!state.favoriteExercises) state.favoriteExercises = [];
+      const i = state.favoriteExercises.indexOf(exId);
+      if (i === -1) state.favoriteExercises.push(exId); else state.favoriteExercises.splice(i, 1);
+      saveState();
+      renderExList(document.getElementById('ex-search').value);
+    }
+
+    // Bumps an exercise to the front of the "Recently Used" list (capped at 8).
+    function trackRecentExercise(exId) {
+      if (!state.recentExerciseIds) state.recentExerciseIds = [];
+      state.recentExerciseIds = [exId, ...state.recentExerciseIds.filter(id => id !== exId)].slice(0, 8);
+      saveState();
     }
 
     // Swaps the exercise definition (id/name/icon/muscle) on an existing block
     // while leaving every set row, note, rest data, and linkGroup untouched.
     function replaceExercise(exId) {
+      trackRecentExercise(exId);
       const blockId = exReplaceTargetBlockId;
       closeExPicker();
       if (!blockId) return;
@@ -3339,7 +3482,18 @@
       showToast('Exercise changed to ' + def.name);
     }
 
+    // Moves a top-level element (an .ex-block or .combo-block) one slot earlier/later
+    // among its siblings — used for reordering exercises within an active workout.
+    function moveNodeUpDown(id, dir) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const parent = el.parentElement;
+      if (dir < 0) { const prev = el.previousElementSibling; if (prev) parent.insertBefore(el, prev); }
+      else { const next = el.nextElementSibling; if (next) parent.insertBefore(next, el); }
+    }
+
     function addExercise(exId, containerOverride, linkGroupPrefill, trackRest) {
+      trackRecentExercise(exId);
       if (trackRest === undefined) trackRest = true;
       closeExPicker();
       const def = getAllExercises().find(e => e.id === exId);
@@ -3388,6 +3542,9 @@
     <div class="ex-block-footer">
       <button class="set-add-btn" onclick="addSet('${blockId}',false)">+ Add Set</button>
       <button class="set-add-btn" onclick="addSet('${blockId}',true)" style="color:var(--accent)">+ Warmup</button>
+      <span style="flex:1"></span>
+      <button class="icon-btn" style="padding:2px 6px;" onclick="moveNodeUpDown('${blockId}',-1)" title="Move up">▲</button>
+      <button class="icon-btn" style="padding:2px 6px;" onclick="moveNodeUpDown('${blockId}',1)" title="Move down">▼</button>
       <button class="ex-del-btn" onclick="removeExBlock('${blockId}')">Remove</button>
     </div>
   `;
@@ -3406,7 +3563,11 @@
       wrapper.innerHTML = `<div class="combo-header">
       <div class="combo-header-top">
         <span class="combo-header-title">🔗 Combined Exercise</span>
-        <button class="ex-del-btn" onclick="removeComboBlock('${comboId}')">Remove All</button>
+        <div>
+          <button class="icon-btn" style="padding:2px 6px;" onclick="moveNodeUpDown('${comboId}',-1)" title="Move up">▲</button>
+          <button class="icon-btn" style="padding:2px 6px;" onclick="moveNodeUpDown('${comboId}',1)" title="Move down">▼</button>
+          <button class="ex-del-btn" onclick="removeComboBlock('${comboId}')">Remove All</button>
+        </div>
       </div>
       <span class="combo-header-sub">${exIds.length} exercises · stacked as one set</span>
     </div>`;
@@ -3460,6 +3621,16 @@
       state.activeRestRow = null;
     }
 
+    // Most recent past session's working sets for an exercise (state.workouts is
+    // already sorted newest-first), used to show a "last: 8x60kg" hint while logging.
+    function getLastExerciseSets(exId) {
+      for (const w of state.workouts) {
+        const ex = w.exercises.find(e => e.exId === exId);
+        if (ex && ex.sets && ex.sets.some(s => !s.warmup)) return ex.sets.filter(s => !s.warmup);
+      }
+      return null;
+    }
+
     function addSet(blockId, isWarmup) {
       const blockEl = document.getElementById(blockId);
       const tracksRest = !blockEl || blockEl.dataset.trackRest !== 'false';
@@ -3468,6 +3639,8 @@
       const warmupCount = tbody.querySelectorAll('[data-warmup="true"]').length;
       const regCount = existing.length - warmupCount;
       const label = isWarmup ? 'W' : (regCount + 1);
+      const lastSets = (!isWarmup && blockEl) ? getLastExerciseSets(blockEl.dataset.exId) : null;
+      const lastSet = lastSets ? lastSets[regCount] : null;
       const tr = document.createElement('tr');
       tr.className = 'set-row' + (isWarmup ? ' warmup' : '');
       tr.dataset.warmup = isWarmup;
@@ -3479,7 +3652,7 @@
       if (!tracksRest) {
         // A non-first member of a combined exercise — performed back-to-back with no
         // rest of its own, so it's always shown (and saved) as a fixed 0:00.
-        restCellHTML = `<span class="rest-timer stopped">0:00</span>`;
+        restCellHTML = `<span class="rest-timer stopped" title="Rest is tracked on the first exercise in this combo">— synced</span>`;
       } else if (state.editingWorkoutId) {
         // Editing a saved workout: rest becomes a plain editable field (no ticking clock).
         restCellHTML = `<input class="rest-input" type="number" min="0" placeholder="sec">`;
@@ -3488,9 +3661,10 @@
       }
       tr.innerHTML = `
     <td><span class="set-badge ${badgeClass}" style="cursor:pointer" onclick="toggleSetType(this)" title="Click to toggle Warmup/Normal">${label}</span></td>
-    <td><input class="set-input w-input" type="number" min="0" step="0.5" placeholder="kg"></td>
-    <td><input class="set-input r-input" type="number" min="0" placeholder="reps"></td>
+    <td><input class="set-input w-input" type="number" min="0" step="0.5" placeholder="${lastSet ? lastSet.weight + 'kg' : 'kg'}" title="${lastSet ? 'Last: ' + lastSet.weight + 'kg x ' + lastSet.reps : ''}"></td>
+    <td><input class="set-input r-input" type="number" min="0" placeholder="${lastSet ? lastSet.reps : 'reps'}" title="${lastSet ? 'Last: ' + lastSet.weight + 'kg x ' + lastSet.reps : ''}"></td>
     <td><button type="button" class="variations-btn" onclick="openVariationsPicker(this)">+ Tag</button></td>
+
     <td><input class="rir-input" type="number" min="0" max="10" placeholder="0"></td>
     <td class="rest-cell">${restCellHTML}</td>
     <td><button class="set-del-btn" onclick="deleteSetRow('${blockId}', this)">✕</button></td>
@@ -3638,6 +3812,37 @@
     // ═══════════════════════════════════════════
     //  HOME
     // ═══════════════════════════════════════════
+    // Consecutive weeks (Sun-Sat, going back from this week) with >=1 workout logged.
+    // This week still counts as "alive" even with 0 workouts so far, so the streak
+    // doesn't look broken before the week is even over.
+    function computeWeekStreak() {
+      const now = new Date();
+      let weekStart = new Date(now); weekStart.setDate(now.getDate() - now.getDay()); weekStart.setHours(0, 0, 0, 0);
+      let streak = 0;
+      let isCurrentWeek = true;
+      while (streak < 520) {
+        const weekEnd = new Date(weekStart); weekEnd.setDate(weekEnd.getDate() + 7);
+        const count = state.workouts.filter(w => { const d = new Date(w.date); return d >= weekStart && d < weekEnd; }).length;
+        if (count > 0) streak++;
+        else if (!isCurrentWeek) break;
+        isCurrentWeek = false;
+        weekStart.setDate(weekStart.getDate() - 7);
+      }
+      return streak;
+    }
+
+    function renderStreakBadge() {
+      const el = document.getElementById('streak-badge');
+      if (!el) return;
+      const streak = computeWeekStreak();
+      if (streak >= 2) {
+        el.style.display = 'inline';
+        el.textContent = `🔥 ${streak} week streak`;
+      } else {
+        el.style.display = 'none';
+      }
+    }
+
     function refreshHome() {
       const now = new Date();
       const weekStart = new Date(now); weekStart.setDate(now.getDate() - now.getDay());
@@ -3659,6 +3864,7 @@
       setDeltaBadge('home-delta-workouts', weekWorkouts.length - lastWeekWorkouts.length, '');
       setDeltaBadge('home-delta-duration', totalDuration - lastDuration, 'min');
       setDeltaBadge('home-delta-volume', Math.round(totalVolume - lastVolume), ' kg');
+      renderStreakBadge();
 
       // CTA visibility
       document.getElementById('home-cta').style.display = state.workouts.length === 0 ? 'block' : 'none';
@@ -3726,6 +3932,7 @@
         <div class="kebab-menu" onclick="toggleKebab(event, ${w.id})" style="position: relative; padding: 0 5px; margin-right: -5px; cursor: pointer; color: var(--text-muted); font-size: 18px; line-height: 1;">
           ⋮
           <div class="kebab-dropdown" style="display: none; position: absolute; right: 0; top: 100%; margin-top: 5px; background: var(--surface3); border: 1px solid var(--border); border-radius: 8px; padding: 4px; z-index: 10; box-shadow: 0 4px 12px rgba(0,0,0,0.5);">
+            <button onclick="repeatWorkout(event, ${w.id})" style="background: transparent; border: none; color: var(--text); cursor: pointer; font-size: 13px; font-weight: 500; font-family: inherit; padding: 8px 16px; width: max-content; border-radius: 4px; transition: background .15s; white-space: nowrap;" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='transparent'">🔁 Repeat Workout</button>
             <button onclick="deleteWorkoutFromFeed(event, ${w.id})" style="background: transparent; border: none; color: var(--red); cursor: pointer; font-size: 13px; font-weight: 500; font-family: inherit; padding: 8px 16px; width: max-content; border-radius: 4px; transition: background .15s;" onmouseover="this.style.background='rgba(239, 68, 68, 0.1)'" onmouseout="this.style.background='transparent'">Delete Workout</button>
           </div>
         </div>
@@ -4838,6 +5045,9 @@
       <div class="ex-block-footer">
         <button class="set-add-btn" onclick="addSet('${blockId}',false)">+ Add Set</button>
         <button class="set-add-btn" onclick="addSet('${blockId}',true)" style="color:var(--accent)">+ Warmup</button>
+        <span style="flex:1"></span>
+        <button class="icon-btn" style="padding:2px 6px;" onclick="moveNodeUpDown('${blockId}',-1)" title="Move up">▲</button>
+        <button class="icon-btn" style="padding:2px 6px;" onclick="moveNodeUpDown('${blockId}',1)" title="Move down">▼</button>
         <button class="ex-del-btn" onclick="removeExBlock('${blockId}')">Remove</button>
       </div>
     `;
@@ -4860,7 +5070,7 @@
         // those, repeat that same average into every set's (now editable) rest field.
         // Non-first combined-exercise members never had real rest — always fixed 0.
         const restCellHTML = !trackRest
-          ? `<span class="rest-timer stopped">0:00</span>`
+          ? `<span class="rest-timer stopped" title="Rest is tracked on the first exercise in this combo">— synced</span>`
           : (() => {
             const restVal = (set.restSeconds !== undefined && set.restSeconds !== null)
               ? set.restSeconds
@@ -4883,6 +5093,77 @@
         tbody.appendChild(tr);
         updateVariationsBtn(tr);
       });
+    }
+
+    // Starts a brand-new active workout using the same exercises (and same set/warmup
+    // counts) as a past one, but with weight/reps cleared — the structure is copied,
+    // not the numbers, so today's actual performance gets logged fresh.
+    function repeatWorkout(event, id) {
+      if (event) event.stopPropagation();
+      document.querySelectorAll('.kebab-dropdown').forEach(d => d.style.display = 'none');
+      const w = state.workouts.find(x => x.id === id);
+      if (!w) return;
+
+      clearInterval(state.timerInterval);
+      clearAllRestTimers();
+      state.activeWorkout = { name: '', note: '', exercises: [], startTime: Date.now() };
+      state.editingWorkoutId = null;
+
+      navigate('workout', document.querySelectorAll('.nav-btn')[1]);
+      document.getElementById('no-workout').style.display = 'none';
+      document.getElementById('active-workout').style.display = 'block';
+      document.getElementById('workout-name').value = w.name || '';
+      document.getElementById('workout-note').value = '';
+      document.getElementById('workout-date').value = '';
+      document.getElementById('workout-duration-input').value = '';
+
+      const container = document.getElementById('exercises-container');
+      container.innerHTML = '';
+
+      const groups = [];
+      const used = new Set();
+      w.exercises.forEach((ex, i) => {
+        if (used.has(i)) return;
+        if (ex.linkGroup) {
+          const members = [i]; used.add(i);
+          w.exercises.forEach((e2, j) => {
+            if (j > i && !used.has(j) && e2.linkGroup === ex.linkGroup) { members.push(j); used.add(j); }
+          });
+          groups.push(members);
+        } else {
+          groups.push([i]); used.add(i);
+        }
+      });
+
+      groups.forEach(members => {
+        const blankEx = (ex) => ({
+          exId: ex.exId, name: ex.name, icon: ex.icon, note: '', linkGroup: ex.linkGroup,
+          sets: (ex.sets || []).map(s => ({ warmup: s.warmup, weight: 0, reps: 0, rir: 0, variations: [] })),
+        });
+        if (members.length > 1) {
+          const comboId = 'combo-' + Date.now() + Math.random().toString(36).slice(2, 5);
+          const wrapper = document.createElement('div');
+          wrapper.className = 'combo-block'; wrapper.id = comboId;
+          wrapper.innerHTML = `<div class="combo-header">
+        <div class="combo-header-top">
+          <span class="combo-header-title">🔗 Combined Exercise</span>
+          <div>
+            <button class="icon-btn" style="padding:2px 6px;" onclick="moveNodeUpDown('${comboId}',-1)" title="Move up">▲</button>
+            <button class="icon-btn" style="padding:2px 6px;" onclick="moveNodeUpDown('${comboId}',1)" title="Move down">▼</button>
+            <button class="ex-del-btn" onclick="removeComboBlock('${comboId}')">Remove All</button>
+          </div>
+        </div>
+        <span class="combo-header-sub">${members.length} exercises · stacked as one set</span>
+      </div>`;
+          container.appendChild(wrapper);
+          members.forEach((idx, i) => populateExBlock(blankEx(w.exercises[idx]), wrapper, i === 0));
+        } else {
+          populateExBlock(blankEx(w.exercises[members[0]]), container);
+        }
+      });
+
+      startTimer();
+      showToast('Repeating "' + (w.name || 'Workout') + '" — log today\'s numbers 💪');
     }
 
     function editWorkout(id) {
@@ -4936,7 +5217,11 @@
           wrapper.innerHTML = `<div class="combo-header">
         <div class="combo-header-top">
           <span class="combo-header-title">🔗 Combined Exercise</span>
-          <button class="ex-del-btn" onclick="removeComboBlock('${comboId}')">Remove All</button>
+          <div>
+            <button class="icon-btn" style="padding:2px 6px;" onclick="moveNodeUpDown('${comboId}',-1)" title="Move up">▲</button>
+            <button class="icon-btn" style="padding:2px 6px;" onclick="moveNodeUpDown('${comboId}',1)" title="Move down">▼</button>
+            <button class="ex-del-btn" onclick="removeComboBlock('${comboId}')">Remove All</button>
+          </div>
         </div>
         <span class="combo-header-sub">${members.length} exercises · stacked as one set</span>
       </div>`;
