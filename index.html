@@ -1943,6 +1943,89 @@
         transform: rotate(360deg);
       }
     }
+
+    /* ── SMALL SCREEN RESPONSIVENESS ── */
+    .progress-tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .time-filters { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+    @media (max-width: 380px) {
+      .page-header { padding: 14px 14px 10px; }
+      .page-header h1 { font-size: 19px; }
+      .header-icons { gap: 7px; }
+      .header-icons .icon-btn svg, .icon-btn svg { width: 20px; height: 20px; }
+
+      .snapshot-card, .cta-card, .import-card, .feed-card, .goal-card, .chart-container,
+      .insight-card, .day-card, .week-compare-card, .add-ex-btn, .ex-block, .combo-block { margin-left: 12px; margin-right: 12px; }
+
+      .snapshot-card { padding: 14px; }
+      .snapshot-stats { gap: 14px; flex-wrap: wrap; row-gap: 10px; }
+      .stat-item .val { font-size: 20px; }
+      .stat-item .lbl { font-size: 10.5px; }
+      .stat-delta { font-size: 10px; padding: 2px 6px; }
+
+      .cta-card { padding: 16px 14px; }
+      .cta-card h2 { font-size: 18px; }
+      .cta-card p { font-size: 12px; }
+
+      .section-title { font-size: 18px; padding: 0 14px 6px; }
+      .section-sub { padding: 0 14px 12px; font-size: 12px; }
+
+      .exercise-grid { grid-template-columns: repeat(2, 1fr); }
+
+      .feed-meta { gap: 14px; font-size: 12px; }
+      .feed-meta strong { font-size: 14px; }
+
+      .detail-stat, .you-stat { padding: 11px 10px; }
+      .detail-stat .val, .you-stat .val { font-size: 17px; }
+
+      .week-compare-card { padding: 14px; }
+      .week-compare-grid { gap: 6px; }
+      .wc-item .wc-val { font-size: 17px; }
+
+      .sets-table th, .sets-table td { padding: 5px 6px; font-size: 12px; }
+      .set-input { width: 48px; }
+      .rir-input, .rpe-input { width: 36px; }
+      .tempo-input { width: 46px; }
+      .variations-btn { max-width: 84px; }
+
+      .workout-meta-row { flex-wrap: wrap; }
+      .workout-meta-row #workout-duration-input,
+      .workout-meta-row #workout-bodyweight-input { width: calc(50% - 5px); flex: none; }
+      .workout-meta-row #workout-date { flex: 1 1 100%; }
+
+      .workout-name-input { font-size: 19px; }
+
+      .muscle-body-container svg { max-width: 42vw; height: auto; }
+      .muscle-legend { gap: 12px; font-size: 11px; }
+
+      .badge-chip { min-width: 58px; padding: 8px 10px; }
+      .badge-chip .badge-emoji { font-size: 17px; }
+
+      .time-filter { font-size: 11px; padding: 7px 4px; }
+      .progress-tab { padding: 12px 10px; font-size: 12px; }
+
+      .chart-value { font-size: 23px; }
+      .chart-container { padding: 14px; }
+
+      .nav-btn { padding: 8px 10px; }
+      .nav-btn span { font-size: 10.5px; }
+
+      .you-header { padding: 16px; gap: 12px; }
+      .avatar { width: 48px; height: 48px; font-size: 19px; }
+
+      .modal-header { padding: 14px 16px 10px; }
+      .ex-list-item { padding: 10px 14px; gap: 10px; }
+      .ex-list-icon { width: 36px; height: 36px; }
+    }
+
+    @media (max-width: 340px) {
+      .snapshot-stats { gap: 10px 16px; }
+      .header-icons { gap: 5px; }
+      .exercise-grid { grid-template-columns: repeat(2, 1fr); }
+      .detail-stats { grid-template-columns: repeat(2, 1fr); }
+      .you-stats { grid-template-columns: repeat(3, 1fr); }
+      .set-input { width: 44px; }
+    }
   </style>
 </head>
 
@@ -2086,7 +2169,7 @@
           </div>
         </div>
 
-        <div style="display: flex; gap: 10px; padding: 12px 20px 0;">
+        <div class="workout-meta-row" style="display: flex; gap: 10px; padding: 12px 20px 0;">
           <input type="datetime-local" id="workout-date"
             style="flex: 1; background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 8px; border-radius: 6px; font-family: inherit; font-size: 13px; outline: none;">
           <input type="number" id="workout-duration-input" placeholder="Duration (min)"
