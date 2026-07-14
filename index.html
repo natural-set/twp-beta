@@ -3636,7 +3636,7 @@
             if (s.weight * s.reps > (prev.volume || 0)) s.prs.push('Volume');
             if (s.reps > (prev.reps || 0)) s.prs.push('Reps');
           }
-          if (!s.warmup && s.reps > 0 && isBodyweightExercise(exDef.name)) {
+          if (!s.warmup && s.reps > 0 && isBodyweightExercise(ex.name)) {
             const bwPrev = getBodyweightBestFor(ex.exId);
             const bw = getUserBodyweight();
             if (s.weight === 0 && s.reps > (bwPrev.bestReps || 0)) s.prs.push('Bodyweight');
