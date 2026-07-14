@@ -2322,6 +2322,8 @@
 
         <div id="filter-stats"></div>
 
+        <div id="weekly-summary-card"></div>
+
         <div class="section-title" data-i18n="suggested_goal">Suggested Goal</div>
         <div class="goal-card">
           <div class="goal-icon">
@@ -2364,6 +2366,7 @@
         <div class="insight-card">
           <h3>Training Load (last 12 weeks)</h3>
           <canvas id="training-load-chart" height="140"></canvas>
+          <div id="training-load-note" style="margin-top:10px;"></div>
         </div>
         <div class="insight-card">
           <h3>Push / Pull / Legs Balance</h3>
@@ -2997,24 +3000,27 @@
 
     // Full anatomical breakdown — 17 tracked groups. `color` only tints the bar in
     // the Muscle Split list (major lifts = red bar, smaller/stabilizer groups = blue).
+    // target = [min, max] recommended weekly working sets for that muscle (rough
+    // evidence-based ranges) — used instead of one flat threshold for every muscle,
+    // since e.g. Chest/Lats naturally carry more volume than Traps/Forearms.
     const MUSCLE_GROUPS = [
-      { name: 'Chest', icon: '💪', color: 'primary' },
-      { name: 'Upper Back', icon: '🔙', color: 'primary' },
-      { name: 'Lower Back', icon: '🦴', color: 'primary' },
-      { name: 'Lats', icon: '🔝', color: 'secondary' },
-      { name: 'Traps', icon: '🎯', color: 'secondary' },
-      { name: 'Front Delts', icon: '🙌', color: 'secondary' },
-      { name: 'Side Delts', icon: '🤸', color: 'secondary' },
-      { name: 'Rear Delts', icon: '🏹', color: 'secondary' },
-      { name: 'Biceps', icon: '💪', color: 'primary' },
-      { name: 'Triceps', icon: '⬇️', color: 'primary' },
-      { name: 'Forearms', icon: '✊', color: 'secondary' },
-      { name: 'Abs', icon: '🧘', color: 'secondary' },
-      { name: 'Obliques', icon: '🌀', color: 'secondary' },
-      { name: 'Quadriceps', icon: '🦵', color: 'primary' },
-      { name: 'Hamstrings', icon: '🏹', color: 'primary' },
-      { name: 'Glutes', icon: '🍑', color: 'secondary' },
-      { name: 'Calves', icon: '🦶', color: 'secondary' },
+      { name: 'Chest', icon: '💪', color: 'primary', target: [12, 20] },
+      { name: 'Upper Back', icon: '🔙', color: 'primary', target: [10, 18] },
+      { name: 'Lower Back', icon: '🦴', color: 'primary', target: [6, 12] },
+      { name: 'Lats', icon: '🔝', color: 'secondary', target: [12, 20] },
+      { name: 'Traps', icon: '🎯', color: 'secondary', target: [6, 12] },
+      { name: 'Front Delts', icon: '🙌', color: 'secondary', target: [6, 12] },
+      { name: 'Side Delts', icon: '🤸', color: 'secondary', target: [12, 20] },
+      { name: 'Rear Delts', icon: '🏹', color: 'secondary', target: [12, 20] },
+      { name: 'Biceps', icon: '💪', color: 'primary', target: [10, 18] },
+      { name: 'Triceps', icon: '⬇️', color: 'primary', target: [10, 18] },
+      { name: 'Forearms', icon: '✊', color: 'secondary', target: [6, 12] },
+      { name: 'Abs', icon: '🧘', color: 'secondary', target: [10, 18] },
+      { name: 'Obliques', icon: '🌀', color: 'secondary', target: [6, 12] },
+      { name: 'Quadriceps', icon: '🦵', color: 'primary', target: [12, 20] },
+      { name: 'Hamstrings', icon: '🏹', color: 'primary', target: [10, 16] },
+      { name: 'Glutes', icon: '🍑', color: 'secondary', target: [10, 18] },
+      { name: 'Calves', icon: '🦶', color: 'secondary', target: [10, 16] },
     ];
 
     // Built-ins + user-added exercises, minus anything hidden. Every picker in
@@ -5050,9 +5056,40 @@
   `;
     }
 
+    // "What changed" at a glance — combines volume trend, new PRs, and consistency
+    // (workouts vs goal) in one card, instead of that being scattered across tabs.
+    function renderWeeklySummary() {
+      const el = document.getElementById('weekly-summary-card');
+      if (!el) return;
+      const now = new Date();
+      const weekStart = new Date(now); weekStart.setDate(now.getDate() - now.getDay()); weekStart.setHours(0, 0, 0, 0);
+      const lastWeekStart = new Date(weekStart); lastWeekStart.setDate(lastWeekStart.getDate() - 7);
+      const weekWorkouts = state.workouts.filter(w => new Date(w.date) >= weekStart);
+      const lastWeekWorkouts = state.workouts.filter(w => { const d = new Date(w.date); return d >= lastWeekStart && d < weekStart; });
+      if (!weekWorkouts.length && !lastWeekWorkouts.length) { el.innerHTML = ''; return; }
+      const vol = weekWorkouts.reduce((s, w) => s + w.volume, 0);
+      const lastVol = lastWeekWorkouts.reduce((s, w) => s + w.volume, 0);
+      const volPct = lastVol > 0 ? Math.round(((vol - lastVol) / lastVol) * 100) : null;
+      const newPRs = weekWorkouts.reduce((s, w) => s + w.exercises.reduce((ss, ex) => ss + (ex.sets || []).filter(st => st.prs && st.prs.length).length, 0), 0);
+      const goal = state.weeklyGoal || 3;
+      const volDelta = volPct === null
+        ? (vol > 0 ? `${Math.round(vol)}kg so far` : 'No data last week')
+        : `${volPct >= 0 ? '▲' : '▼'} ${Math.abs(volPct)}% vs last wk`;
+      el.innerHTML = `
+    <div class="snapshot-card" style="margin:0 16px 20px;">
+      <div class="snapshot-header"><span>This Week At a Glance</span></div>
+      <div class="snapshot-stats" style="flex-wrap:wrap;row-gap:12px;">
+        <div class="stat-item"><div class="val">${weekWorkouts.length}/${goal}</div><div class="lbl">Workouts</div></div>
+        <div class="stat-item"><div class="val">${Math.round(vol)}kg</div><div class="lbl">Volume</div><div class="stat-delta ${volPct === null ? '' : volPct >= 0 ? 'up' : 'down'}">${volDelta}</div></div>
+        <div class="stat-item"><div class="val">🏅 ${newPRs}</div><div class="lbl">New PRs</div></div>
+      </div>
+    </div>`;
+    }
+
     function refreshProgress() {
       renderChart();
       renderGoal();
+      renderWeeklySummary();
       renderProgressMuscleMap();
       renderExerciseHistory();
     }
@@ -5105,6 +5142,32 @@
       return recent.every(s => s.weight === recent[0].weight && s.reps === recent[0].reps);
     }
 
+    // Compares the most recent session's top set to the one before it (progress
+    // arrow), and — if plateaued — how many sessions in a row it's been stuck.
+    function getExerciseTrend(exId) {
+      const sessions = [];
+      state.workouts.forEach(w => {
+        const ex = w.exercises.find(e => e.exId === exId);
+        if (!ex) return;
+        const working = (ex.sets || []).filter(s => !s.warmup && s.reps > 0);
+        if (!working.length) return;
+        const top = working.reduce((a, b) => (b.weight > a.weight || (b.weight === a.weight && b.reps > a.reps)) ? b : a);
+        sessions.push({ date: w.date, weight: top.weight, reps: top.reps, est1rm: top.weight * (1 + top.reps / 30) });
+      });
+      sessions.sort((a, b) => new Date(b.date) - new Date(a.date));
+      if (sessions.length < 2) return { arrow: '', weeksStalled: 0 };
+      const [latest, prev] = sessions;
+      let arrow = '<span style="color:var(--text-muted)">●</span>';
+      if (latest.est1rm > prev.est1rm * 1.01) arrow = '<span style="color:var(--green)">▲</span>';
+      else if (latest.est1rm < prev.est1rm * 0.99) arrow = '<span style="color:var(--red)">▼</span>';
+      let stalled = 1;
+      for (let i = 1; i < sessions.length; i++) {
+        if (sessions[i].weight === sessions[0].weight && sessions[i].reps === sessions[0].reps) stalled++;
+        else break;
+      }
+      return { arrow, weeksStalled: stalled };
+    }
+
     function renderExerciseHistory() {
       const el = document.getElementById('exercise-history-list');
       const seen = {};
@@ -5117,15 +5180,19 @@
       });
       const items = Object.values(seen);
       if (!items.length) { el.innerHTML = ''; return; }
-      el.innerHTML = items.map(it => `
+      el.innerHTML = items.map(it => {
+        const trend = getExerciseTrend(it.exId);
+        const plateauTag = trend.weeksStalled >= PLATEAU_SESSION_COUNT ? `<span class="plateau-tag">⚠️ Stalled ${trend.weeksStalled}x</span>` : '';
+        return `
     <div class="muscle-item" style="cursor:pointer" onclick="openExerciseDetail('${it.exId}')">
       <div class="muscle-item-icon">${it.icon}</div>
-      <div>
-        <div class="muscle-item-name">${it.name}${isExercisePlateaued(it.exId) ? '<span class="plateau-tag">⚠️ Plateau</span>' : ''}</div>
+      <div style="flex:1">
+        <div class="muscle-item-name">${trend.arrow} ${it.name}${plateauTag}</div>
         <div class="muscle-item-stats">${Math.round(it.volume)}kg total · ${it.count} sessions</div>
       </div>
     </div>
-  `).join('');
+  `;
+      }).join('');
     }
 
     // ═══════════════════════════════════════════
@@ -5161,7 +5228,8 @@
       });
 
       const maxKg = Math.max(...Object.values(stats).map(s => s.kg), 1);
-      document.getElementById('muscle-split-list').innerHTML = MUSCLE_GROUPS.map(m => {
+      const sorted = [...MUSCLE_GROUPS].sort((a, b) => (stats[a.name]?.kg || 0) - (stats[b.name]?.kg || 0));
+      document.getElementById('muscle-split-list').innerHTML = sorted.map(m => {
         const s = stats[m.name] || { kg: 0, sets: 0 };
         const barW = Math.max(2, (s.kg / maxKg) * 100);
         return `<div class="muscle-item" style="cursor:pointer" onclick="openMuscleDetail('${m.name}')">
@@ -5207,17 +5275,37 @@
       renderMuscleWarnings();
     }
 
+    // Days since a muscle last appeared (primary or secondary) in any logged workout —
+    // null if it's never been trained at all.
+    function daysSinceMuscleTrained(muscleName) {
+      let last = null;
+      state.workouts.forEach(w => {
+        w.exercises.forEach(ex => {
+          if (!(ex.sets || []).some(s => !s.warmup)) return;
+          const { primary, secondary } = getExerciseMuscles(ex);
+          if (primary.includes(muscleName) || secondary.includes(muscleName)) {
+            const d = new Date(w.date);
+            if (!last || d > last) last = d;
+          }
+        });
+      });
+      return last ? Math.floor((Date.now() - last.getTime()) / 86400000) : null;
+    }
+
     function renderMuscleWarnings() {
       const now = new Date();
       const weekStart = new Date(now); weekStart.setDate(now.getDate() - now.getDay()); weekStart.setHours(0, 0, 0, 0);
       const weekWorkouts = state.workouts.filter(w => new Date(w.date) >= weekStart);
       const sets = weeklyMuscleSets(weekWorkouts);
-      const rows = MUSCLE_GROUPS.filter(m => sets[m.name] > 0).map(m => {
+      const rows = MUSCLE_GROUPS.filter(m => sets[m.name] > 0 || daysSinceMuscleTrained(m.name) !== null).map(m => {
         const n = Math.round(sets[m.name] * 10) / 10;
+        const [lo, hi] = m.target || [10, 20];
         let pill = `<span class="warn-pill ok">✓ In range</span>`;
-        if (n < 10) pill = `<span class="warn-pill low">▼ Low (${n})</span>`;
-        else if (n > 20) pill = `<span class="warn-pill high">▲ High (${n})</span>`;
-        return `<div class="warn-row"><span>${m.icon} ${m.name} — ${n} sets</span>${pill}</div>`;
+        if (n < lo) pill = `<span class="warn-pill low">▼ Low</span>`;
+        else if (n > hi) pill = `<span class="warn-pill high">▲ High</span>`;
+        const days = daysSinceMuscleTrained(m.name);
+        const daysNote = (days !== null && days >= 7) ? ` · <span style="color:var(--gold)">${days}d ago</span>` : '';
+        return `<div class="warn-row"><span>${m.icon} ${m.name} — ${n}/${lo}-${hi} sets${daysNote}</span>${pill}</div>`;
       });
       document.getElementById('muscle-warnings').innerHTML = rows.length
         ? rows.join('')
@@ -5233,10 +5321,11 @@
       const pct = k => Math.round((totals[k] / sum) * 100);
       const colors = { push: '#ef4444', pull: '#3b82f6', legs: '#f59e0b' };
       const bar = ['push', 'pull', 'legs'].map(k => `<div style="width:${pct(k)}%;background:${colors[k]};"></div>`).join('');
-      const legend = ['push', 'pull', 'legs'].map(k => `<div class="warn-row"><span><span class="legend-dot" style="background:${colors[k]}"></span>${titleCase(k)}</span><strong>${pct(k)}%</strong></div>`).join('');
-      let warning = '';
-      if (pct('legs') < 20) warning = `<div style="color:var(--gold);font-size:12px;margin-top:8px;">⚠️ Lower body volume looks low relative to upper body.</div>`;
-      document.getElementById('ppl-balance').innerHTML = `<div class="ppl-bar-row">${bar}</div>${legend}${warning}`;
+      const legend = ['push', 'pull', 'legs'].map(k => `<div class="warn-row"><span><span class="legend-dot" style="background:${colors[k]}"></span>${titleCase(k)}<span style="color:var(--text-dim);font-size:11px;margin-left:6px;">target ~30-35%</span></span><strong>${pct(k)}%</strong></div>`).join('');
+      const warnings = [];
+      if (pct('legs') < 25) warnings.push('⚠️ Legs volume is low relative to upper body.');
+      if (pct('pull') < pct('push') - 15) warnings.push('⚠️ Pull volume trails push — watch posture/shoulder balance.');
+      document.getElementById('ppl-balance').innerHTML = `<div class="ppl-bar-row">${bar}</div>${legend}${warnings.map(w => `<div style="color:var(--gold);font-size:12px;margin-top:8px;">${w}</div>`).join('')}`;
     }
 
     let trainingLoadChartInstance = null;
@@ -5265,6 +5354,25 @@
           }
         }
       });
+
+      // Flag a big swing between the last two completed weeks (indices 9 & 10 — the
+      // current week at index 11 is still partial, so it's excluded from this check).
+      const noteEl = document.getElementById('training-load-note');
+      if (noteEl) {
+        const prevFull = weekVols[9], lastFull = weekVols[10];
+        if (prevFull > 0) {
+          const pctChange = Math.round(((lastFull - prevFull) / prevFull) * 100);
+          if (pctChange <= -30) {
+            noteEl.innerHTML = `<div style="color:var(--accent-blue);font-size:12px;">📉 Volume dropped ${Math.abs(pctChange)}% last week — could be a planned deload, or worth checking in on.</div>`;
+          } else if (pctChange >= 30) {
+            noteEl.innerHTML = `<div style="color:var(--gold);font-size:12px;">⚠️ Volume jumped ${pctChange}% last week — ramping up that fast raises injury risk.</div>`;
+          } else {
+            noteEl.innerHTML = '';
+          }
+        } else {
+          noteEl.innerHTML = '';
+        }
+      }
     }
 
     // ── Muscle activation → color helpers ──
