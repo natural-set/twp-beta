@@ -2279,6 +2279,7 @@
         <button class="progress-tab" onclick="switchProgressTab(this,'exercises')" data-i18n="tab_exercises">Exercises</button>
         <button class="progress-tab" onclick="switchProgressTab(this,'muscles')" data-i18n="tab_muscles">Muscles</button>
         <button class="progress-tab" onclick="switchProgressTab(this,'insights')">Insights</button>
+        <button class="progress-tab" onclick="switchProgressTab(this,'plan')">Plan</button>
       </div>
 
       <div id="ptab-overview">
@@ -2322,8 +2323,6 @@
 
         <div id="filter-stats"></div>
 
-        <div id="weekly-summary-card"></div>
-
         <div class="section-title" data-i18n="suggested_goal">Suggested Goal</div>
         <div class="goal-card">
           <div class="goal-icon">
@@ -2366,7 +2365,6 @@
         <div class="insight-card">
           <h3>Training Load (last 12 weeks)</h3>
           <canvas id="training-load-chart" height="140"></canvas>
-          <div id="training-load-note" style="margin-top:10px;"></div>
         </div>
         <div class="insight-card">
           <h3>Push / Pull / Legs Balance</h3>
@@ -2375,6 +2373,45 @@
         <div class="insight-card">
           <h3>Muscle Volume Warnings (this week)</h3>
           <div id="muscle-warnings"></div>
+        </div>
+      </div>
+
+      <div id="ptab-plan" style="display:none;">
+        <div id="plan-setup-card" class="insight-card" style="display:none;">
+          <h3>Set Up Periodization</h3>
+          <div style="display:flex;flex-direction:column;gap:12px;">
+            <div>
+              <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">Goal date</label>
+              <input id="plan-goal-date" type="date" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:8px;font-family:inherit;font-size:13px;outline:none;">
+            </div>
+            <div>
+              <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">Athlete level</label>
+              <select id="plan-level" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:8px;font-family:inherit;font-size:13px;outline:none;">
+                <option value="beginner">Beginner</option>
+                <option value="intermediate" selected>Intermediate</option>
+                <option value="advanced">Advanced</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">Model</label>
+              <select id="plan-model" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:8px;font-family:inherit;font-size:13px;outline:none;">
+                <option value="linear">Linear</option>
+                <option value="wave">Wave (undulating)</option>
+              </select>
+            </div>
+            <button class="btn-primary" onclick="generatePeriodizationPlan()">Generate Plan</button>
+          </div>
+        </div>
+        <div id="plan-active-wrap" style="display:none;">
+          <div class="insight-card">
+            <h3>This Week</h3>
+            <div id="plan-week-card"></div>
+          </div>
+          <div class="insight-card">
+            <h3>Macrocycle Timeline</h3>
+            <div id="plan-timeline"></div>
+          </div>
+          <button class="ex-del-btn" style="margin:0 16px 16px;" onclick="resetPeriodizationPlan()">Reset Plan</button>
         </div>
       </div>
     </div>
@@ -3000,27 +3037,24 @@
 
     // Full anatomical breakdown — 17 tracked groups. `color` only tints the bar in
     // the Muscle Split list (major lifts = red bar, smaller/stabilizer groups = blue).
-    // target = [min, max] recommended weekly working sets for that muscle (rough
-    // evidence-based ranges) — used instead of one flat threshold for every muscle,
-    // since e.g. Chest/Lats naturally carry more volume than Traps/Forearms.
     const MUSCLE_GROUPS = [
-      { name: 'Chest', icon: '💪', color: 'primary', target: [12, 20] },
-      { name: 'Upper Back', icon: '🔙', color: 'primary', target: [10, 18] },
-      { name: 'Lower Back', icon: '🦴', color: 'primary', target: [6, 12] },
-      { name: 'Lats', icon: '🔝', color: 'secondary', target: [12, 20] },
-      { name: 'Traps', icon: '🎯', color: 'secondary', target: [6, 12] },
-      { name: 'Front Delts', icon: '🙌', color: 'secondary', target: [6, 12] },
-      { name: 'Side Delts', icon: '🤸', color: 'secondary', target: [12, 20] },
-      { name: 'Rear Delts', icon: '🏹', color: 'secondary', target: [12, 20] },
-      { name: 'Biceps', icon: '💪', color: 'primary', target: [10, 18] },
-      { name: 'Triceps', icon: '⬇️', color: 'primary', target: [10, 18] },
-      { name: 'Forearms', icon: '✊', color: 'secondary', target: [6, 12] },
-      { name: 'Abs', icon: '🧘', color: 'secondary', target: [10, 18] },
-      { name: 'Obliques', icon: '🌀', color: 'secondary', target: [6, 12] },
-      { name: 'Quadriceps', icon: '🦵', color: 'primary', target: [12, 20] },
-      { name: 'Hamstrings', icon: '🏹', color: 'primary', target: [10, 16] },
-      { name: 'Glutes', icon: '🍑', color: 'secondary', target: [10, 18] },
-      { name: 'Calves', icon: '🦶', color: 'secondary', target: [10, 16] },
+      { name: 'Chest', icon: '💪', color: 'primary' },
+      { name: 'Upper Back', icon: '🔙', color: 'primary' },
+      { name: 'Lower Back', icon: '🦴', color: 'primary' },
+      { name: 'Lats', icon: '🔝', color: 'secondary' },
+      { name: 'Traps', icon: '🎯', color: 'secondary' },
+      { name: 'Front Delts', icon: '🙌', color: 'secondary' },
+      { name: 'Side Delts', icon: '🤸', color: 'secondary' },
+      { name: 'Rear Delts', icon: '🏹', color: 'secondary' },
+      { name: 'Biceps', icon: '💪', color: 'primary' },
+      { name: 'Triceps', icon: '⬇️', color: 'primary' },
+      { name: 'Forearms', icon: '✊', color: 'secondary' },
+      { name: 'Abs', icon: '🧘', color: 'secondary' },
+      { name: 'Obliques', icon: '🌀', color: 'secondary' },
+      { name: 'Quadriceps', icon: '🦵', color: 'primary' },
+      { name: 'Hamstrings', icon: '🏹', color: 'primary' },
+      { name: 'Glutes', icon: '🍑', color: 'secondary' },
+      { name: 'Calves', icon: '🦶', color: 'secondary' },
     ];
 
     // Built-ins + user-added exercises, minus anything hidden. Every picker in
@@ -3324,6 +3358,7 @@
       measurementHistory: {}, // dated snapshots per measurement field: { key: [{date, value}] }
       language: 'en', // 'en' | 'pt'
       activeRestRow: null, // the one <tr> whose rest clock is currently ticking, across all exercises
+      periodization: null, // { goalDate, athleteLevel, model, mesocycles: [...], generatedAt }
     };
 
     let chartInstance = null;
@@ -3379,6 +3414,7 @@
         state.recentExerciseIds = parsed.recentExerciseIds || [];
         state.measurementHistory = parsed.measurementHistory || {};
         state.language = parsed.language || (navigator.language && navigator.language.toLowerCase().startsWith('pt') ? 'pt' : 'en');
+        state.periodization = parsed.periodization || null;
         // Existing duplicates (e.g. from a prior sync bug) get silently
         // cleaned up and persisted right away so they don't keep reappearing.
         if (state.workouts.length !== rawWorkouts.length) saveState();
@@ -3400,6 +3436,7 @@
         recentExerciseIds: state.recentExerciseIds,
         measurementHistory: state.measurementHistory,
         language: state.language,
+        periodization: state.periodization,
       }));
     }
 
@@ -4901,11 +4938,12 @@
     function switchProgressTab(btn, tab) {
       document.querySelectorAll('.progress-tab').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      ['overview', 'exercises', 'muscles', 'insights'].forEach(t => {
+      ['overview', 'exercises', 'muscles', 'insights', 'plan'].forEach(t => {
         document.getElementById('ptab-' + t).style.display = t === tab ? 'block' : 'none';
       });
       if (tab === 'muscles') renderMuscleSplit();
       if (tab === 'insights') renderInsights();
+      if (tab === 'plan') renderPeriodizationTab();
     }
 
     function switchFilter(btn, f) {
@@ -5056,40 +5094,9 @@
   `;
     }
 
-    // "What changed" at a glance — combines volume trend, new PRs, and consistency
-    // (workouts vs goal) in one card, instead of that being scattered across tabs.
-    function renderWeeklySummary() {
-      const el = document.getElementById('weekly-summary-card');
-      if (!el) return;
-      const now = new Date();
-      const weekStart = new Date(now); weekStart.setDate(now.getDate() - now.getDay()); weekStart.setHours(0, 0, 0, 0);
-      const lastWeekStart = new Date(weekStart); lastWeekStart.setDate(lastWeekStart.getDate() - 7);
-      const weekWorkouts = state.workouts.filter(w => new Date(w.date) >= weekStart);
-      const lastWeekWorkouts = state.workouts.filter(w => { const d = new Date(w.date); return d >= lastWeekStart && d < weekStart; });
-      if (!weekWorkouts.length && !lastWeekWorkouts.length) { el.innerHTML = ''; return; }
-      const vol = weekWorkouts.reduce((s, w) => s + w.volume, 0);
-      const lastVol = lastWeekWorkouts.reduce((s, w) => s + w.volume, 0);
-      const volPct = lastVol > 0 ? Math.round(((vol - lastVol) / lastVol) * 100) : null;
-      const newPRs = weekWorkouts.reduce((s, w) => s + w.exercises.reduce((ss, ex) => ss + (ex.sets || []).filter(st => st.prs && st.prs.length).length, 0), 0);
-      const goal = state.weeklyGoal || 3;
-      const volDelta = volPct === null
-        ? (vol > 0 ? `${Math.round(vol)}kg so far` : 'No data last week')
-        : `${volPct >= 0 ? '▲' : '▼'} ${Math.abs(volPct)}% vs last wk`;
-      el.innerHTML = `
-    <div class="snapshot-card" style="margin:0 16px 20px;">
-      <div class="snapshot-header"><span>This Week At a Glance</span></div>
-      <div class="snapshot-stats" style="flex-wrap:wrap;row-gap:12px;">
-        <div class="stat-item"><div class="val">${weekWorkouts.length}/${goal}</div><div class="lbl">Workouts</div></div>
-        <div class="stat-item"><div class="val">${Math.round(vol)}kg</div><div class="lbl">Volume</div><div class="stat-delta ${volPct === null ? '' : volPct >= 0 ? 'up' : 'down'}">${volDelta}</div></div>
-        <div class="stat-item"><div class="val">🏅 ${newPRs}</div><div class="lbl">New PRs</div></div>
-      </div>
-    </div>`;
-    }
-
     function refreshProgress() {
       renderChart();
       renderGoal();
-      renderWeeklySummary();
       renderProgressMuscleMap();
       renderExerciseHistory();
     }
@@ -5142,32 +5149,6 @@
       return recent.every(s => s.weight === recent[0].weight && s.reps === recent[0].reps);
     }
 
-    // Compares the most recent session's top set to the one before it (progress
-    // arrow), and — if plateaued — how many sessions in a row it's been stuck.
-    function getExerciseTrend(exId) {
-      const sessions = [];
-      state.workouts.forEach(w => {
-        const ex = w.exercises.find(e => e.exId === exId);
-        if (!ex) return;
-        const working = (ex.sets || []).filter(s => !s.warmup && s.reps > 0);
-        if (!working.length) return;
-        const top = working.reduce((a, b) => (b.weight > a.weight || (b.weight === a.weight && b.reps > a.reps)) ? b : a);
-        sessions.push({ date: w.date, weight: top.weight, reps: top.reps, est1rm: top.weight * (1 + top.reps / 30) });
-      });
-      sessions.sort((a, b) => new Date(b.date) - new Date(a.date));
-      if (sessions.length < 2) return { arrow: '', weeksStalled: 0 };
-      const [latest, prev] = sessions;
-      let arrow = '<span style="color:var(--text-muted)">●</span>';
-      if (latest.est1rm > prev.est1rm * 1.01) arrow = '<span style="color:var(--green)">▲</span>';
-      else if (latest.est1rm < prev.est1rm * 0.99) arrow = '<span style="color:var(--red)">▼</span>';
-      let stalled = 1;
-      for (let i = 1; i < sessions.length; i++) {
-        if (sessions[i].weight === sessions[0].weight && sessions[i].reps === sessions[0].reps) stalled++;
-        else break;
-      }
-      return { arrow, weeksStalled: stalled };
-    }
-
     function renderExerciseHistory() {
       const el = document.getElementById('exercise-history-list');
       const seen = {};
@@ -5180,19 +5161,15 @@
       });
       const items = Object.values(seen);
       if (!items.length) { el.innerHTML = ''; return; }
-      el.innerHTML = items.map(it => {
-        const trend = getExerciseTrend(it.exId);
-        const plateauTag = trend.weeksStalled >= PLATEAU_SESSION_COUNT ? `<span class="plateau-tag">⚠️ Stalled ${trend.weeksStalled}x</span>` : '';
-        return `
+      el.innerHTML = items.map(it => `
     <div class="muscle-item" style="cursor:pointer" onclick="openExerciseDetail('${it.exId}')">
       <div class="muscle-item-icon">${it.icon}</div>
-      <div style="flex:1">
-        <div class="muscle-item-name">${trend.arrow} ${it.name}${plateauTag}</div>
+      <div>
+        <div class="muscle-item-name">${it.name}${isExercisePlateaued(it.exId) ? '<span class="plateau-tag">⚠️ Plateau</span>' : ''}</div>
         <div class="muscle-item-stats">${Math.round(it.volume)}kg total · ${it.count} sessions</div>
       </div>
     </div>
-  `;
-      }).join('');
+  `).join('');
     }
 
     // ═══════════════════════════════════════════
@@ -5228,8 +5205,7 @@
       });
 
       const maxKg = Math.max(...Object.values(stats).map(s => s.kg), 1);
-      const sorted = [...MUSCLE_GROUPS].sort((a, b) => (stats[a.name]?.kg || 0) - (stats[b.name]?.kg || 0));
-      document.getElementById('muscle-split-list').innerHTML = sorted.map(m => {
+      document.getElementById('muscle-split-list').innerHTML = MUSCLE_GROUPS.map(m => {
         const s = stats[m.name] || { kg: 0, sets: 0 };
         const barW = Math.max(2, (s.kg / maxKg) * 100);
         return `<div class="muscle-item" style="cursor:pointer" onclick="openMuscleDetail('${m.name}')">
@@ -5275,37 +5251,17 @@
       renderMuscleWarnings();
     }
 
-    // Days since a muscle last appeared (primary or secondary) in any logged workout —
-    // null if it's never been trained at all.
-    function daysSinceMuscleTrained(muscleName) {
-      let last = null;
-      state.workouts.forEach(w => {
-        w.exercises.forEach(ex => {
-          if (!(ex.sets || []).some(s => !s.warmup)) return;
-          const { primary, secondary } = getExerciseMuscles(ex);
-          if (primary.includes(muscleName) || secondary.includes(muscleName)) {
-            const d = new Date(w.date);
-            if (!last || d > last) last = d;
-          }
-        });
-      });
-      return last ? Math.floor((Date.now() - last.getTime()) / 86400000) : null;
-    }
-
     function renderMuscleWarnings() {
       const now = new Date();
       const weekStart = new Date(now); weekStart.setDate(now.getDate() - now.getDay()); weekStart.setHours(0, 0, 0, 0);
       const weekWorkouts = state.workouts.filter(w => new Date(w.date) >= weekStart);
       const sets = weeklyMuscleSets(weekWorkouts);
-      const rows = MUSCLE_GROUPS.filter(m => sets[m.name] > 0 || daysSinceMuscleTrained(m.name) !== null).map(m => {
+      const rows = MUSCLE_GROUPS.filter(m => sets[m.name] > 0).map(m => {
         const n = Math.round(sets[m.name] * 10) / 10;
-        const [lo, hi] = m.target || [10, 20];
         let pill = `<span class="warn-pill ok">✓ In range</span>`;
-        if (n < lo) pill = `<span class="warn-pill low">▼ Low</span>`;
-        else if (n > hi) pill = `<span class="warn-pill high">▲ High</span>`;
-        const days = daysSinceMuscleTrained(m.name);
-        const daysNote = (days !== null && days >= 7) ? ` · <span style="color:var(--gold)">${days}d ago</span>` : '';
-        return `<div class="warn-row"><span>${m.icon} ${m.name} — ${n}/${lo}-${hi} sets${daysNote}</span>${pill}</div>`;
+        if (n < 10) pill = `<span class="warn-pill low">▼ Low (${n})</span>`;
+        else if (n > 20) pill = `<span class="warn-pill high">▲ High (${n})</span>`;
+        return `<div class="warn-row"><span>${m.icon} ${m.name} — ${n} sets</span>${pill}</div>`;
       });
       document.getElementById('muscle-warnings').innerHTML = rows.length
         ? rows.join('')
@@ -5321,11 +5277,10 @@
       const pct = k => Math.round((totals[k] / sum) * 100);
       const colors = { push: '#ef4444', pull: '#3b82f6', legs: '#f59e0b' };
       const bar = ['push', 'pull', 'legs'].map(k => `<div style="width:${pct(k)}%;background:${colors[k]};"></div>`).join('');
-      const legend = ['push', 'pull', 'legs'].map(k => `<div class="warn-row"><span><span class="legend-dot" style="background:${colors[k]}"></span>${titleCase(k)}<span style="color:var(--text-dim);font-size:11px;margin-left:6px;">target ~30-35%</span></span><strong>${pct(k)}%</strong></div>`).join('');
-      const warnings = [];
-      if (pct('legs') < 25) warnings.push('⚠️ Legs volume is low relative to upper body.');
-      if (pct('pull') < pct('push') - 15) warnings.push('⚠️ Pull volume trails push — watch posture/shoulder balance.');
-      document.getElementById('ppl-balance').innerHTML = `<div class="ppl-bar-row">${bar}</div>${legend}${warnings.map(w => `<div style="color:var(--gold);font-size:12px;margin-top:8px;">${w}</div>`).join('')}`;
+      const legend = ['push', 'pull', 'legs'].map(k => `<div class="warn-row"><span><span class="legend-dot" style="background:${colors[k]}"></span>${titleCase(k)}</span><strong>${pct(k)}%</strong></div>`).join('');
+      let warning = '';
+      if (pct('legs') < 20) warning = `<div style="color:var(--gold);font-size:12px;margin-top:8px;">⚠️ Lower body volume looks low relative to upper body.</div>`;
+      document.getElementById('ppl-balance').innerHTML = `<div class="ppl-bar-row">${bar}</div>${legend}${warning}`;
     }
 
     let trainingLoadChartInstance = null;
@@ -5354,25 +5309,158 @@
           }
         }
       });
+    }
 
-      // Flag a big swing between the last two completed weeks (indices 9 & 10 — the
-      // current week at index 11 is still partial, so it's excluded from this check).
-      const noteEl = document.getElementById('training-load-note');
-      if (noteEl) {
-        const prevFull = weekVols[9], lastFull = weekVols[10];
-        if (prevFull > 0) {
-          const pctChange = Math.round(((lastFull - prevFull) / prevFull) * 100);
-          if (pctChange <= -30) {
-            noteEl.innerHTML = `<div style="color:var(--accent-blue);font-size:12px;">📉 Volume dropped ${Math.abs(pctChange)}% last week — could be a planned deload, or worth checking in on.</div>`;
-          } else if (pctChange >= 30) {
-            noteEl.innerHTML = `<div style="color:var(--gold);font-size:12px;">⚠️ Volume jumped ${pctChange}% last week — ramping up that fast raises injury risk.</div>`;
-          } else {
-            noteEl.innerHTML = '';
-          }
-        } else {
-          noteEl.innerHTML = '';
-        }
+    // ═══════════════════════════════════════════
+    //  PERIODIZATION  (Macro/Meso/Microcycle planner)
+    // ═══════════════════════════════════════════
+    const LEVEL_PRESETS = {
+      beginner: { mesoWeeks: 6, deloadEvery: 8, baseWeeklySets: 100 },
+      intermediate: { mesoWeeks: 4, deloadEvery: 5, baseWeeklySets: 130 },
+      advanced: { mesoWeeks: 3, deloadEvery: 4, baseWeeklySets: 160 },
+    };
+    const PHASE_CYCLE = ['hypertrophy', 'strength', 'power'];
+    const PHASE_COLOR = { hypertrophy: '#3b82f6', strength: '#f97316', power: '#ef4444', deload: '#94a3b8', peak: '#f59e0b' };
+
+    function mondayOf(d) { const x = new Date(d); const day = x.getDay(); const diff = day === 0 ? -6 : 1 - day; x.setDate(x.getDate() + diff); x.setHours(0, 0, 0, 0); return x; }
+
+    // Builds mesocycles (each a run of weeks with a phase + volume/intensity target %)
+    // spanning from today to goalDate, then explodes them into weekly microcycles.
+    function buildPeriodizationPlan(goalDateStr, level, model) {
+      const preset = LEVEL_PRESETS[level];
+      const start = mondayOf(new Date());
+      const goal = new Date(goalDateStr);
+      const totalWeeks = Math.max(2, Math.ceil((goal - start) / (7 * 86400000)));
+
+      // Chunk weeks into mesocycles, inserting a 1-week deload every deloadEvery weeks,
+      // forcing the final block to be a short "peak" phase leading into the goal.
+      const mesos = [];
+      let weekCursor = 0, phaseIdx = 0, weeksSinceDeload = 0;
+      while (weekCursor < totalWeeks) {
+        const remaining = totalWeeks - weekCursor;
+        let len, phase;
+        if (remaining <= 2) { len = remaining; phase = 'peak'; }
+        else if (weeksSinceDeload >= preset.deloadEvery) { len = 1; phase = 'deload'; weeksSinceDeload = 0; }
+        else { len = Math.min(preset.mesoWeeks, remaining - 2); phase = PHASE_CYCLE[phaseIdx % PHASE_CYCLE.length]; phaseIdx++; weeksSinceDeload += len; }
+        mesos.push({ startWeek: weekCursor, weeks: len, phase });
+        weekCursor += len;
       }
+
+      // Linear volume/intensity curve across the whole macrocycle: volume ramps
+      // down 100%→40%, intensity ramps up 60%→95%, based on each meso's midpoint.
+      mesos.forEach(m => {
+        const frac = (m.startWeek + m.weeks / 2) / totalWeeks;
+        let volPct = Math.round(100 - frac * 60);
+        let intPct = Math.round(60 + frac * 35);
+        if (m.phase === 'deload') { volPct = 50; intPct = 55; }
+        if (m.phase === 'peak') { volPct = 30; intPct = 95; }
+        m.volumePct = volPct;
+        m.intensityPct = intPct;
+      });
+
+      // Explode into weekly microcycles with concrete targets.
+      const microcycles = [];
+      mesos.forEach(m => {
+        for (let w = 0; w < m.weeks; w++) {
+          let volPct = m.volumePct, intPct = m.intensityPct;
+          if (model === 'wave' && m.phase !== 'deload' && m.phase !== 'peak') {
+            const wave = (w % 2 === 0) ? 1 : -1; // alternate heavy/light weeks
+            volPct = Math.max(20, m.volumePct + wave * 15);
+            intPct = Math.min(98, m.intensityPct - wave * 8);
+          }
+          const weekStart = new Date(start); weekStart.setDate(weekStart.getDate() + (m.startWeek + w) * 7);
+          microcycles.push({
+            weekStart: weekStart.toISOString(), phase: m.phase,
+            plannedVolume: Math.round(preset.baseWeeklySets * volPct / 100),
+            plannedIntensityPct: intPct,
+          });
+        }
+      });
+
+      return { goalDate: goalDateStr, athleteLevel: level, model, mesos, microcycles, generatedAt: new Date().toISOString() };
+    }
+
+    function generatePeriodizationPlan() {
+      const goalDate = document.getElementById('plan-goal-date').value;
+      if (!goalDate) { showToast('Pick a goal date'); return; }
+      const level = document.getElementById('plan-level').value;
+      const model = document.getElementById('plan-model').value;
+      state.periodization = buildPeriodizationPlan(goalDate, level, model);
+      saveState();
+      pushSync();
+      renderPeriodizationTab();
+      showToast('Plan generated 📋');
+    }
+
+    function resetPeriodizationPlan() {
+      if (!confirm('Reset your periodization plan?')) return;
+      state.periodization = null;
+      saveState();
+      renderPeriodizationTab();
+    }
+
+    function getCurrentMicrocycle() {
+      if (!state.periodization) return null;
+      const thisMonday = mondayOf(new Date()).toDateString();
+      return state.periodization.microcycles.find(m => new Date(m.weekStart).toDateString() === thisMonday)
+        || state.periodization.microcycles[state.periodization.microcycles.length - 1];
+    }
+
+    // Actual weekly volume (whole-body sets) reuses weeklyMuscleSets(); actual intensity
+    // is approximated from average logged RIR (0 RIR ≈ 100%, 10 RIR ≈ 50%), falling back
+    // to RPE*10 when RIR wasn't logged.
+    function computeActualThisWeek() {
+      const weekStart = mondayOf(new Date());
+      const weekWorkouts = state.workouts.filter(w => new Date(w.date) >= weekStart);
+      const sets = weeklyMuscleSets(weekWorkouts);
+      const volume = Math.round(Object.values(sets).reduce((a, b) => a + b, 0));
+      let rirVals = [], rpeVals = [];
+      weekWorkouts.forEach(w => w.exercises.forEach(ex => (ex.sets || []).forEach(s => {
+        if (!s.warmup) { if (s.rir > 0) rirVals.push(s.rir); if (s.rpe > 0) rpeVals.push(s.rpe); }
+      })));
+      let intensityPct = null;
+      if (rirVals.length) intensityPct = Math.round(100 - (rirVals.reduce((a, b) => a + b, 0) / rirVals.length) * 5);
+      else if (rpeVals.length) intensityPct = Math.round((rpeVals.reduce((a, b) => a + b, 0) / rpeVals.length) * 10);
+      return { volume, intensityPct };
+    }
+
+    function renderPeriodizationTab() {
+      const hasPlan = !!(state.periodization && state.periodization.microcycles && state.periodization.microcycles.length);
+      document.getElementById('plan-setup-card').style.display = hasPlan ? 'none' : 'block';
+      document.getElementById('plan-active-wrap').style.display = hasPlan ? 'block' : 'none';
+      if (!hasPlan) {
+        const d = new Date(); d.setDate(d.getDate() + 84);
+        document.getElementById('plan-goal-date').value = d.toISOString().slice(0, 10);
+        return;
+      }
+
+      const micro = getCurrentMicrocycle();
+      const actual = computeActualThisWeek();
+      const volDev = micro.plannedVolume ? Math.round((actual.volume - micro.plannedVolume) / micro.plannedVolume * 100) : 0;
+      const volFlag = Math.abs(volDev) > 15;
+      const barPct = (val, target) => Math.min(100, Math.round((val / Math.max(target, 1)) * 100));
+
+      document.getElementById('plan-week-card').innerHTML = `
+    <div style="font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;">Phase: <span style="color:${PHASE_COLOR[micro.phase]}">${titleCase(micro.phase)}</span> · ${titleCase(state.periodization.model)} model</div>
+    <div style="margin-bottom:14px;">
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted);margin-bottom:4px;"><span>Volume</span><span>${actual.volume} / ${micro.plannedVolume} sets ${volFlag ? `<strong style="color:${volDev > 0 ? 'var(--red)' : 'var(--accent-blue)'}">(${volDev > 0 ? '+' : ''}${volDev}%)</strong>` : ''}</span></div>
+      <div style="height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;"><div style="height:100%;width:${barPct(actual.volume, micro.plannedVolume)}%;background:${volFlag ? 'var(--red)' : 'var(--accent-blue)'};"></div></div>
+    </div>
+    <div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted);margin-bottom:4px;"><span>Intensity</span><span>${actual.intensityPct !== null ? actual.intensityPct + '%' : 'no RIR/RPE logged'} / target ${micro.plannedIntensityPct}%</span></div>
+      <div style="height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;"><div style="height:100%;width:${barPct(actual.intensityPct || 0, micro.plannedIntensityPct)}%;background:var(--gold);"></div></div>
+    </div>
+  `;
+
+      document.getElementById('plan-timeline').innerHTML = `
+    <div style="display:flex;height:28px;border-radius:6px;overflow:hidden;margin-bottom:10px;">
+      ${state.periodization.mesos.map(m => `<div title="${titleCase(m.phase)} · ${m.weeks}wk" style="flex:${m.weeks};background:${PHASE_COLOR[m.phase]};"></div>`).join('')}
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;font-size:11px;color:var(--text-muted);">
+      ${Object.entries(PHASE_COLOR).map(([k, c]) => `<span><span class="legend-dot" style="background:${c}"></span>${titleCase(k)}</span>`).join('')}
+    </div>
+    <div style="font-size:12px;color:var(--text-dim);margin-top:10px;">Goal date: ${new Date(state.periodization.goalDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
+  `;
     }
 
     // ── Muscle activation → color helpers ──
