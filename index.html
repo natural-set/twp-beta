@@ -2508,6 +2508,24 @@
       </div>
     </div>
 
+    <!-- Intensity Popover -->
+    <div class="modal-overlay" id="intensity-modal">
+      <div class="modal-sheet" style="max-height:60vh;">
+        <div class="modal-header">
+          <div style="font-size:16px;font-weight:800;flex:1;">🔥 Intensity</div>
+          <button class="modal-close-btn" onclick="closeIntensityModal()" aria-label="Close">✕</button>
+        </div>
+        <div style="padding:18px 20px 22px;">
+          <div style="font-size:13px;color:var(--text-muted);margin-bottom:14px;">Override the auto-calculated intensity, or clear to go back to Auto.</div>
+          <div id="intensity-scale" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;"></div>
+          <div style="display:flex;gap:10px;">
+            <button class="btn-secondary" onclick="clearIntensity()">Auto</button>
+            <button class="btn-primary-flex" onclick="saveIntensityModal()">Save</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Toast -->
     <div class="toast" id="toast"></div>
 
@@ -4242,9 +4260,30 @@
       btn.textContent = vars.map(v => VARIATION_LABELS[v.type] || titleCase(v.type.replace(/-/g, ' '))).join(', ');
     }
 
-    function variationsSummary(vars) {
+    // Ascending-then-descending pyramid, e.g. 20 -> [1,2,3,4,4,3,2,1], 12 -> [1,2,3,3,2,1],
+    // 10 -> [1,2,3,2,1] (best-effort: largest full pyramid whose sum doesn't exceed reps).
+    function buildPyramidSequence(totalReps) {
+      const r = Math.max(1, totalReps || 1);
+      let best = [1];
+      for (let k = 1; k <= 50; k++) {
+        const singleSum = k * k;
+        const doubleSum = k * (k + 1);
+        if (singleSum > r && doubleSum > r) break;
+        const up = Array.from({ length: k }, (_, i) => i + 1);
+        if (singleSum <= r) best = up.concat(up.slice(0, k - 1).reverse());
+        if (doubleSum <= r) best = up.concat(up.slice().reverse());
+      }
+      return best;
+    }
+
+    function variationsSummary(vars, reps) {
       if (!vars || !vars.length) return '';
-      return vars.map(v => VARIATION_LABELS[v.type] || titleCase(v.type.replace(/-/g, ' '))).join(', ');
+      return vars.map(v => {
+        const label = VARIATION_LABELS[v.type] || titleCase(v.type.replace(/-/g, ' '));
+        if (v.type === 'pyramids') return `${label} · ${buildPyramidSequence(reps).join('-')}`;
+        if (v.type === 'negatives' && v.value) return `${label} · ${v.value} reps`;
+        return label;
+      }).join(', ');
     }
 
     // ═══════════════════════════════════════════
@@ -4600,6 +4639,8 @@
       // Intensity 1-10: factor in sets (ideal ~15), duration (ideal ~60min), soreness feedback
       let intensity = Math.min(10, Math.round((workSets / 15) * 4 + (w.duration / 60) * 3 + (w.sorenessRange ? w.sorenessRange[1] / 10 * 3 : 0)));
       intensity = Math.max(1, intensity);
+      const isManualIntensity = w.manualIntensity != null;
+      if (isManualIntensity) intensity = w.manualIntensity;
       const intensityLabel = intensity <= 3 ? 'Light' : intensity <= 6 ? 'Moderate' : intensity <= 8 ? 'Hard' : 'Max Effort';
       const intensityColor = intensity <= 3 ? 'var(--green)' : intensity <= 6 ? 'var(--accent-blue)' : intensity <= 8 ? 'var(--accent)' : 'var(--red)';
 
@@ -4653,6 +4694,12 @@
         const exVolume = ex.sets.reduce((s, set) => s + set.weight * set.reps, 0);
         const restNote = ex.restSeconds ? `Rest ~${Math.round(ex.restSeconds / 60)}min` : ex.note && ex.note.includes('Rest') ? ex.note : '';
         const extraNote = ex.note && !ex.note.includes('Rest') ? ex.note : '';
+        // Negatives are extra reps actually performed at the end of a set, so they count
+        // toward the total reps done — unlike volume/1RM/PR math, which stays untouched.
+        const totalWorkingReps = workingSets.reduce((s, set) => {
+          const negExtra = (set.variations || []).reduce((n, v) => v.type === 'negatives' ? n + (parseInt(v.value) || 0) : n, 0);
+          return s + set.reps + negExtra;
+        }, 0);
 
         let setIndex = 0;
         const setsHTML = ex.sets.map((s) => {
@@ -4665,7 +4712,7 @@
           const rirDisplay = s.rir > 0 ? ` · RIR ${s.rir}` : '';
           const rpeDisplay = s.rpe > 0 ? ` · RPE ${s.rpe}` : '';
           const tempoDisplay = s.tempo ? ` · Tempo ${s.tempo}` : '';
-          const varSummary = variationsSummary(s.variations);
+          const varSummary = variationsSummary(s.variations, s.reps);
           const varDisplay = varSummary ? ` · <span style="color:var(--accent-blue)">${varSummary}</span>` : '';
           return `<div class="detail-set-row ${s.prs && s.prs.length ? 'pr-row' : ''}">
         ${badge}
@@ -4683,7 +4730,8 @@
       </div>
       ${extraNote ? `<div class="detail-note">${extraNote}</div>` : ''}
       ${restNote ? `<div style="padding:6px 0 6px 0;font-size:11px;color:var(--accent-blue);display:flex;align-items:center;gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>${restNote}</div>` : ''}
-      ${setsHTML}`;
+      ${setsHTML}
+      <div style="padding-top:8px;margin-top:4px;border-top:1px solid var(--border);font-size:11px;color:var(--text-dim);">Total: ${workingSets.length} working set${workingSets.length === 1 ? '' : 's'} · ${totalWorkingReps} rep${totalWorkingReps === 1 ? '' : 's'}</div>`;
       }
 
       // Group exercises that share a linkGroup (bi-sets/supersets created via the
@@ -4736,8 +4784,8 @@
       <div class="detail-stat"><div class="lbl">Volume</div><div class="val">${Math.round(w.volume)}kg</div></div>
       <div class="detail-stat"><div class="lbl">Sets</div><div class="val">${workSets}</div></div>
       <div class="detail-stat"><div class="lbl">Avg weight</div><div class="val">${avgWeight}kg</div></div>
-      <div class="detail-stat">
-        <div class="lbl">Intensity</div>
+      <div class="detail-stat" style="cursor:pointer" onclick="editIntensity(${w.id})" title="Tap to edit">
+        <div class="lbl">Intensity${isManualIntensity ? ' ✏️' : ''}</div>
         <div class="val" style="color:${intensityColor}">${intensity}/10 <span style="font-size:11px;font-weight:500">${intensityLabel}</span></div>
       </div>
       <div class="detail-stat" style="cursor:pointer" onclick="editSoreness(${w.id})" title="Tap to edit">
@@ -5949,6 +5997,58 @@
       }
       saveState();
       closeSorenessModal();
+      openDetail(id);
+    }
+
+    // ── Intensity popover (manual override of the auto-computed score) ──
+    let intensityModalWorkoutId = null;
+    let intensityModalSelected = null;
+
+    function editIntensity(workoutId) {
+      const w = state.workouts.find(x => x.id === workoutId);
+      if (!w) return;
+      intensityModalWorkoutId = workoutId;
+      renderIntensityScale(w.manualIntensity || null);
+      document.getElementById('intensity-modal').classList.add('open');
+    }
+
+    function renderIntensityScale(current) {
+      intensityModalSelected = current;
+      const el = document.getElementById('intensity-scale');
+      el.innerHTML = '';
+      for (let i = 1; i <= 10; i++) {
+        const active = current === i;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = i;
+        btn.onclick = () => renderIntensityScale(i);
+        btn.style.cssText = `width:32px;height:32px;border-radius:50%;border:1px solid ${active ? 'var(--accent)' : 'var(--border)'};background:${active ? 'var(--accent)' : 'var(--surface2)'};color:${active ? '#fff' : 'var(--text)'};font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0;`;
+        el.appendChild(btn);
+      }
+    }
+
+    function closeIntensityModal() {
+      document.getElementById('intensity-modal').classList.remove('open');
+      intensityModalWorkoutId = null;
+    }
+
+    function clearIntensity() {
+      if (intensityModalWorkoutId == null) return;
+      const w = state.workouts.find(x => x.id === intensityModalWorkoutId);
+      const id = intensityModalWorkoutId;
+      if (w) { w.manualIntensity = null; saveState(); }
+      closeIntensityModal();
+      openDetail(id);
+    }
+
+    function saveIntensityModal() {
+      if (intensityModalWorkoutId == null) return;
+      const w = state.workouts.find(x => x.id === intensityModalWorkoutId);
+      if (!w) return;
+      const id = intensityModalWorkoutId;
+      w.manualIntensity = intensityModalSelected;
+      saveState();
+      closeIntensityModal();
       openDetail(id);
     }
 
