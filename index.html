@@ -721,6 +721,21 @@
       text-align: center;
     }
 
+    .badge-chip-locked { opacity: .85; }
+    .badge-ring-outer { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; padding: 3px; }
+    .badge-ring-inner { width: 100%; height: 100%; border-radius: 50%; background: var(--surface); display: flex; align-items: center; justify-content: center; font-size: 14px; }
+
+    .profile-group { margin-bottom: 2px; }
+    .profile-group-header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 12px 4px; cursor: pointer; font-size: 12px; font-weight: 700;
+      color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em;
+      border-bottom: 1px solid var(--border);
+    }
+    .profile-group-header svg { width: 14px; height: 14px; transition: transform .15s; }
+    .profile-group-count { font-size: 11px; color: var(--text-dim); font-weight: 500; text-transform: none; letter-spacing: normal; }
+
+
     .plateau-tag {
       font-size: 10px;
       font-weight: 700;
@@ -1929,15 +1944,15 @@
     }
 
     /* ── SYNC BUTTON ── */
-    #sync-btn {
+    #sync-btn, .sync-btn-icon {
       transition: all 0.3s ease;
     }
 
-    #sync-btn.syncing svg {
+    #sync-btn.syncing svg, .sync-btn-icon.syncing svg {
       animation: spin 0.8s linear infinite;
     }
 
-    #sync-btn.synced svg {
+    #sync-btn.synced svg, .sync-btn-icon.synced svg {
       color: var(--green);
     }
 
@@ -2070,7 +2085,7 @@
                 d="M6.404 12.768a2 2 0 1 1-2.829-2.829l1.768-1.767a2 2 0 1 1-2.828-2.829l2.828-2.828a2 2 0 1 1 2.829 2.828l1.767-1.768a2 2 0 1 1 2.829 2.829z" />
             </svg>
           </button>
-          <button class="icon-btn" id="sync-btn" title="Sync with cloud" aria-label="Sync with cloud" onclick="pushSync(true)">
+          <button class="icon-btn sync-btn-icon" id="sync-btn" title="Sync with cloud" aria-label="Sync with cloud" onclick="pushSync(true)">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
               class="lucide lucide-cloud-sync-icon lucide-cloud-sync">
@@ -2455,7 +2470,9 @@
         <h1 data-i18n="header_you">You</h1>
       </div>
       <div class="you-header">
-        <div class="avatar" id="you-avatar">W</div>
+        <div class="avatar" id="you-avatar" onclick="editAvatar()" style="cursor:pointer;position:relative;">W
+          <span style="position:absolute;bottom:-2px;right:-2px;width:18px;height:18px;background:var(--surface3);border:2px solid var(--bg);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;">✏️</span>
+        </div>
         <div>
           <div class="you-name" id="you-name">Athlete</div>
           <div class="you-sub">Member since today</div>
@@ -2475,6 +2492,7 @@
           <div class="lbl" data-i18n="lbl_prs_set">PRs Set</div>
         </div>
       </div>
+      <div id="you-stats-context" style="text-align:center;font-size:11.5px;color:var(--text-muted);padding:0 20px 12px;"></div>
       <div class="badge-row" id="you-badges"></div>
       <div class="settings-section">
         <div
@@ -2498,13 +2516,16 @@
         </div>
         <div class="settings-item" onclick="pushSync(true)">
           <span data-i18n="cloud_sync">Cloud Sync</span>
-          <span style="color:var(--text-muted);font-size:13px;" id="sync-status-text">Never synced</span>
-        </div>
-        <div class="settings-item" onclick="clearData()">
-          <span style="color: var(--red)" data-i18n="clear_all_data">Clear All Data</span>
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
-          </svg>
+          <span style="display:flex;align-items:center;gap:8px;color:var(--text-muted);font-size:13px;">
+            <span id="sync-status-text">Never synced</span>
+            <button class="icon-btn sync-btn-icon" style="padding:2px;width:18px;height:18px;" tabindex="-1" aria-label="Sync now" onclick="event.stopPropagation();pushSync(true)">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m17 18-1.535 1.605a5 5 0 0 1-8-1.5" /><path d="M17 22v-4h-4" />
+                <path d="M20.996 15.251A4.5 4.5 0 0 0 17.495 8h-1.79a7 7 0 1 0-12.709 5.607" /><path d="M7 10v4h4" />
+                <path d="m7 14 1.535-1.605a5 5 0 0 1 8 1.5" />
+              </svg>
+            </button>
+          </span>
         </div>
       </div>
 
@@ -2519,6 +2540,16 @@
         data-i18n="section_workout_history">
         Workout History</div>
       <div id="you-history-list" style="margin: 0 0 16px;"></div>
+
+      <div style="margin: 28px 16px 24px; padding-top: 18px; border-top: 1px solid var(--border);">
+        <div style="font-size: 11px; color: var(--red); letter-spacing: .08em; text-transform: uppercase; margin-bottom: 8px; padding: 0 4px; opacity: .8;">Danger Zone</div>
+        <div class="settings-item" onclick="clearData()" style="border: 1px solid rgba(239,68,68,.25); border-radius: var(--radius-sm); padding: 12px 14px; background: rgba(239,68,68,.05);">
+          <span style="color: var(--red); font-weight: 600;" data-i18n="clear_all_data">Clear All Data</span>
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="var(--red)" style="width:18px;height:18px;">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+          </svg>
+        </div>
+      </div>
     </div>
 
 
@@ -2800,20 +2831,20 @@
 
       const payload = buildSyncPayload();
       const payloadStr = JSON.stringify(payload);
-      const btn = document.getElementById('sync-btn');
+      const btns = document.querySelectorAll('.sync-btn-icon');
 
       // Nothing changed since our last confirmed push — skip the network call
       // entirely rather than creating a redundant commit.
       if (payloadStr === localStorage.getItem('lastPushedPayload')) {
         if (manual) {
-          if (btn) { btn.classList.add('synced'); setTimeout(() => btn.classList.remove('synced'), 1500); }
+          btns.forEach(btn => { btn.classList.add('synced'); setTimeout(() => btn.classList.remove('synced'), 1500); });
           showToast('☁️ Already up to date');
         }
         return true;
       }
 
       syncInProgress = true;
-      if (btn) btn.classList.add('syncing');
+      btns.forEach(btn => btn.classList.add('syncing'));
       updateSyncStatusDisplay();
 
       try {
@@ -2831,11 +2862,11 @@
         localStorage.setItem('lastSyncTime', lastSyncTime);
         updateSyncStatusDisplay();
 
-        if (btn) {
+        btns.forEach(btn => {
           btn.classList.remove('syncing');
           btn.classList.add('synced');
           setTimeout(() => btn.classList.remove('synced'), 2000);
-        }
+        });
 
         // The backend may also independently determine nothing actually
         // changed (e.g. this device's local cache was stale/cleared) — in
@@ -2845,7 +2876,7 @@
 
       } catch (err) {
         console.error('Push sync error:', err);
-        if (btn) btn.classList.remove('syncing');
+        btns.forEach(btn => btn.classList.remove('syncing'));
         showToast('⚠️ Cloud sync failed: ' + err.message);
         return false;
 
@@ -3477,15 +3508,18 @@
     }
 
     const PROFILE_FIELDS = [
-      { k: 'dob', l: 'DOB' }, { k: 'height', l: 'Height (cm)' }, { k: 'weight', l: 'Current Weight' },
-      { k: 'goalWeight', l: 'Goal Weight' }, { k: 'bodyFat', l: 'Body Fat %' }, { k: 'sport', l: 'Sport' },
-      { k: 'activityLevel', l: 'Activity Level' }, { k: 'trainingStyle', l: 'Training Style' },
-      { k: 'injuries', l: 'Injuries' }, { k: 'surgeries', l: 'Surgeries' }, { k: 'prExercise', l: "PR's Exercise" },
-      { k: 'chest', l: 'Chest' }, { k: 'waist', l: 'Waist' }, { k: 'shoulders', l: 'Shoulders' },
-      { k: 'lArm', l: 'L Arm' }, { k: 'rArm', l: 'R Arm' }, { k: 'lForearm', l: 'L Forearm' },
-      { k: 'rForearm', l: 'R Forearm' }, { k: 'lThigh', l: 'L Thigh' }, { k: 'rThigh', l: 'R Thigh' },
-      { k: 'lCalf', l: 'L Calf' }, { k: 'rCalf', l: 'R Calf' }, { k: 'notes', l: 'Notes' },
+      { k: 'dob', l: 'DOB', g: 'Basics' }, { k: 'height', l: 'Height (cm)', g: 'Basics' }, { k: 'weight', l: 'Current Weight', g: 'Basics' },
+      { k: 'goalWeight', l: 'Goal Weight', g: 'Basics' }, { k: 'bodyFat', l: 'Body Fat %', g: 'Basics' },
+      { k: 'sport', l: 'Sport', g: 'Training Background' }, { k: 'activityLevel', l: 'Activity Level', g: 'Training Background' },
+      { k: 'trainingStyle', l: 'Training Style', g: 'Training Background' }, { k: 'injuries', l: 'Injuries', g: 'Training Background' },
+      { k: 'surgeries', l: 'Surgeries', g: 'Training Background' }, { k: 'prExercise', l: "PR's Exercise", g: 'Training Background' },
+      { k: 'notes', l: 'Notes', g: 'Training Background' },
+      { k: 'chest', l: 'Chest', g: 'Body Metrics' }, { k: 'waist', l: 'Waist', g: 'Body Metrics' }, { k: 'shoulders', l: 'Shoulders', g: 'Body Metrics' },
+      { k: 'lArm', l: 'L Arm', g: 'Body Metrics' }, { k: 'rArm', l: 'R Arm', g: 'Body Metrics' }, { k: 'lForearm', l: 'L Forearm', g: 'Body Metrics' },
+      { k: 'rForearm', l: 'R Forearm', g: 'Body Metrics' }, { k: 'lThigh', l: 'L Thigh', g: 'Body Metrics' }, { k: 'rThigh', l: 'R Thigh', g: 'Body Metrics' },
+      { k: 'lCalf', l: 'L Calf', g: 'Body Metrics' }, { k: 'rCalf', l: 'R Calf', g: 'Body Metrics' },
     ];
+    const PROFILE_GROUPS = ['Basics', 'Training Background', 'Body Metrics'];
     // These fields get a dated history entry on every save (in addition to overwriting
     // the "current" value), so trends over time aren't lost the way a single overwritten
     // value would lose them — mirroring what the plain-text training log used to capture.
@@ -3525,6 +3559,14 @@
         saveState();
         renderGoal();
         showToast('Goal set to ' + state.weeklyGoal + '/week 🎯');
+        closeProfileFieldModal();
+        return;
+      }
+      if (profileFieldEditMode === 'avatar') {
+        if (!state.profile) state.profile = {};
+        state.profile.avatarEmoji = raw.slice(0, 2) || '';
+        saveState();
+        refreshYou();
         closeProfileFieldModal();
         return;
       }
@@ -3630,17 +3672,39 @@
     }
 
 
+    let profileGroupsOpen = { Basics: true, 'Training Background': false, 'Body Metrics': false };
+    function toggleProfileGroup(g) {
+      profileGroupsOpen[g] = !profileGroupsOpen[g];
+      renderProfile();
+    }
+    const CHEVRON = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>';
+
     function renderProfile() {
       const el = document.getElementById('you-profile-list');
       if (!el) return;
-      el.innerHTML = PROFILE_FIELDS.map(f => {
-        const val = (state.profile && state.profile[f.k]) || '';
-        return `<div class="settings-item" onclick="editProfileField('${f.k}','${f.l}')">
+      el.innerHTML = PROFILE_GROUPS.map(g => {
+        const fields = PROFILE_FIELDS.filter(f => f.g === g);
+        const filled = fields.filter(f => state.profile && state.profile[f.k]).length;
+        const open = !!profileGroupsOpen[g];
+        const rows = fields.map(f => {
+          const val = (state.profile && state.profile[f.k]) || '';
+          return `<div class="settings-item" onclick="editProfileField('${f.k}','${f.l}')">
       <span>${f.l}</span>
       <span style="color:var(--text-muted);font-size:13px;display:flex;align-items:center;gap:6px;">
         ${val ? val : '<span style="color:var(--text-dim)">Add</span>'}
         <svg width="18" height="18" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
       </span>
+    </div>`;
+        }).join('');
+        return `<div class="profile-group">
+      <div class="profile-group-header" onclick="toggleProfileGroup('${g}')">
+        <span>${g}</span>
+        <span style="display:flex;align-items:center;gap:8px;">
+          <span class="profile-group-count">${filled}/${fields.length}</span>
+          <span style="display:inline-flex;transform:rotate(${open ? 90 : 0}deg);">${CHEVRON}</span>
+        </span>
+      </div>
+      <div style="display:${open ? 'block' : 'none'};">${rows}</div>
     </div>`;
       }).join('');
     }
@@ -3697,9 +3761,6 @@
     }
 
     function goToWorkout() { navigate('workout', document.querySelectorAll('.nav-btn')[1]); startWorkout(); }
-
-
-
 
 
     // ═══════════════════════════════════════════
@@ -6241,7 +6302,9 @@
     // ═══════════════════════════════════════════
     function refreshYou() {
       document.getElementById('you-name').textContent = state.userName;
-      document.getElementById('you-avatar').textContent = state.userName.charAt(0).toUpperCase();
+      const avatarEl = document.getElementById('you-avatar');
+      const customAvatar = state.profile && state.profile.avatarEmoji;
+      avatarEl.childNodes[0].textContent = customAvatar || state.userName.charAt(0).toUpperCase();
       document.getElementById('you-total-workouts').textContent = state.workouts.length;
       const totalVol = state.workouts.reduce((s, w) => s + w.volume, 0);
       document.getElementById('you-total-vol').textContent = Math.round(totalVol / 1000 * 10) / 10 + 't';
@@ -6252,19 +6315,34 @@
       renderYouHistory();
       renderBadges();
       updateSyncStatusDisplay();
+
+      // Stat row context: this month's count + most recently earned badge
+      const ctxEl = document.getElementById('you-stats-context');
+      if (ctxEl) {
+        const now = new Date();
+        const monthCount = state.workouts.filter(w => { const d = new Date(w.date); return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear(); }).length;
+        const vol = totalVol;
+        const streak = computeWeekStreak();
+        const metricVal = { workouts: state.workouts.length, volume: vol, streak: streak };
+        const earnedBadges = BADGE_DEFS.filter(b => metricVal[b.metric] >= b.target);
+        const latest = earnedBadges[earnedBadges.length - 1];
+        const parts = [`${monthCount} workout${monthCount === 1 ? '' : 's'} this month`];
+        if (latest) parts.push(`latest badge: ${latest.emoji} ${latest.label}`);
+        ctxEl.textContent = parts.join(' · ');
+      }
     }
 
     const BADGE_DEFS = [
-      { key: 'w10', label: '10 Workouts', emoji: '💪', check: (n, vol, streak) => n >= 10 },
-      { key: 'w50', label: '50 Workouts', emoji: '🏆', check: (n, vol, streak) => n >= 50 },
-      { key: 'w100', label: '100 Workouts', emoji: '🥇', check: (n, vol, streak) => n >= 100 },
-      { key: 'w250', label: '250 Workouts', emoji: '👑', check: (n, vol, streak) => n >= 250 },
-      { key: 'vol10t', label: '10t Lifted', emoji: '🏋️', check: (n, vol) => vol >= 10000 },
-      { key: 'vol50t', label: '50t Lifted', emoji: '⚡', check: (n, vol) => vol >= 50000 },
-      { key: 'vol100t', label: '100t Lifted', emoji: '🔱', check: (n, vol) => vol >= 100000 },
-      { key: 'streak4', label: '4 Week Streak', emoji: '🔥', check: (n, vol, streak) => streak >= 4 },
-      { key: 'streak8', label: '8 Week Streak', emoji: '🔥', check: (n, vol, streak) => streak >= 8 },
-      { key: 'streak12', label: '12 Week Streak', emoji: '🔥', check: (n, vol, streak) => streak >= 12 },
+      { key: 'w10', label: '10 Workouts', emoji: '💪', metric: 'workouts', target: 10 },
+      { key: 'w50', label: '50 Workouts', emoji: '🏆', metric: 'workouts', target: 50 },
+      { key: 'w100', label: '100 Workouts', emoji: '🥇', metric: 'workouts', target: 100 },
+      { key: 'w250', label: '250 Workouts', emoji: '👑', metric: 'workouts', target: 250 },
+      { key: 'vol10t', label: '10t Lifted', emoji: '🏋️', metric: 'volume', target: 10000 },
+      { key: 'vol50t', label: '50t Lifted', emoji: '⚡', metric: 'volume', target: 50000 },
+      { key: 'vol100t', label: '100t Lifted', emoji: '🔱', metric: 'volume', target: 100000 },
+      { key: 'streak4', label: '4 Week Streak', emoji: '🔥', metric: 'streak', target: 4 },
+      { key: 'streak8', label: '8 Week Streak', emoji: '🔥', metric: 'streak', target: 8 },
+      { key: 'streak12', label: '12 Week Streak', emoji: '🔥', metric: 'streak', target: 12 },
     ];
 
     function renderBadges() {
@@ -6273,10 +6351,36 @@
       const n = state.workouts.length;
       const vol = state.workouts.reduce((s, w) => s + w.volume, 0);
       const streak = computeWeekStreak();
-      const earned = BADGE_DEFS.filter(b => b.check(n, vol, streak));
-      el.innerHTML = earned.length
-        ? earned.map(b => `<div class="badge-chip"><span class="badge-emoji">${b.emoji}</span><span class="badge-label">${b.label}</span></div>`).join('')
-        : `<div style="color:var(--text-muted);font-size:12px;padding:4px;">Keep training to unlock badges 💪</div>`;
+      const metricVal = { workouts: n, volume: vol, streak: streak };
+      const withProgress = BADGE_DEFS.map(b => {
+        const val = metricVal[b.metric];
+        return { ...b, earned: val >= b.target, pct: Math.min(100, Math.round(val / b.target * 100)) };
+      });
+      const earned = withProgress.filter(b => b.earned);
+      const locked = withProgress.filter(b => !b.earned).sort((a, b) => b.pct - a.pct);
+      const next = locked[0];
+
+      const earnedHTML = earned.map(b => `<div class="badge-chip"><span class="badge-emoji">${b.emoji}</span><span class="badge-label">${b.label}</span></div>`).join('');
+      const nextHTML = next ? `<div class="badge-chip badge-chip-locked" title="${next.pct}% there">
+      <div class="badge-ring-outer" style="background:conic-gradient(var(--accent) ${next.pct * 3.6}deg, var(--surface3) 0deg);">
+        <div class="badge-ring-inner"><span style="opacity:.5">${next.emoji}</span></div>
+      </div>
+      <span class="badge-label">${next.label}</span>
+      <span style="font-size:9px;color:var(--text-dim);">${next.pct}%</span>
+    </div>` : '';
+
+      el.innerHTML = (earnedHTML + nextHTML) || `<div style="color:var(--text-muted);font-size:12px;padding:4px;">Keep training to unlock badges 💪</div>`;
+    }
+
+    function editAvatar() {
+      profileFieldEditMode = 'avatar';
+      document.getElementById('pf-modal-title').textContent = 'Avatar Emoji';
+      document.getElementById('pf-modal-input').type = 'text';
+      document.getElementById('pf-modal-input').value = (state.profile && state.profile.avatarEmoji) || '';
+      document.getElementById('pf-modal-input').placeholder = 'e.g. 💪';
+      document.getElementById('pf-modal-history-btn').style.display = 'none';
+      document.getElementById('profile-field-modal').classList.add('open');
+      setTimeout(() => document.getElementById('pf-modal-input').focus(), 50);
     }
 
     function editName() {
