@@ -36,6 +36,12 @@
       --bronze: #cd7f32;
       --red: #ef4444;
       --green: #22c55e;
+      /* Semantic roles — used for status/meaning rather than a fixed hue, so the
+         same signal (e.g. "needs attention") reads the same color everywhere. */
+      --color-positive: var(--green);
+      --color-attention: var(--gold);
+      --color-primary-focus: var(--red);
+      --color-secondary-focus: var(--accent-blue);
       --radius: 12px;
       --radius-sm: 8px;
       --nav-h: 64px;
@@ -665,17 +671,17 @@
 
     .warn-pill.low {
       background: rgba(59, 130, 246, .15);
-      color: var(--accent-blue);
+      color: var(--color-secondary-focus);
     }
 
     .warn-pill.high {
-      background: rgba(239, 68, 68, .15);
-      color: var(--red);
+      background: rgba(245, 158, 11, .15);
+      color: var(--color-attention);
     }
 
     .warn-pill.ok {
       background: rgba(34, 197, 94, .15);
-      color: var(--green);
+      color: var(--color-positive);
     }
 
     .ppl-bar-row {
@@ -2278,7 +2284,6 @@
         <button class="progress-tab active" onclick="switchProgressTab(this,'overview')" data-i18n="tab_overview">Overview</button>
         <button class="progress-tab" onclick="switchProgressTab(this,'exercises')" data-i18n="tab_exercises">Exercises</button>
         <button class="progress-tab" onclick="switchProgressTab(this,'muscles')" data-i18n="tab_muscles">Muscles</button>
-        <button class="progress-tab" onclick="switchProgressTab(this,'insights')">Insights</button>
         <button class="progress-tab" onclick="switchProgressTab(this,'plan')">Plan</button>
       </div>
 
@@ -2295,6 +2300,10 @@
         <div class="chart-container">
           <div class="chart-label" id="chart-period-label">This week</div>
           <div class="chart-value" id="chart-main-value">0min</div>
+          <div id="chart-legend-row" style="display:none;gap:14px;font-size:11px;color:var(--text-muted);margin:-6px 0 8px;">
+            <span>★ <span style="color:var(--gold)">PR</span></span>
+            <span>┄┄ Previous period</span>
+          </div>
           <canvas id="progress-chart" height="140"></canvas>
           <div class="metric-tabs">
             <button class="metric-tab active" onclick="switchMetric(this,'duration')">
@@ -2343,6 +2352,28 @@
         <div class="section-title" style="padding-top: 8px;" data-i18n="this_week">This Week</div>
         <div class="section-sub" data-i18n="muscle_coverage">Your muscle coverage</div>
         <div id="progress-muscle-map" class="muscle-body-container"></div>
+
+        <div style="margin:8px 16px 20px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;">
+          <button onclick="toggleInsightsSection()" style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:none;border:none;color:var(--text);font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;">
+            <span>Deeper Insights <span id="insights-warn-pill" style="display:none;font-size:11px;font-weight:700;color:var(--gold);background:rgba(245,158,11,.15);padding:2px 8px;border-radius:10px;margin-left:6px;"></span></span>
+            <span id="insights-chevron" style="transition:transform .2s;">▾</span>
+          </button>
+          <div id="insights-body" style="display:none;padding:0 16px 16px;">
+            <div class="insight-card" style="margin:0 0 16px;">
+              <h3>Training Load (last 12 weeks)</h3>
+              <canvas id="training-load-chart" height="140"></canvas>
+              <div id="training-load-note" style="margin-top:10px;"></div>
+            </div>
+            <div class="insight-card" style="margin:0 0 16px;">
+              <h3>Push / Pull / Legs Balance</h3>
+              <div id="ppl-balance"></div>
+            </div>
+            <div class="insight-card" style="margin:0;">
+              <h3>Muscle Volume Warnings (this week)</h3>
+              <div id="muscle-warnings"></div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div id="ptab-exercises" style="display:none; padding: 0 16px;">
@@ -2361,22 +2392,6 @@
         <div class="muscle-section-title">Muscle Split</div>
         <div class="muscle-section-sub">Distribution</div>
         <div class="muscle-list" id="muscle-split-list"></div>
-      </div>
-
-      <div id="ptab-insights" style="display:none;">
-        <div class="insight-card">
-          <h3>Training Load (last 12 weeks)</h3>
-          <canvas id="training-load-chart" height="140"></canvas>
-          <div id="training-load-note" style="margin-top:10px;"></div>
-        </div>
-        <div class="insight-card">
-          <h3>Push / Pull / Legs Balance</h3>
-          <div id="ppl-balance"></div>
-        </div>
-        <div class="insight-card">
-          <h3>Muscle Volume Warnings (this week)</h3>
-          <div id="muscle-warnings"></div>
-        </div>
       </div>
 
       <div id="ptab-plan" style="display:none;">
@@ -3614,6 +3629,7 @@
     </div>`;
       }).join('');
     }
+
 
 
 
@@ -4945,12 +4961,42 @@
     function switchProgressTab(btn, tab) {
       document.querySelectorAll('.progress-tab').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      ['overview', 'exercises', 'muscles', 'insights', 'plan'].forEach(t => {
+      ['overview', 'exercises', 'muscles', 'plan'].forEach(t => {
         document.getElementById('ptab-' + t).style.display = t === tab ? 'block' : 'none';
       });
       if (tab === 'muscles') renderMuscleSplit();
-      if (tab === 'insights') renderInsights();
       if (tab === 'plan') renderPeriodizationTab();
+    }
+
+    // Insights now live inside Overview as a collapsible section (rather than their
+    // own tab) — collapsed by default, rendered lazily on first expand since its
+    // canvas would otherwise size to 0 while hidden. Re-rendered on every open so
+    // it reflects the latest logged sets.
+    let insightsOpen = false;
+    function toggleInsightsSection() {
+      insightsOpen = !insightsOpen;
+      document.getElementById('insights-body').style.display = insightsOpen ? 'block' : 'none';
+      document.getElementById('insights-chevron').style.transform = insightsOpen ? 'rotate(180deg)' : '';
+      if (insightsOpen) renderInsights();
+    }
+
+    // Surfaces a "N to review" pill on the collapsed header so warnings aren't
+    // missed just because the section starts closed.
+    function updateInsightsWarnPill() {
+      const now = new Date();
+      const weekStart = new Date(now); weekStart.setDate(now.getDate() - now.getDay()); weekStart.setHours(0, 0, 0, 0);
+      const weekWorkouts = state.workouts.filter(w => new Date(w.date) >= weekStart);
+      const sets = weeklyMuscleSets(weekWorkouts);
+      let count = 0;
+      MUSCLE_GROUPS.forEach(m => {
+        const n = sets[m.name] || 0;
+        const [lo, hi] = m.target || [10, 20];
+        if (n > 0 && (n < lo || n > hi)) count++;
+      });
+      const pill = document.getElementById('insights-warn-pill');
+      if (!pill) return;
+      if (count > 0) { pill.style.display = 'inline'; pill.textContent = `${count} to review`; }
+      else pill.style.display = 'none';
     }
 
     function switchFilter(btn, f) {
@@ -4960,7 +5006,7 @@
       renderChart();
     }
 
-    function getFilteredWorkouts() {
+    function getFilterCutoff() {
       const now = new Date();
       const cutoff = new Date();
       if (state.currentFilter === 'week') {
@@ -4979,20 +5025,19 @@
       } else {
         cutoff.setMonth(now.getMonth() - 3);
       }
+      return cutoff;
+    }
+
+    function getFilteredWorkouts() {
+      const cutoff = getFilterCutoff();
       return state.workouts.filter(w => new Date(w.date) >= cutoff);
     }
 
-    function renderChart() {
-      const workouts = getFilteredWorkouts();
-      const now = new Date();
-
-      // Decide bucket size based on filter
-      const useDays = state.currentFilter === 'week' || state.currentFilter === 'month';
-
-      // Local-date key (YYYY-MM-DD) — avoids the UTC round-trip that toISOString()
-      // introduces, which shifted bucket dates by a day for timezones behind UTC.
+    // Buckets a set of workouts into local-date keys (daily or weekly), returning
+    // sorted labels + per-bucket totals/workout-ids — shared by the current-period
+    // and previous-period (ghost line) computations so both bucket identically.
+    function bucketWorkouts(workouts, useDays) {
       const localKey = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-
       const buckets = {};
       workouts.forEach(w => {
         const d = new Date(w.date);
@@ -5000,28 +5045,41 @@
         if (useDays) {
           bucketDate = new Date(d.getFullYear(), d.getMonth(), d.getDate());
         } else {
-          // weekly buckets — snap to the local Sunday of that week
           bucketDate = new Date(d.getFullYear(), d.getMonth(), d.getDate());
           bucketDate.setDate(bucketDate.getDate() - bucketDate.getDay());
         }
         const key = localKey(bucketDate);
-        if (!buckets[key]) buckets[key] = { duration: 0, volume: 0, workouts: 0, date: bucketDate };
+        if (!buckets[key]) buckets[key] = { duration: 0, volume: 0, workouts: 0, date: bucketDate, ids: [], hasPR: false };
         buckets[key].duration += w.duration;
         buckets[key].volume += w.volume;
         buckets[key].workouts++;
+        buckets[key].ids.push(w.id);
+        if (w.exercises.some(ex => (ex.sets || []).some(s => s.prs && s.prs.length))) buckets[key].hasPR = true;
       });
+      const keys = Object.keys(buckets).sort();
+      return { buckets, keys };
+    }
 
-      const labels = Object.keys(buckets).sort().slice(-24);
-      const values = labels.map(k => {
-        if (state.currentMetric === 'duration') return buckets[k].duration;
-        if (state.currentMetric === 'volume') return Math.round(buckets[k].volume);
-        return buckets[k].workouts;
-      });
+    function metricValue(bucket) {
+      if (state.currentMetric === 'duration') return bucket.duration;
+      if (state.currentMetric === 'volume') return Math.round(bucket.volume);
+      return bucket.workouts;
+    }
+
+    function renderChart() {
+      const workouts = getFilteredWorkouts();
+      const now = new Date();
+      const useDays = state.currentFilter === 'week' || state.currentFilter === 'month';
+
+      const { buckets, keys } = bucketWorkouts(workouts, useDays);
+      const labelKeys = keys.slice(-24);
+      const values = labelKeys.map(k => metricValue(buckets[k]));
+      const prFlags = labelKeys.map(k => buckets[k].hasPR);
+      const idsByPoint = labelKeys.map(k => buckets[k].ids);
 
       const total = values.reduce((s, v) => s + v, 0);
       const unit = state.currentMetric === 'duration' ? 'min' : state.currentMetric === 'volume' ? 'kg' : '';
 
-      // Period label
       const periodLabels = {
         week: 'This week', month: 'This month',
         '3m': 'Last 3 months', '6m': 'Last 6 months',
@@ -5030,31 +5088,66 @@
       document.getElementById('chart-period-label').textContent = periodLabels[state.currentFilter] || '';
       document.getElementById('chart-main-value').textContent = total + unit;
 
+      // Ghost "previous period" line: same-length window immediately before the
+      // current one, re-bucketed the same way, aligned by position (not calendar
+      // date) so it lines up under the current period's x-axis. Skipped for "all
+      // time" since there's no meaningful "previous" window to compare against.
+      let prevValues = null;
+      if (state.currentFilter !== 'all' && labelKeys.length) {
+        const cutoff = getFilterCutoff();
+        const spanMs = now - cutoff;
+        const prevCutoff = new Date(cutoff.getTime() - spanMs);
+        const prevWorkouts = state.workouts.filter(w => { const d = new Date(w.date); return d >= prevCutoff && d < cutoff; });
+        const prevBuckets = bucketWorkouts(prevWorkouts, useDays);
+        const prevVals = prevBuckets.keys.map(k => metricValue(prevBuckets.buckets[k]));
+        // Align to the tail of the current label count (older buckets padded with null).
+        prevValues = new Array(labelKeys.length).fill(null);
+        for (let i = 0; i < Math.min(prevVals.length, labelKeys.length); i++) {
+          prevValues[labelKeys.length - 1 - i] = prevVals[prevVals.length - 1 - i];
+        }
+      }
+
       const ctx = document.getElementById('progress-chart').getContext('2d');
       if (chartInstance) chartInstance.destroy();
+      const datasets = [{
+        data: values.length ? values : [0],
+        borderColor: '#3b82f6',
+        backgroundColor: 'rgba(59,130,246,0.08)',
+        fill: true,
+        tension: 0.35,
+        pointBackgroundColor: values.map((v, i) => prFlags[i] ? '#f59e0b' : '#3b82f6'),
+        pointStyle: values.map((v, i) => prFlags[i] ? 'star' : 'circle'),
+        pointRadius: values.map((v, i) => prFlags[i] ? 7 : 4),
+        pointHoverRadius: values.map((v, i) => prFlags[i] ? 9 : 6),
+        order: 1,
+      }];
+      if (prevValues) {
+        datasets.push({
+          data: prevValues, borderColor: 'rgba(148,163,184,.55)', backgroundColor: 'transparent',
+          borderDash: [5, 5], fill: false, tension: 0.35, pointRadius: 0, pointHoverRadius: 0,
+          spanGaps: true, order: 2,
+        });
+      }
+
       chartInstance = new Chart(ctx, {
         type: 'line',
         data: {
-          labels: labels.length ? labels.map(l => {
-            return buckets[l].date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-          }) : ['No data'],
-          datasets: [{
-            data: values.length ? values : [0],
-            borderColor: '#3b82f6',
-            backgroundColor: 'rgba(59,130,246,0.08)',
-            fill: true,
-            tension: 0.35,
-            pointBackgroundColor: '#3b82f6',
-            pointRadius: 4,
-            pointHoverRadius: 6,
-          }]
+          labels: labelKeys.length ? labelKeys.map(k => buckets[k].date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })) : ['No data'],
+          datasets,
         },
         options: {
           responsive: true,
+          onClick: (evt, elements) => {
+            if (!elements.length) return;
+            const idx = elements[0].index;
+            const ids = idsByPoint[idx];
+            if (ids && ids.length) openDetail(ids[ids.length - 1]);
+          },
           plugins: {
-            legend: { display: false }, tooltip: {
+            legend: { display: false },
+            tooltip: {
               callbacks: {
-                label: ctx => ctx.parsed.y + unit
+                label: c => (c.datasetIndex === 0 ? (prFlags[c.dataIndex] ? '🏅 PR · ' : '') + c.parsed.y + unit : 'Previous: ' + c.parsed.y + unit)
               }
             }
           },
@@ -5065,7 +5158,8 @@
         }
       });
 
-      // Also update the summary stats below the chart
+      document.getElementById('chart-legend-row').style.display = prevValues ? 'flex' : 'none';
+
       renderFilterStats(workouts);
     }
 
@@ -5137,6 +5231,8 @@
       renderWeeklySummary();
       renderProgressMuscleMap();
       renderExerciseHistory();
+      updateInsightsWarnPill();
+      if (insightsOpen) renderInsights();
     }
 
     function renderGoal() {
