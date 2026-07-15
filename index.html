@@ -2332,6 +2332,11 @@
 
         <div id="filter-stats"></div>
 
+        <button id="overview-warn-banner" onclick="jumpToInsights()" style="display:none;width:calc(100% - 32px);margin:0 16px 16px;padding:10px 14px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:var(--radius-sm);color:var(--color-attention);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;text-align:left;display:none;align-items:center;justify-content:space-between;">
+          <span id="overview-warn-banner-text"></span>
+          <span>→</span>
+        </button>
+
         <div id="weekly-summary-card"></div>
 
         <div class="section-title" data-i18n="suggested_goal">Suggested Goal</div>
@@ -3688,6 +3693,8 @@
     function goToWorkout() { navigate('workout', document.querySelectorAll('.nav-btn')[1]); startWorkout(); }
 
 
+
+
     // ═══════════════════════════════════════════
     //  WORKOUT
     // ═══════════════════════════════════════════
@@ -4985,8 +4992,10 @@
       if (insightsOpen) renderInsights();
     }
 
-    // Surfaces a "N to review" pill on the collapsed header so warnings aren't
-    // missed just because the section starts closed.
+    // Combines muscle-volume warnings + PPL imbalance into one count, surfaced two
+    // ways: a small "N to review" pill on the collapsed Insights header, and a
+    // tappable "N things to check" banner at the top of Overview so the warnings
+    // aren't missed just because Insights starts collapsed / isn't its own tab.
     function updateInsightsWarnPill() {
       const now = new Date();
       const weekStart = new Date(now); weekStart.setDate(now.getDate() - now.getDay()); weekStart.setHours(0, 0, 0, 0);
@@ -4998,10 +5007,37 @@
         const [lo, hi] = m.target || [10, 20];
         if (n > 0 && (n < lo || n > hi)) count++;
       });
+
+      const allSets = weeklyMuscleSets(state.workouts);
+      const totals = { push: 0, pull: 0, legs: 0 };
+      Object.entries(allSets).forEach(([m, v]) => { const cat = MUSCLE_CATEGORY[m]; if (cat) totals[cat] += v; });
+      const sum = totals.push + totals.pull + totals.legs;
+      if (sum) {
+        const pct = k => Math.round((totals[k] / sum) * 100);
+        if (pct('legs') < 25) count++;
+        if (pct('pull') < pct('push') - 15) count++;
+      }
+
       const pill = document.getElementById('insights-warn-pill');
-      if (!pill) return;
-      if (count > 0) { pill.style.display = 'inline'; pill.textContent = `${count} to review`; }
-      else pill.style.display = 'none';
+      if (pill) {
+        if (count > 0) { pill.style.display = 'inline'; pill.textContent = `${count} to review`; }
+        else pill.style.display = 'none';
+      }
+      const banner = document.getElementById('overview-warn-banner');
+      if (banner) {
+        if (count > 0) { banner.style.display = 'flex'; document.getElementById('overview-warn-banner-text').textContent = `⚠️ ${count} thing${count > 1 ? 's' : ''} to check`; }
+        else banner.style.display = 'none';
+      }
+    }
+
+    // Jumps from anywhere (Overview banner, Plan tab) into the Deeper Insights
+    // section: switches to Progress → Overview, expands it if collapsed, scrolls
+    // it into view.
+    function jumpToInsights() {
+      navigateToTab('progress');
+      switchProgressTab(document.querySelectorAll('.progress-tab')[0], 'overview');
+      if (!insightsOpen) toggleInsightsSection();
+      setTimeout(() => document.getElementById('insights-body')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);
     }
 
     function switchFilter(btn, f) {
@@ -5742,13 +5778,14 @@
       document.getElementById('plan-week-card').innerHTML = `
     <div style="font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;">Phase: <span style="color:${PHASE_COLOR[micro.phase]}">${titleCase(micro.phase)}</span> · ${titleCase(state.periodization.model)} model</div>
     <div style="margin-bottom:14px;">
-      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted);margin-bottom:4px;"><span>Volume</span><span>${actual.volume} / ${micro.plannedVolume} sets ${volFlag ? `<strong style="color:${volDev > 0 ? 'var(--red)' : 'var(--accent-blue)'}">(${volDev > 0 ? '+' : ''}${volDev}%)</strong>` : ''}</span></div>
-      <div style="height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;"><div style="height:100%;width:${barPct(actual.volume, micro.plannedVolume)}%;background:${volFlag ? 'var(--red)' : 'var(--accent-blue)'};"></div></div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted);margin-bottom:4px;"><span>Weekly Sets</span><span>${actual.volume} / ${micro.plannedVolume} sets ${volFlag ? `<strong style="color:${volDev > 0 ? 'var(--color-attention)' : 'var(--color-secondary-focus)'}">(${volDev > 0 ? '+' : ''}${volDev}%)</strong>` : ''}</span></div>
+      <div style="height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;"><div style="height:100%;width:${barPct(actual.volume, micro.plannedVolume)}%;background:${volFlag ? 'var(--color-attention)' : 'var(--color-secondary-focus)'};"></div></div>
     </div>
-    <div>
+    <div style="margin-bottom:14px;">
       <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted);margin-bottom:4px;"><span>Intensity</span><span>${actual.intensityPct !== null ? actual.intensityPct + '%' : 'no RIR/RPE logged'} / target ${micro.plannedIntensityPct}%</span></div>
-      <div style="height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;"><div style="height:100%;width:${barPct(actual.intensityPct || 0, micro.plannedIntensityPct)}%;background:var(--gold);"></div></div>
+      <div style="height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;"><div style="height:100%;width:${barPct(actual.intensityPct || 0, micro.plannedIntensityPct)}%;background:var(--color-attention);"></div></div>
     </div>
+    <div onclick="jumpToInsights()" style="cursor:pointer;font-size:12px;color:var(--accent-blue);display:flex;align-items:center;gap:4px;">See how this compares in Deeper Insights →</div>
   `;
 
       document.getElementById('plan-timeline').innerHTML = `
