@@ -1563,6 +1563,7 @@
       display: none;
     }
 
+
     /* Import modal */
     .import-modal-sheet {
       width: 100%;
@@ -2084,10 +2085,12 @@
       </div>
 
       <div class="snapshot-card">
+        <div id="snapshot-summary" style="font-size:13px;color:var(--text);font-weight:600;margin-bottom:10px;"></div>
+        <div id="plan-status-line" style="display:none;font-size:11px;color:var(--text-muted);margin-bottom:12px;cursor:pointer;" onclick="navigate('progress',document.querySelectorAll('.nav-btn')[2]);switchProgressTab(document.querySelector('.progress-tab:nth-child(5)'),'plan')"></div>
         <div class="snapshot-header">
           <div style="display:flex;align-items:center;gap:8px;">
             <span data-i18n="weekly_snapshot">Your weekly snapshot</span>
-            <span id="streak-badge" style="display:none;font-size:12px;font-weight:700;color:var(--accent);"></span>
+            <span id="streak-badge" style="display:none;font-size:11px;font-weight:800;color:var(--accent);background:rgba(249,115,22,.15);padding:3px 9px;border-radius:20px;"></span>
           </div>
           <a onclick="openWeeklyDetail(0)" data-i18n="see_more">See more</a>
         </div>
@@ -2111,9 +2114,9 @@
       </div>
 
       <div id="home-cta" class="cta-card">
-        <h2 data-i18n="cta_title">Ready to start lifting?</h2>
-        <p data-i18n="cta_desc">Start your workout and add your exercises. Your stats will be ready when you finish.</p>
-        <button class="btn-primary" onclick="goToWorkout()" data-i18n="cta_btn">Start my first workout</button>
+        <h2 id="cta-title-el" data-i18n="cta_title">Ready to start lifting?</h2>
+        <p id="cta-desc-el" data-i18n="cta_desc">Start your workout and add your exercises. Your stats will be ready when you finish.</p>
+        <button class="btn-primary" onclick="goToWorkout()" id="cta-btn-el" data-i18n="cta_btn">Start my first workout</button>
       </div>
 
       <div class="import-card" id="import-export-card" onclick="handleImportExportClick()" style="position:relative;">
@@ -2143,7 +2146,10 @@
       </div>
       <input type="file" id="file-input" accept=".pdf,.xlsx,.xls,.csv,.txt" onchange="handleFileUpload(event)">
 
-      <div class="section-title" data-i18n="recent_workouts">Recent Workouts</div>
+      <div class="section-title" style="display:flex;justify-content:space-between;align-items:center;">
+        <span data-i18n="recent_workouts">Recent Workouts</span>
+        <a id="see-all-workouts" onclick="navigate('you',document.querySelectorAll('.nav-btn')[3])" style="display:none;font-size:13px;font-weight:600;color:var(--accent-blue);cursor:pointer;">See all →</a>
+      </div>
       <div id="home-feed"></div>
     </div>
 
@@ -3695,6 +3701,7 @@
 
 
 
+
     // ═══════════════════════════════════════════
     //  WORKOUT
     // ═══════════════════════════════════════════
@@ -4504,10 +4511,54 @@
       setDeltaBadge('home-delta-volume', Math.round(totalVolume - lastVolume), ' kg');
       renderStreakBadge();
 
-      // CTA visibility
-      document.getElementById('home-cta').style.display = state.workouts.length === 0 ? 'block' : 'none';
+      // One-line interpretive summary
+      const goal = state.weeklyGoal || 3;
+      const summaryEl = document.getElementById('snapshot-summary');
+      if (summaryEl) {
+        if (weekWorkouts.length >= goal) {
+          summaryEl.textContent = `🎯 Goal reached — ${weekWorkouts.length}/${goal} workouts this week`;
+        } else if (weekWorkouts.length > 0) {
+          summaryEl.textContent = `On track — ${weekWorkouts.length}/${goal} toward your weekly goal`;
+        } else if (state.workouts.length > 0) {
+          const lastDate = new Date(state.workouts[0].date);
+          const days = Math.floor((now - lastDate) / 86400000);
+          summaryEl.textContent = days <= 0 ? `Logged today — nothing else yet this week` : `${days} day${days === 1 ? '' : 's'} since your last session`;
+        } else {
+          summaryEl.textContent = '';
+        }
+      }
+
+      // Compact plan status (only if a periodization plan is active)
+      const planEl = document.getElementById('plan-status-line');
+      if (planEl) {
+        const micro = (typeof getCurrentMicrocycle === 'function') ? getCurrentMicrocycle() : null;
+        if (micro) {
+          planEl.style.display = 'block';
+          planEl.innerHTML = `📋 <span style="color:${PHASE_COLOR[micro.phase] || 'var(--text-muted)'}">${titleCase(micro.phase)}</span> week · target ${micro.plannedVolume} sets`;
+        } else {
+          planEl.style.display = 'none';
+        }
+      }
+
+      // CTA: full prompt for true first-timers, lighter nudge if inactive this week only
+      const cta = document.getElementById('home-cta');
+      if (state.workouts.length === 0) {
+        cta.style.display = 'block';
+        document.getElementById('cta-title-el').textContent = t('cta_title');
+        document.getElementById('cta-desc-el').textContent = t('cta_desc');
+        document.getElementById('cta-btn-el').textContent = t('cta_btn');
+      } else if (weekWorkouts.length === 0) {
+        cta.style.display = 'block';
+        document.getElementById('cta-title-el').textContent = "You haven't logged this week yet";
+        document.getElementById('cta-desc-el').textContent = 'Get back on track — start today\'s session.';
+        document.getElementById('cta-btn-el').textContent = 'Start workout';
+      } else {
+        cta.style.display = 'none';
+      }
 
       // Feed
+      const seeAllEl = document.getElementById('see-all-workouts');
+      if (seeAllEl) seeAllEl.style.display = state.workouts.length > 5 ? 'inline' : 'none';
       const feed = document.getElementById('home-feed');
       if (state.workouts.length === 0) {
         feed.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:14px;">No workouts yet. Start your first one!</div>';
@@ -4533,8 +4584,12 @@
 
     function renderFeedCard(w) {
       const d = new Date(w.date);
-      const dateStr = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) + ' at ' +
-        d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+      const dayDiff = Math.round((new Date().setHours(0, 0, 0, 0) - new Date(d).setHours(0, 0, 0, 0)) / 86400000);
+      const dayLabel = dayDiff === 0 ? 'Today' : dayDiff === 1 ? 'Yesterday' : null;
+      const timeStr = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+      const dateStr = dayLabel
+        ? `<strong style="color:var(--accent-blue)">${dayLabel}</strong> at ${timeStr}`
+        : d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) + ' at ' + timeStr;
 
       const medals = w.records > 0 ? `<span class="medal">🥇</span><span style="font-size:13px;font-weight:700">${w.records}</span>` : '';
       const exerciseCells = w.exercises.slice(0, 6).map(ex => {
