@@ -2279,6 +2279,7 @@
         <button class="progress-tab" onclick="switchProgressTab(this,'exercises')" data-i18n="tab_exercises">Exercises</button>
         <button class="progress-tab" onclick="switchProgressTab(this,'muscles')" data-i18n="tab_muscles">Muscles</button>
         <button class="progress-tab" onclick="switchProgressTab(this,'insights')">Insights</button>
+        <button class="progress-tab" onclick="switchProgressTab(this,'plan')">Plan</button>
       </div>
 
       <div id="ptab-overview">
@@ -2375,6 +2376,45 @@
         <div class="insight-card">
           <h3>Muscle Volume Warnings (this week)</h3>
           <div id="muscle-warnings"></div>
+        </div>
+      </div>
+
+      <div id="ptab-plan" style="display:none;">
+        <div id="plan-setup-card" class="insight-card" style="display:none;">
+          <h3>Set Up Periodization</h3>
+          <div style="display:flex;flex-direction:column;gap:12px;">
+            <div>
+              <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">Goal date</label>
+              <input id="plan-goal-date" type="date" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:8px;font-family:inherit;font-size:13px;outline:none;">
+            </div>
+            <div>
+              <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">Athlete level</label>
+              <select id="plan-level" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:8px;font-family:inherit;font-size:13px;outline:none;">
+                <option value="beginner">Beginner</option>
+                <option value="intermediate" selected>Intermediate</option>
+                <option value="advanced">Advanced</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">Model</label>
+              <select id="plan-model" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:8px;font-family:inherit;font-size:13px;outline:none;">
+                <option value="linear">Linear</option>
+                <option value="wave">Wave (undulating)</option>
+              </select>
+            </div>
+            <button class="btn-primary" onclick="generatePeriodizationPlan()">Generate Plan</button>
+          </div>
+        </div>
+        <div id="plan-active-wrap" style="display:none;">
+          <div class="insight-card">
+            <h3>This Week</h3>
+            <div id="plan-week-card"></div>
+          </div>
+          <div class="insight-card">
+            <h3>Macrocycle Timeline</h3>
+            <div id="plan-timeline"></div>
+          </div>
+          <button class="ex-del-btn" style="margin:0 16px 16px;" onclick="resetPeriodizationPlan()">Reset Plan</button>
         </div>
       </div>
     </div>
@@ -3324,6 +3364,7 @@
       measurementHistory: {}, // dated snapshots per measurement field: { key: [{date, value}] }
       language: 'en', // 'en' | 'pt'
       activeRestRow: null, // the one <tr> whose rest clock is currently ticking, across all exercises
+      periodization: null, // { goalDate, athleteLevel, model, mesocycles: [...], generatedAt }
     };
 
     let chartInstance = null;
@@ -3379,6 +3420,7 @@
         state.recentExerciseIds = parsed.recentExerciseIds || [];
         state.measurementHistory = parsed.measurementHistory || {};
         state.language = parsed.language || (navigator.language && navigator.language.toLowerCase().startsWith('pt') ? 'pt' : 'en');
+        state.periodization = parsed.periodization || null;
         // Existing duplicates (e.g. from a prior sync bug) get silently
         // cleaned up and persisted right away so they don't keep reappearing.
         if (state.workouts.length !== rawWorkouts.length) saveState();
@@ -3400,6 +3442,7 @@
         recentExerciseIds: state.recentExerciseIds,
         measurementHistory: state.measurementHistory,
         language: state.language,
+        periodization: state.periodization,
       }));
     }
 
@@ -3571,6 +3614,7 @@
     </div>`;
       }).join('');
     }
+
 
 
     function renderYouHistory() {
@@ -4901,11 +4945,12 @@
     function switchProgressTab(btn, tab) {
       document.querySelectorAll('.progress-tab').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      ['overview', 'exercises', 'muscles', 'insights'].forEach(t => {
+      ['overview', 'exercises', 'muscles', 'insights', 'plan'].forEach(t => {
         document.getElementById('ptab-' + t).style.display = t === tab ? 'block' : 'none';
       });
       if (tab === 'muscles') renderMuscleSplit();
       if (tab === 'insights') renderInsights();
+      if (tab === 'plan') renderPeriodizationTab();
     }
 
     function switchFilter(btn, f) {
@@ -5373,6 +5418,150 @@
           noteEl.innerHTML = '';
         }
       }
+    }
+
+    // ═══════════════════════════════════════════
+    //  PERIODIZATION  (Macro/Meso/Microcycle planner)
+    // ═══════════════════════════════════════════
+    const LEVEL_PRESETS = {
+      beginner: { mesoWeeks: 6, deloadEvery: 8, baseWeeklySets: 100 },
+      intermediate: { mesoWeeks: 4, deloadEvery: 5, baseWeeklySets: 130 },
+      advanced: { mesoWeeks: 3, deloadEvery: 4, baseWeeklySets: 160 },
+    };
+    const PHASE_CYCLE = ['hypertrophy', 'strength', 'power'];
+    const PHASE_COLOR = { hypertrophy: '#3b82f6', strength: '#f97316', power: '#ef4444', deload: '#94a3b8', peak: '#f59e0b' };
+
+    function mondayOf(d) { const x = new Date(d); const day = x.getDay(); const diff = day === 0 ? -6 : 1 - day; x.setDate(x.getDate() + diff); x.setHours(0, 0, 0, 0); return x; }
+
+    // Builds mesocycles (each a run of weeks with a phase + volume/intensity target %)
+    // spanning from today to goalDate, then explodes them into weekly microcycles.
+    function buildPeriodizationPlan(goalDateStr, level, model) {
+      const preset = LEVEL_PRESETS[level];
+      const start = mondayOf(new Date());
+      const goal = new Date(goalDateStr);
+      const totalWeeks = Math.max(2, Math.ceil((goal - start) / (7 * 86400000)));
+
+      const mesos = [];
+      let weekCursor = 0, phaseIdx = 0, weeksSinceDeload = 0;
+      while (weekCursor < totalWeeks) {
+        const remaining = totalWeeks - weekCursor;
+        let len, phase;
+        if (remaining <= 2) { len = remaining; phase = 'peak'; }
+        else if (weeksSinceDeload >= preset.deloadEvery) { len = 1; phase = 'deload'; weeksSinceDeload = 0; }
+        else { len = Math.min(preset.mesoWeeks, remaining - 2); phase = PHASE_CYCLE[phaseIdx % PHASE_CYCLE.length]; phaseIdx++; weeksSinceDeload += len; }
+        mesos.push({ startWeek: weekCursor, weeks: len, phase });
+        weekCursor += len;
+      }
+
+      mesos.forEach(m => {
+        const frac = (m.startWeek + m.weeks / 2) / totalWeeks;
+        let volPct = Math.round(100 - frac * 60);
+        let intPct = Math.round(60 + frac * 35);
+        if (m.phase === 'deload') { volPct = 50; intPct = 55; }
+        if (m.phase === 'peak') { volPct = 30; intPct = 95; }
+        m.volumePct = volPct;
+        m.intensityPct = intPct;
+      });
+
+      const microcycles = [];
+      mesos.forEach(m => {
+        for (let w = 0; w < m.weeks; w++) {
+          let volPct = m.volumePct, intPct = m.intensityPct;
+          if (model === 'wave' && m.phase !== 'deload' && m.phase !== 'peak') {
+            const wave = (w % 2 === 0) ? 1 : -1;
+            volPct = Math.max(20, m.volumePct + wave * 15);
+            intPct = Math.min(98, m.intensityPct - wave * 8);
+          }
+          const weekStart = new Date(start); weekStart.setDate(weekStart.getDate() + (m.startWeek + w) * 7);
+          microcycles.push({
+            weekStart: weekStart.toISOString(), phase: m.phase,
+            plannedVolume: Math.round(preset.baseWeeklySets * volPct / 100),
+            plannedIntensityPct: intPct,
+          });
+        }
+      });
+
+      return { goalDate: goalDateStr, athleteLevel: level, model, mesos, microcycles, generatedAt: new Date().toISOString() };
+    }
+
+    function generatePeriodizationPlan() {
+      const goalDate = document.getElementById('plan-goal-date').value;
+      if (!goalDate) { showToast('Pick a goal date'); return; }
+      const level = document.getElementById('plan-level').value;
+      const model = document.getElementById('plan-model').value;
+      state.periodization = buildPeriodizationPlan(goalDate, level, model);
+      saveState();
+      pushSync();
+      renderPeriodizationTab();
+      showToast('Plan generated 📋');
+    }
+
+    function resetPeriodizationPlan() {
+      if (!confirm('Reset your periodization plan?')) return;
+      state.periodization = null;
+      saveState();
+      renderPeriodizationTab();
+    }
+
+    function getCurrentMicrocycle() {
+      if (!state.periodization) return null;
+      const thisMonday = mondayOf(new Date()).toDateString();
+      return state.periodization.microcycles.find(m => new Date(m.weekStart).toDateString() === thisMonday)
+        || state.periodization.microcycles[state.periodization.microcycles.length - 1];
+    }
+
+    function computeActualThisWeek() {
+      const weekStart = mondayOf(new Date());
+      const weekWorkouts = state.workouts.filter(w => new Date(w.date) >= weekStart);
+      const sets = weeklyMuscleSets(weekWorkouts);
+      const volume = Math.round(Object.values(sets).reduce((a, b) => a + b, 0));
+      let rirVals = [], rpeVals = [];
+      weekWorkouts.forEach(w => w.exercises.forEach(ex => (ex.sets || []).forEach(s => {
+        if (!s.warmup) { if (s.rir > 0) rirVals.push(s.rir); if (s.rpe > 0) rpeVals.push(s.rpe); }
+      })));
+      let intensityPct = null;
+      if (rirVals.length) intensityPct = Math.round(100 - (rirVals.reduce((a, b) => a + b, 0) / rirVals.length) * 5);
+      else if (rpeVals.length) intensityPct = Math.round((rpeVals.reduce((a, b) => a + b, 0) / rpeVals.length) * 10);
+      return { volume, intensityPct };
+    }
+
+    function renderPeriodizationTab() {
+      const hasPlan = !!(state.periodization && state.periodization.microcycles && state.periodization.microcycles.length);
+      document.getElementById('plan-setup-card').style.display = hasPlan ? 'none' : 'block';
+      document.getElementById('plan-active-wrap').style.display = hasPlan ? 'block' : 'none';
+      if (!hasPlan) {
+        const d = new Date(); d.setDate(d.getDate() + 84);
+        document.getElementById('plan-goal-date').value = d.toISOString().slice(0, 10);
+        return;
+      }
+
+      const micro = getCurrentMicrocycle();
+      const actual = computeActualThisWeek();
+      const volDev = micro.plannedVolume ? Math.round((actual.volume - micro.plannedVolume) / micro.plannedVolume * 100) : 0;
+      const volFlag = Math.abs(volDev) > 15;
+      const barPct = (val, target) => Math.min(100, Math.round((val / Math.max(target, 1)) * 100));
+
+      document.getElementById('plan-week-card').innerHTML = `
+    <div style="font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;">Phase: <span style="color:${PHASE_COLOR[micro.phase]}">${titleCase(micro.phase)}</span> · ${titleCase(state.periodization.model)} model</div>
+    <div style="margin-bottom:14px;">
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted);margin-bottom:4px;"><span>Volume</span><span>${actual.volume} / ${micro.plannedVolume} sets ${volFlag ? `<strong style="color:${volDev > 0 ? 'var(--red)' : 'var(--accent-blue)'}">(${volDev > 0 ? '+' : ''}${volDev}%)</strong>` : ''}</span></div>
+      <div style="height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;"><div style="height:100%;width:${barPct(actual.volume, micro.plannedVolume)}%;background:${volFlag ? 'var(--red)' : 'var(--accent-blue)'};"></div></div>
+    </div>
+    <div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted);margin-bottom:4px;"><span>Intensity</span><span>${actual.intensityPct !== null ? actual.intensityPct + '%' : 'no RIR/RPE logged'} / target ${micro.plannedIntensityPct}%</span></div>
+      <div style="height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;"><div style="height:100%;width:${barPct(actual.intensityPct || 0, micro.plannedIntensityPct)}%;background:var(--gold);"></div></div>
+    </div>
+  `;
+
+      document.getElementById('plan-timeline').innerHTML = `
+    <div style="display:flex;height:28px;border-radius:6px;overflow:hidden;margin-bottom:10px;">
+      ${state.periodization.mesos.map(m => `<div title="${titleCase(m.phase)} · ${m.weeks}wk" style="flex:${m.weeks};background:${PHASE_COLOR[m.phase]};"></div>`).join('')}
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;font-size:11px;color:var(--text-muted);">
+      ${Object.entries(PHASE_COLOR).map(([k, c]) => `<span><span class="legend-dot" style="background:${c}"></span>${titleCase(k)}</span>`).join('')}
+    </div>
+    <div style="font-size:12px;color:var(--text-dim);margin-top:10px;">Goal date: ${new Date(state.periodization.goalDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
+  `;
     }
 
     // ── Muscle activation → color helpers ──
@@ -6606,13 +6795,26 @@
     function isMetricToken(tok) {
       // A token is "metric data" if it's mostly digits/slashes/c/p/n/x/+/- combos, or is exactly "---"
       if (tok === '---') return true;
-      if (/^[\d/cpnx+\-.]+$/i.test(tok) && /\d/.test(tok)) return true;
+      if (/^[\d/cpnx+\-.^ret]+$/i.test(tok) && /\d/.test(tok)) return true;
       return false;
+    }
+
+    // Extracts ^-tagged extras (RIR/RPE/tempo) appended by our own exporter, e.g.
+    // "10c60^r2^e8.5^t2-1-1" -> { clean: "10c60", rir, rpe, tempo }. Doesn't affect
+    // parsing of hand-written logs, which never contain "^".
+    function extractSetTags(chunk) {
+      let rir = 0, rpe = 0, tempo = '';
+      let clean = chunk.replace(/\^r(\d+(?:\.\d+)?)/i, (_, v) => { rir = parseFloat(v); return ''; });
+      clean = clean.replace(/\^e(\d+(?:\.\d+)?)/i, (_, v) => { rpe = parseFloat(v); return ''; });
+      clean = clean.replace(/\^t([\w-]+)/i, (_, v) => { tempo = v; return ''; });
+      return { clean, rir, rpe, tempo };
     }
 
     function parseSetChunk(chunk, index) {
       chunk = chunk.trim();
       if (!chunk || chunk === '-' || chunk === '--' || chunk === '---') return null;
+      const tags = extractSetTags(chunk);
+      chunk = tags.clean;
 
       let weight = 0;
       let reps = 0;
@@ -6666,7 +6868,9 @@
         warmup: false,
         weight: Math.round(weight * 100) / 100,
         reps: totalReps,
-        rir: 0,
+        rir: tags.rir || 0,
+        rpe: tags.rpe || 0,
+        tempo: tags.tempo || '',
         bodyweight: isBodyweight,
         negativeReps: negativeReps || 0,
       };
@@ -6705,6 +6909,9 @@
             weight: s.bodyweight ? BODYWEIGHT_KG : s.weight,
             reps: s.reps,
             rir: s.rir || 0,
+            rpe: s.rpe || 0,
+            tempo: s.tempo || '',
+            variations: s.negativeReps ? [{ type: 'negatives', value: String(s.negativeReps) }] : [],
           }));
           return {
             exId: 'custom-' + ex.name.toLowerCase().replace(/\s+/g, '-'),
@@ -6938,8 +7145,51 @@ Soreness: 6-7</div>
       document.getElementById('import-modal').classList.remove('open');
     }
 
+    // Imported workouts skip live logging (finishWorkout never sees them), so PR
+    // badges have to be computed here — walking ALL workouts (existing + imported)
+    // oldest→newest and only tagging the imported ones, so PR status reflects true
+    // chronological order rather than import batch order.
+    function recomputeImportedPRs(importedWorkouts) {
+      const all = [...state.workouts, ...importedWorkouts].slice().sort((a, b) => new Date(a.date) - new Date(b.date));
+      const bestByExId = {}, bwBestByExId = {};
+      const bw = getUserBodyweight();
+      const importedIds = new Set(importedWorkouts.map(w => w.id));
+      all.forEach(w => {
+        const isImported = importedIds.has(w.id);
+        w.exercises.forEach(ex => {
+          const best = bestByExId[ex.exId] || {};
+          const bwBest = bwBestByExId[ex.exId] || {};
+          (ex.sets || []).forEach(s => {
+            if (s.warmup) return;
+            if (isImported) {
+              s.prs = [];
+              if (s.weight > 0 && s.reps > 0) {
+                const est = s.weight * (1 + s.reps / 30);
+                if (est > (best.est1rm || 0)) s.prs.push('1RM');
+                if (s.weight * s.reps > (best.volume || 0)) s.prs.push('Volume');
+                if (s.reps > (best.reps || 0)) s.prs.push('Reps');
+              }
+              if (s.reps > 0 && isBodyweightExercise(ex.name)) {
+                if (s.weight === 0 && s.reps > (bwBest.bestReps || 0)) s.prs.push('Bodyweight');
+                else if (s.weight > 0 && (bw + s.weight) > (bwBest.bestSystemWeight || 0)) s.prs.push('Bodyweight');
+              }
+            }
+            const est2 = s.weight * (1 + s.reps / 30);
+            if (est2 > (best.est1rm || 0)) best.est1rm = est2;
+            if (s.weight * s.reps > (best.volume || 0)) best.volume = s.weight * s.reps;
+            if (s.reps > (best.reps || 0)) best.reps = s.reps;
+            if (s.weight === 0 && s.reps > (bwBest.bestReps || 0)) bwBest.bestReps = s.reps;
+            if (s.weight > 0 && (bw + s.weight) > (bwBest.bestSystemWeight || 0)) bwBest.bestSystemWeight = bw + s.weight;
+          });
+          bestByExId[ex.exId] = best; bwBestByExId[ex.exId] = bwBest;
+        });
+        if (isImported) w.records = w.exercises.reduce((sum, ex) => sum + (ex.sets || []).filter(s => s.prs && s.prs.length).length, 0);
+      });
+    }
+
     function confirmImport() {
       if (!pendingImportWorkouts) return;
+      recomputeImportedPRs(pendingImportWorkouts);
       state.workouts = [...pendingImportWorkouts, ...state.workouts];
       state.workouts.sort((a, b) => new Date(b.date) - new Date(a.date));
       saveState();
@@ -7004,11 +7254,21 @@ Soreness: 6-7</div>
       return out.join(' ');
     }
 
+    // ^-tags round-trip RIR/RPE/tempo through the plain-text export so a re-import
+    // doesn't lose them — see extractSetTags() on the import side.
+    function setTags(s) {
+      let tag = '';
+      if (s.rir > 0) tag += `^r${s.rir}`;
+      if (s.rpe > 0) tag += `^e${s.rpe}`;
+      if (s.tempo) tag += `^t${s.tempo}`;
+      return tag;
+    }
+
     function fmtSetToken(s) {
       if (!s) return '';
       const variations = s.variations || [];
       const partial = variations.find(v => v.type === 'partials' && v.value);
-      if (partial) return partial.value;
+      if (partial) return partial.value + setTags(s);
       const bw = (typeof BODYWEIGHT_KG !== 'undefined') ? BODYWEIGHT_KG : 80;
       const hasWeight = s.weight && s.weight !== bw;
       let tok = `${s.reps}${hasWeight ? 'c' + s.weight : ''}`;
@@ -7017,6 +7277,7 @@ Soreness: 6-7</div>
         if (v.type === 'negatives') tok += v.value ? `+${v.value}negatives` : `+negatives`;
         else tok += `+${v.type}`;
       });
+      tok += setTags(s);
       return tok;
     }
 
