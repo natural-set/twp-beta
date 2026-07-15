@@ -2377,8 +2377,12 @@
       </div>
 
       <div id="ptab-exercises" style="display:none; padding: 0 16px;">
-        <div style="padding: 20px 0; text-align: center; color: var(--text-muted); font-size: 14px;">
-          Exercise history will appear as you log workouts.
+        <input id="exercise-search" class="modal-search" placeholder="Search exercises…" oninput="renderExerciseHistory()"
+          style="width:100%;margin:12px 0 10px;box-sizing:border-box;">
+        <div class="time-filters" style="margin:0 0 12px;">
+          <button class="ex-sort-btn time-filter active" onclick="switchExerciseSort(this,'recent')">Recent</button>
+          <button class="ex-sort-btn time-filter" onclick="switchExerciseSort(this,'trained')">Most Trained</button>
+          <button class="ex-sort-btn time-filter" onclick="switchExerciseSort(this,'plateaued')">Plateaued</button>
         </div>
         <div id="exercise-history-list"></div>
       </div>
@@ -3682,6 +3686,7 @@
     }
 
     function goToWorkout() { navigate('workout', document.querySelectorAll('.nav-btn')[1]); startWorkout(); }
+
 
     // ═══════════════════════════════════════════
     //  WORKOUT
@@ -5309,31 +5314,119 @@
       return { arrow, weeksStalled: stalled };
     }
 
+    let exerciseSortMode = 'recent';
+    function switchExerciseSort(btn, mode) {
+      document.querySelectorAll('#ptab-exercises .ex-sort-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      exerciseSortMode = mode;
+      renderExerciseHistory();
+    }
+
     function renderExerciseHistory() {
       const el = document.getElementById('exercise-history-list');
       const seen = {};
       state.workouts.forEach(w => {
         w.exercises.forEach(ex => {
-          if (!seen[ex.exId]) seen[ex.exId] = { exId: ex.exId, name: ex.name, icon: ex.icon, count: 0, volume: 0 };
+          if (!seen[ex.exId]) seen[ex.exId] = { exId: ex.exId, name: ex.name, icon: ex.icon, count: 0, volume: 0, lastDate: w.date };
           seen[ex.exId].count++;
+          if (new Date(w.date) > new Date(seen[ex.exId].lastDate)) seen[ex.exId].lastDate = w.date;
           (ex.sets || []).filter(s => !s.warmup).forEach(s => { seen[ex.exId].volume += s.weight * s.reps; });
         });
       });
-      const items = Object.values(seen);
-      if (!items.length) { el.innerHTML = ''; return; }
+      let items = Object.values(seen);
+      if (!items.length) {
+        el.innerHTML = emptyState('🏋️', 'Log a workout to start building exercise history — trends, volume, and plateau detection will show up here.');
+        return;
+      }
+
+      const query = (document.getElementById('exercise-search')?.value || '').trim().toLowerCase();
+      if (query) items = items.filter(it => it.name.toLowerCase().includes(query));
+
+      // Attach trend/plateau info once so both sorting and rendering reuse it
+      // instead of recomputing per comparison during sort.
+      items = items.map(it => ({ ...it, trend: getExerciseTrend(it.exId), plateaued: isExercisePlateaued(it.exId) }));
+
+      if (exerciseSortMode === 'trained') {
+        items.sort((a, b) => b.count - a.count);
+      } else if (exerciseSortMode === 'plateaued') {
+        items.sort((a, b) => (b.plateaued - a.plateaued) || (b.trend.weeksStalled - a.trend.weeksStalled));
+      } else {
+        items.sort((a, b) => new Date(b.lastDate) - new Date(a.lastDate));
+      }
+
+      if (!items.length) {
+        el.innerHTML = emptyState('🔍', `No exercises match "${query}". Try a different search term.`);
+        return;
+      }
+      if (exerciseSortMode === 'plateaued' && !items.some(it => it.plateaued)) {
+        el.innerHTML = emptyState('✅', `No plateaus detected — every exercise has shown progress across its last ${PLATEAU_SESSION_COUNT} sessions.`);
+        return;
+      }
+
       el.innerHTML = items.map(it => {
-        const trend = getExerciseTrend(it.exId);
-        const plateauTag = trend.weeksStalled >= PLATEAU_SESSION_COUNT ? `<span class="plateau-tag">⚠️ Stalled ${trend.weeksStalled}x</span>` : '';
+        const plateauTag = it.trend.weeksStalled >= PLATEAU_SESSION_COUNT ? `<span class="plateau-tag">⚠️ Stalled ${it.trend.weeksStalled}x</span>` : '';
         return `
     <div class="muscle-item" style="cursor:pointer" onclick="openExerciseDetail('${it.exId}')">
       <div class="muscle-item-icon">${it.icon}</div>
       <div style="flex:1">
-        <div class="muscle-item-name">${trend.arrow} ${it.name}${plateauTag}</div>
+        <div class="muscle-item-name">${it.trend.arrow} ${it.name}${plateauTag}</div>
         <div class="muscle-item-stats">${Math.round(it.volume)}kg total · ${it.count} sessions</div>
       </div>
     </div>
   `;
       }).join('');
+    }
+
+    // Shared purposeful empty-state markup (icon + one sentence tied to the panel
+    // it's in) — replaces the generic muted one-liners that used to sit in Exercises,
+    // Muscles, and the Insights sub-panels.
+    function emptyState(icon, text) {
+      return `<div style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:40px 24px;text-align:center;">
+        <div style="font-size:34px;opacity:.5;">${icon}</div>
+        <div style="font-size:13px;color:var(--text-muted);max-width:260px;line-height:1.5;">${text}</div>
+      </div>`;
+    }
+
+    // Weighted weekly set-count per muscle over the last N weeks (primary=full
+    // credit, secondary=half — same weighting as weeklyMuscleSets), bucketed once
+    // for all muscles together so the Muscle Split sparklines don't re-scan the
+    // full workout history once per muscle row.
+    function computeMuscleWeeklySeries(weeks) {
+      const now = new Date();
+      const weekStarts = [];
+      for (let i = weeks - 1; i >= 0; i--) {
+        const ws = new Date(now); ws.setDate(now.getDate() - now.getDay() - i * 7); ws.setHours(0, 0, 0, 0);
+        weekStarts.push(ws);
+      }
+      const series = {};
+      MUSCLE_GROUPS.forEach(m => { series[m.name] = new Array(weeks).fill(0); });
+      state.workouts.forEach(w => {
+        const d = new Date(w.date);
+        let idx = -1;
+        for (let i = 0; i < weeks; i++) {
+          const we = new Date(weekStarts[i]); we.setDate(we.getDate() + 7);
+          if (d >= weekStarts[i] && d < we) { idx = i; break; }
+        }
+        if (idx === -1) return;
+        w.exercises.forEach(ex => {
+          const workSets = (ex.sets || []).filter(s => !s.warmup);
+          if (!workSets.length) return;
+          const { primary, secondary } = getExerciseMuscles(ex);
+          primary.forEach(m => { if (series[m]) series[m][idx] += workSets.length; });
+          secondary.forEach(m => { if (series[m]) series[m][idx] += workSets.length * 0.5; });
+        });
+      });
+      return series;
+    }
+
+    // Minimal inline trend sparkline — no axes/labels, just shape, so it reads at
+    // a glance inside a list row rather than competing with the bar/kg text.
+    function sparklineSVG(vals, color) {
+      const w = 56, h = 20;
+      const max = Math.max(...vals, 0.001);
+      if (!vals.some(v => v > 0)) return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><line x1="0" y1="${h - 1}" x2="${w}" y2="${h - 1}" stroke="var(--border)" stroke-width="1"/></svg>`;
+      const pts = vals.map((v, i) => `${(i / (vals.length - 1)) * w},${h - (v / max) * (h - 2) - 1}`).join(' ');
+      return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="flex-shrink:0;"><polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
     }
 
     // ═══════════════════════════════════════════
@@ -5369,10 +5462,18 @@
       });
 
       const maxKg = Math.max(...Object.values(stats).map(s => s.kg), 1);
+      const totalKg = Object.values(stats).reduce((s, x) => s + x.kg, 0);
+      const listEl = document.getElementById('muscle-split-list');
+      if (totalKg === 0) {
+        listEl.innerHTML = emptyState('💪', 'Log a few workouts to see your muscle split — which muscles are getting the most volume, and how that shifts week to week.');
+        return;
+      }
+      const weeklySeries = computeMuscleWeeklySeries(8);
       const sorted = [...MUSCLE_GROUPS].sort((a, b) => (stats[a.name]?.kg || 0) - (stats[b.name]?.kg || 0));
-      document.getElementById('muscle-split-list').innerHTML = sorted.map(m => {
+      listEl.innerHTML = sorted.map(m => {
         const s = stats[m.name] || { kg: 0, sets: 0 };
         const barW = Math.max(2, (s.kg / maxKg) * 100);
+        const color = m.color === 'secondary' ? '#3b82f6' : '#ef4444';
         return `<div class="muscle-item" style="cursor:pointer" onclick="openMuscleDetail('${m.name}')">
       <div class="muscle-item-icon">${m.icon}</div>
       <div style="flex:1">
@@ -5380,6 +5481,7 @@
         <div class="muscle-item-stats">${Math.round(s.kg)}kg · ${Math.round(s.sets)} sets</div>
         <div class="muscle-bar ${m.color === 'secondary' ? 'secondary' : ''}" style="width:${barW}%"></div>
       </div>
+      <div title="Last 8 weeks">${sparklineSVG(weeklySeries[m.name], color)}</div>
     </div>`;
       }).join('');
     }
@@ -5450,7 +5552,7 @@
       });
       document.getElementById('muscle-warnings').innerHTML = rows.length
         ? rows.join('')
-        : `<div style="color:var(--text-muted);font-size:13px;">No sets logged this week yet.</div>`;
+        : emptyState('📋', 'Log a few sets this week and this will show which muscles are under, over, or right in your target weekly volume range.');
     }
 
     function renderPPLBalance() {
@@ -5458,7 +5560,7 @@
       const totals = { push: 0, pull: 0, legs: 0 };
       Object.entries(sets).forEach(([m, v]) => { const cat = MUSCLE_CATEGORY[m]; if (cat) totals[cat] += v; });
       const sum = totals.push + totals.pull + totals.legs;
-      if (!sum) { document.getElementById('ppl-balance').innerHTML = `<div style="color:var(--text-muted);font-size:13px;">Not enough data yet.</div>`; return; }
+      if (!sum) { document.getElementById('ppl-balance').innerHTML = emptyState('⚖️', "Once you've logged a few workouts, this will show how your Push/Pull/Legs volume balances out."); return; }
       const pct = k => Math.round((totals[k] / sum) * 100);
       const colors = { push: '#ef4444', pull: '#3b82f6', legs: '#f59e0b' };
       const bar = ['push', 'pull', 'legs'].map(k => `<div style="width:${pct(k)}%;background:${colors[k]};"></div>`).join('');
