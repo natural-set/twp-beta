@@ -36,12 +36,6 @@
       --bronze: #cd7f32;
       --red: #ef4444;
       --green: #22c55e;
-      /* Semantic roles — used for status/meaning rather than a fixed hue, so the
-         same signal (e.g. "needs attention") reads the same color everywhere. */
-      --color-positive: var(--green);
-      --color-attention: var(--gold);
-      --color-primary-focus: var(--red);
-      --color-secondary-focus: var(--accent-blue);
       --radius: 12px;
       --radius-sm: 8px;
       --nav-h: 64px;
@@ -635,6 +629,27 @@
       outline: none;
     }
 
+    .bw-wrap { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+    .bw-chip {
+      background: var(--surface2); border: 1px solid var(--border); border-radius: 20px;
+      font-family: inherit; font-size: 10px; font-weight: 700; padding: 4px 8px; cursor: pointer;
+      white-space: nowrap; color: var(--text-muted);
+    }
+    .bw-chip.mode-added { border-color: var(--accent-blue); color: var(--accent-blue); background: rgba(59,130,246,.12); }
+    .bw-chip.mode-assisted { border-color: #14b8a6; color: #14b8a6; background: rgba(20,184,166,.12); }
+    .bw-warn { font-size: 9px; color: var(--gold); white-space: nowrap; cursor: pointer; }
+    .bw-stepper { display: flex; align-items: center; gap: 3px; }
+    .bw-step-btn {
+      background: var(--surface2); border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text); width: 20px; height: 20px; font-size: 13px; font-weight: 700;
+      cursor: pointer; padding: 0; line-height: 1; font-family: inherit;
+    }
+    .bw-delta-input {
+      background: var(--surface2); border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text); font-size: 11px; font-family: inherit; text-align: center;
+      padding: 3px 2px; width: 34px; outline: none;
+    }
+
     .insight-card {
       margin: 0 16px 16px;
       background: var(--surface);
@@ -671,17 +686,17 @@
 
     .warn-pill.low {
       background: rgba(59, 130, 246, .15);
-      color: var(--color-secondary-focus);
+      color: var(--accent-blue);
     }
 
     .warn-pill.high {
-      background: rgba(245, 158, 11, .15);
-      color: var(--color-attention);
+      background: rgba(239, 68, 68, .15);
+      color: var(--red);
     }
 
     .warn-pill.ok {
       background: rgba(34, 197, 94, .15);
-      color: var(--color-positive);
+      color: var(--green);
     }
 
     .ppl-bar-row {
@@ -720,21 +735,6 @@
       color: var(--text-muted);
       text-align: center;
     }
-
-    .badge-chip-locked { opacity: .85; }
-    .badge-ring-outer { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; padding: 3px; }
-    .badge-ring-inner { width: 100%; height: 100%; border-radius: 50%; background: var(--surface); display: flex; align-items: center; justify-content: center; font-size: 14px; }
-
-    .profile-group { margin-bottom: 2px; }
-    .profile-group-header {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 12px 4px; cursor: pointer; font-size: 12px; font-weight: 700;
-      color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em;
-      border-bottom: 1px solid var(--border);
-    }
-    .profile-group-header svg { width: 14px; height: 14px; transition: transform .15s; }
-    .profile-group-count { font-size: 11px; color: var(--text-dim); font-weight: 500; text-transform: none; letter-spacing: normal; }
-
 
     .plateau-tag {
       font-size: 10px;
@@ -1578,7 +1578,6 @@
       display: none;
     }
 
-
     /* Import modal */
     .import-modal-sheet {
       width: 100%;
@@ -1944,15 +1943,15 @@
     }
 
     /* ── SYNC BUTTON ── */
-    #sync-btn, .sync-btn-icon {
+    #sync-btn {
       transition: all 0.3s ease;
     }
 
-    #sync-btn.syncing svg, .sync-btn-icon.syncing svg {
+    #sync-btn.syncing svg {
       animation: spin 0.8s linear infinite;
     }
 
-    #sync-btn.synced svg, .sync-btn-icon.synced svg {
+    #sync-btn.synced svg {
       color: var(--green);
     }
 
@@ -2011,8 +2010,7 @@
       .variations-btn { max-width: 84px; }
 
       .workout-meta-row { flex-wrap: wrap; }
-      .workout-meta-row #workout-duration-input,
-      .workout-meta-row #workout-bodyweight-input { width: calc(50% - 5px); flex: none; }
+      .workout-meta-row #workout-duration-input { width: calc(50% - 5px); flex: none; }
       .workout-meta-row #workout-date { flex: 1 1 100%; }
 
       .workout-name-input { font-size: 19px; }
@@ -2085,7 +2083,7 @@
                 d="M6.404 12.768a2 2 0 1 1-2.829-2.829l1.768-1.767a2 2 0 1 1-2.828-2.829l2.828-2.828a2 2 0 1 1 2.829 2.828l1.767-1.768a2 2 0 1 1 2.829 2.829z" />
             </svg>
           </button>
-          <button class="icon-btn sync-btn-icon" id="sync-btn" title="Sync with cloud" aria-label="Sync with cloud" onclick="pushSync(true)">
+          <button class="icon-btn" id="sync-btn" title="Sync with cloud" aria-label="Sync with cloud" onclick="pushSync(true)">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
               class="lucide lucide-cloud-sync-icon lucide-cloud-sync">
@@ -2100,12 +2098,10 @@
       </div>
 
       <div class="snapshot-card">
-        <div id="snapshot-summary" style="font-size:13px;color:var(--text);font-weight:600;margin-bottom:10px;"></div>
-        <div id="plan-status-line" style="display:none;font-size:11px;color:var(--text-muted);margin-bottom:12px;cursor:pointer;" onclick="navigate('progress',document.querySelectorAll('.nav-btn')[2]);switchProgressTab(document.querySelector('.progress-tab:nth-child(5)'),'plan')"></div>
         <div class="snapshot-header">
           <div style="display:flex;align-items:center;gap:8px;">
             <span data-i18n="weekly_snapshot">Your weekly snapshot</span>
-            <span id="streak-badge" style="display:none;font-size:11px;font-weight:800;color:var(--accent);background:rgba(249,115,22,.15);padding:3px 9px;border-radius:20px;"></span>
+            <span id="streak-badge" style="display:none;font-size:12px;font-weight:700;color:var(--accent);"></span>
           </div>
           <a onclick="openWeeklyDetail(0)" data-i18n="see_more">See more</a>
         </div>
@@ -2129,9 +2125,9 @@
       </div>
 
       <div id="home-cta" class="cta-card">
-        <h2 id="cta-title-el" data-i18n="cta_title">Ready to start lifting?</h2>
-        <p id="cta-desc-el" data-i18n="cta_desc">Start your workout and add your exercises. Your stats will be ready when you finish.</p>
-        <button class="btn-primary" onclick="goToWorkout()" id="cta-btn-el" data-i18n="cta_btn">Start my first workout</button>
+        <h2 data-i18n="cta_title">Ready to start lifting?</h2>
+        <p data-i18n="cta_desc">Start your workout and add your exercises. Your stats will be ready when you finish.</p>
+        <button class="btn-primary" onclick="goToWorkout()" data-i18n="cta_btn">Start my first workout</button>
       </div>
 
       <div class="import-card" id="import-export-card" onclick="handleImportExportClick()" style="position:relative;">
@@ -2161,10 +2157,7 @@
       </div>
       <input type="file" id="file-input" accept=".pdf,.xlsx,.xls,.csv,.txt" onchange="handleFileUpload(event)">
 
-      <div class="section-title" style="display:flex;justify-content:space-between;align-items:center;">
-        <span data-i18n="recent_workouts">Recent Workouts</span>
-        <a id="see-all-workouts" onclick="navigate('you',document.querySelectorAll('.nav-btn')[3])" style="display:none;font-size:13px;font-weight:600;color:var(--accent-blue);cursor:pointer;">See all →</a>
-      </div>
+      <div class="section-title" data-i18n="recent_workouts">Recent Workouts</div>
       <div id="home-feed"></div>
     </div>
 
@@ -2200,10 +2193,7 @@
           <input type="datetime-local" id="workout-date"
             style="flex: 1; background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 8px; border-radius: 6px; font-family: inherit; font-size: 13px; outline: none;">
           <input type="number" id="workout-duration-input" placeholder="Duration (min)"
-            style="width: 100px; background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 8px; border-radius: 6px; font-family: inherit; font-size: 13px; outline: none;">
-          <input type="number" step="0.1" id="workout-bodyweight-input" placeholder="Weight (kg)"
-            title="Logging this also updates your bodyweight history in the You tab"
-            style="width: 100px; background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 8px; border-radius: 6px; font-family: inherit; font-size: 13px; outline: none;">
+            style="flex: 1; background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 8px; border-radius: 6px; font-family: inherit; font-size: 13px; outline: none;">
         </div>
 
         <input class="workout-name-input" id="workout-name" placeholder="Workout name…" data-i18n-placeholder="ph_workout_name" />
@@ -2277,6 +2267,15 @@
               style="width:100px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:8px;font-family:inherit;font-size:14px;outline:none;">
           </div>
           <div style="margin-bottom:14px;">
+            <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:6px;">BW chip weight step (kg, optional)</label>
+            <input id="ef-weight-step" type="number" min="0.5" step="0.5" placeholder="e.g. 2.5"
+              style="width:100px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:8px;font-family:inherit;font-size:14px;outline:none;">
+          </div>
+          <div style="margin-bottom:14px;display:flex;align-items:center;gap:8px;">
+            <input type="checkbox" id="ef-is-bodyweight" style="width:18px;height:18px;">
+            <label for="ef-is-bodyweight" style="font-size:12px;color:var(--text-muted);">⚖️ Bodyweight exercise (can add/remove weight)</label>
+          </div>
+          <div style="margin-bottom:14px;">
             <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:6px;">Name</label>
             <input id="ef-name" type="text" placeholder="e.g. Cable Fly"
               style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:10px;font-family:inherit;font-size:14px;outline:none;">
@@ -2305,6 +2304,7 @@
         <button class="progress-tab active" onclick="switchProgressTab(this,'overview')" data-i18n="tab_overview">Overview</button>
         <button class="progress-tab" onclick="switchProgressTab(this,'exercises')" data-i18n="tab_exercises">Exercises</button>
         <button class="progress-tab" onclick="switchProgressTab(this,'muscles')" data-i18n="tab_muscles">Muscles</button>
+        <button class="progress-tab" onclick="switchProgressTab(this,'insights')">Insights</button>
         <button class="progress-tab" onclick="switchProgressTab(this,'plan')">Plan</button>
       </div>
 
@@ -2321,10 +2321,6 @@
         <div class="chart-container">
           <div class="chart-label" id="chart-period-label">This week</div>
           <div class="chart-value" id="chart-main-value">0min</div>
-          <div id="chart-legend-row" style="display:none;gap:14px;font-size:11px;color:var(--text-muted);margin:-6px 0 8px;">
-            <span>★ <span style="color:var(--gold)">PR</span></span>
-            <span>┄┄ Previous period</span>
-          </div>
           <canvas id="progress-chart" height="140"></canvas>
           <div class="metric-tabs">
             <button class="metric-tab active" onclick="switchMetric(this,'duration')">
@@ -2353,11 +2349,6 @@
 
         <div id="filter-stats"></div>
 
-        <button id="overview-warn-banner" onclick="jumpToInsights()" style="display:none;width:calc(100% - 32px);margin:0 16px 16px;padding:10px 14px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:var(--radius-sm);color:var(--color-attention);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;text-align:left;display:none;align-items:center;justify-content:space-between;">
-          <span id="overview-warn-banner-text"></span>
-          <span>→</span>
-        </button>
-
         <div id="weekly-summary-card"></div>
 
         <div class="section-title" data-i18n="suggested_goal">Suggested Goal</div>
@@ -2378,37 +2369,11 @@
         <div class="section-title" style="padding-top: 8px;" data-i18n="this_week">This Week</div>
         <div class="section-sub" data-i18n="muscle_coverage">Your muscle coverage</div>
         <div id="progress-muscle-map" class="muscle-body-container"></div>
-
-        <div style="margin:8px 16px 20px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;">
-          <button onclick="toggleInsightsSection()" style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:none;border:none;color:var(--text);font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;">
-            <span>Deeper Insights <span id="insights-warn-pill" style="display:none;font-size:11px;font-weight:700;color:var(--gold);background:rgba(245,158,11,.15);padding:2px 8px;border-radius:10px;margin-left:6px;"></span></span>
-            <span id="insights-chevron" style="transition:transform .2s;">▾</span>
-          </button>
-          <div id="insights-body" style="display:none;padding:0 16px 16px;">
-            <div class="insight-card" style="margin:0 0 16px;">
-              <h3>Training Load (last 12 weeks)</h3>
-              <canvas id="training-load-chart" height="140"></canvas>
-              <div id="training-load-note" style="margin-top:10px;"></div>
-            </div>
-            <div class="insight-card" style="margin:0 0 16px;">
-              <h3>Push / Pull / Legs Balance</h3>
-              <div id="ppl-balance"></div>
-            </div>
-            <div class="insight-card" style="margin:0;">
-              <h3>Muscle Volume Warnings (this week)</h3>
-              <div id="muscle-warnings"></div>
-            </div>
-          </div>
-        </div>
       </div>
 
       <div id="ptab-exercises" style="display:none; padding: 0 16px;">
-        <input id="exercise-search" class="modal-search" placeholder="Search exercises…" oninput="renderExerciseHistory()"
-          style="width:100%;margin:12px 0 10px;box-sizing:border-box;">
-        <div class="time-filters" style="margin:0 0 12px;">
-          <button class="ex-sort-btn time-filter active" onclick="switchExerciseSort(this,'recent')">Recent</button>
-          <button class="ex-sort-btn time-filter" onclick="switchExerciseSort(this,'trained')">Most Trained</button>
-          <button class="ex-sort-btn time-filter" onclick="switchExerciseSort(this,'plateaued')">Plateaued</button>
+        <div style="padding: 20px 0; text-align: center; color: var(--text-muted); font-size: 14px;">
+          Exercise history will appear as you log workouts.
         </div>
         <div id="exercise-history-list"></div>
       </div>
@@ -2422,6 +2387,22 @@
         <div class="muscle-section-title">Muscle Split</div>
         <div class="muscle-section-sub">Distribution</div>
         <div class="muscle-list" id="muscle-split-list"></div>
+      </div>
+
+      <div id="ptab-insights" style="display:none;">
+        <div class="insight-card">
+          <h3>Training Load (last 12 weeks)</h3>
+          <canvas id="training-load-chart" height="140"></canvas>
+          <div id="training-load-note" style="margin-top:10px;"></div>
+        </div>
+        <div class="insight-card">
+          <h3>Push / Pull / Legs Balance</h3>
+          <div id="ppl-balance"></div>
+        </div>
+        <div class="insight-card">
+          <h3>Muscle Volume Warnings (this week)</h3>
+          <div id="muscle-warnings"></div>
+        </div>
       </div>
 
       <div id="ptab-plan" style="display:none;">
@@ -2470,9 +2451,7 @@
         <h1 data-i18n="header_you">You</h1>
       </div>
       <div class="you-header">
-        <div class="avatar" id="you-avatar" onclick="editAvatar()" style="cursor:pointer;position:relative;">W
-          <span style="position:absolute;bottom:-2px;right:-2px;width:18px;height:18px;background:var(--surface3);border:2px solid var(--bg);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;">✏️</span>
-        </div>
+        <div class="avatar" id="you-avatar">W</div>
         <div>
           <div class="you-name" id="you-name">Athlete</div>
           <div class="you-sub">Member since today</div>
@@ -2492,7 +2471,6 @@
           <div class="lbl" data-i18n="lbl_prs_set">PRs Set</div>
         </div>
       </div>
-      <div id="you-stats-context" style="text-align:center;font-size:11.5px;color:var(--text-muted);padding:0 20px 12px;"></div>
       <div class="badge-row" id="you-badges"></div>
       <div class="settings-section">
         <div
@@ -2516,16 +2494,13 @@
         </div>
         <div class="settings-item" onclick="pushSync(true)">
           <span data-i18n="cloud_sync">Cloud Sync</span>
-          <span style="display:flex;align-items:center;gap:8px;color:var(--text-muted);font-size:13px;">
-            <span id="sync-status-text">Never synced</span>
-            <button class="icon-btn sync-btn-icon" style="padding:2px;width:18px;height:18px;" tabindex="-1" aria-label="Sync now" onclick="event.stopPropagation();pushSync(true)">
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="m17 18-1.535 1.605a5 5 0 0 1-8-1.5" /><path d="M17 22v-4h-4" />
-                <path d="M20.996 15.251A4.5 4.5 0 0 0 17.495 8h-1.79a7 7 0 1 0-12.709 5.607" /><path d="M7 10v4h4" />
-                <path d="m7 14 1.535-1.605a5 5 0 0 1 8 1.5" />
-              </svg>
-            </button>
-          </span>
+          <span style="color:var(--text-muted);font-size:13px;" id="sync-status-text">Never synced</span>
+        </div>
+        <div class="settings-item" onclick="clearData()">
+          <span style="color: var(--red)" data-i18n="clear_all_data">Clear All Data</span>
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+          </svg>
         </div>
       </div>
 
@@ -2540,16 +2515,6 @@
         data-i18n="section_workout_history">
         Workout History</div>
       <div id="you-history-list" style="margin: 0 0 16px;"></div>
-
-      <div style="margin: 28px 16px 24px; padding-top: 18px; border-top: 1px solid var(--border);">
-        <div style="font-size: 11px; color: var(--red); letter-spacing: .08em; text-transform: uppercase; margin-bottom: 8px; padding: 0 4px; opacity: .8;">Danger Zone</div>
-        <div class="settings-item" onclick="clearData()" style="border: 1px solid rgba(239,68,68,.25); border-radius: var(--radius-sm); padding: 12px 14px; background: rgba(239,68,68,.05);">
-          <span style="color: var(--red); font-weight: 600;" data-i18n="clear_all_data">Clear All Data</span>
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="var(--red)" style="width:18px;height:18px;">
-            <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
-          </svg>
-        </div>
-      </div>
     </div>
 
 
@@ -2831,20 +2796,20 @@
 
       const payload = buildSyncPayload();
       const payloadStr = JSON.stringify(payload);
-      const btns = document.querySelectorAll('.sync-btn-icon');
+      const btn = document.getElementById('sync-btn');
 
       // Nothing changed since our last confirmed push — skip the network call
       // entirely rather than creating a redundant commit.
       if (payloadStr === localStorage.getItem('lastPushedPayload')) {
         if (manual) {
-          btns.forEach(btn => { btn.classList.add('synced'); setTimeout(() => btn.classList.remove('synced'), 1500); });
+          if (btn) { btn.classList.add('synced'); setTimeout(() => btn.classList.remove('synced'), 1500); }
           showToast('☁️ Already up to date');
         }
         return true;
       }
 
       syncInProgress = true;
-      btns.forEach(btn => btn.classList.add('syncing'));
+      if (btn) btn.classList.add('syncing');
       updateSyncStatusDisplay();
 
       try {
@@ -2862,11 +2827,11 @@
         localStorage.setItem('lastSyncTime', lastSyncTime);
         updateSyncStatusDisplay();
 
-        btns.forEach(btn => {
+        if (btn) {
           btn.classList.remove('syncing');
           btn.classList.add('synced');
           setTimeout(() => btn.classList.remove('synced'), 2000);
-        });
+        }
 
         // The backend may also independently determine nothing actually
         // changed (e.g. this device's local cache was stale/cleared) — in
@@ -2876,7 +2841,7 @@
 
       } catch (err) {
         console.error('Push sync error:', err);
-        btns.forEach(btn => btn.classList.remove('syncing'));
+        if (btn) btn.classList.remove('syncing');
         showToast('⚠️ Cloud sync failed: ' + err.message);
         return false;
 
@@ -3086,17 +3051,17 @@
       { id: 'squat', name: 'Barbell Squat', icon: '🦵', muscle: 'Quadriceps', primary: ['Quadriceps'], secondary: ['Hamstrings', 'Glutes'] },
       { id: 'deadlift', name: 'Barbell Deadlift', icon: '⚡', muscle: 'Lower Back', primary: ['Lower Back', 'Hamstrings'], secondary: ['Glutes', 'Upper Back', 'Forearms'] },
       { id: 'ohp', name: 'Overhead Press', icon: '🙌', muscle: 'Shoulders', primary: ['Front Delts', 'Side Delts'], secondary: ['Triceps'] },
-      { id: 'pullup', name: 'Pull-Up', icon: '🔝', muscle: 'Back', primary: ['Lats'], secondary: ['Biceps', 'Rear Delts', 'Forearms'] },
+      { id: 'pullup', name: 'Pull-Up', icon: '🔝', muscle: 'Back', primary: ['Lats'], secondary: ['Biceps', 'Rear Delts', 'Forearms'], isBodyweight: true },
       { id: 'row', name: 'Barbell Row', icon: '↩️', muscle: 'Back', primary: ['Upper Back', 'Lats'], secondary: ['Biceps', 'Rear Delts'] },
       { id: 'curl', name: 'Bicep Curl', icon: '💪', muscle: 'Biceps', primary: ['Biceps'], secondary: ['Forearms'] },
       { id: 'pushdown', name: 'Tricep Pushdown', icon: '⬇️', muscle: 'Triceps', primary: ['Triceps'], secondary: [] },
       { id: 'rdl', name: 'Romanian Deadlift', icon: '🏹', muscle: 'Hamstrings', primary: ['Hamstrings'], secondary: ['Glutes', 'Lower Back'] },
       { id: 'lunge', name: 'Lunges', icon: '🚶', muscle: 'Quadriceps', primary: ['Quadriceps'], secondary: ['Glutes', 'Hamstrings'] },
-      { id: 'dip', name: 'Dips', icon: '📉', muscle: 'Chest', primary: ['Chest', 'Triceps'], secondary: ['Front Delts'] },
+      { id: 'dip', name: 'Dips', icon: '📉', muscle: 'Chest', primary: ['Chest', 'Triceps'], secondary: ['Front Delts'], isBodyweight: true },
       { id: 'facepull', name: 'Face Pull', icon: '🎯', muscle: 'Shoulders', primary: ['Rear Delts'], secondary: ['Upper Back', 'Traps'] },
       { id: 'latpull', name: 'Lat Pulldown', icon: '⤵️', muscle: 'Back', primary: ['Lats'], secondary: ['Biceps', 'Rear Delts'] },
       { id: 'calf', name: 'Calf Raise', icon: '🦶', muscle: 'Calves', primary: ['Calves'], secondary: [] },
-      { id: 'plank', name: 'Plank', icon: '🧘', muscle: 'Abs', primary: ['Abs'], secondary: ['Obliques'] },
+      { id: 'plank', name: 'Plank', icon: '🧘', muscle: 'Abs', primary: ['Abs'], secondary: ['Obliques'], isBodyweight: true },
     ];
 
     // Full anatomical breakdown — 17 tracked groups. `color` only tints the bar in
@@ -3176,7 +3141,7 @@
         return `<div class="muscle-item" style="${isHidden ? 'opacity:.4;' : ''}">
       <div class="muscle-item-icon" style="cursor:pointer" onclick="openExerciseForm('${ex.id}')">${ex.icon}</div>
       <div style="flex:1;cursor:pointer" onclick="openExerciseForm('${ex.id}')">
-        <div class="muscle-item-name">${ex.name}${isHidden ? ' (hidden)' : ''}${isOverridden ? ' (edited)' : ''}</div>
+        <div class="muscle-item-name">${ex.name}${ex.isBodyweight ? ' ⚖️' : ''}${isHidden ? ' (hidden)' : ''}${isOverridden ? ' (edited)' : ''}</div>
         <div class="muscle-item-stats"><span style="color:var(--red)">●</span> ${primary} &nbsp; <span style="color:var(--accent-blue)">●</span> ${secondary}</div>
       </div>
       <div style="display:flex;gap:6px;flex-shrink:0">${actions}</div>
@@ -3234,6 +3199,8 @@
       document.getElementById('ef-name').value = existing ? existing.name : '';
       document.getElementById('ef-name').disabled = false;
       document.getElementById('ef-rest-preset').value = (exId && state.exerciseRestPresets && state.exerciseRestPresets[exId]) || '';
+      document.getElementById('ef-weight-step').value = (exId && state.exerciseWeightSteps && state.exerciseWeightSteps[exId]) || '';
+      document.getElementById('ef-is-bodyweight').checked = existing ? !!existing.isBodyweight : false;
 
       efMuscleSelection = {
         primary: new Set(existing ? existing.primary || [] : []),
@@ -3279,26 +3246,33 @@
       const secondary = Array.from(efMuscleSelection.secondary);
       const restPresetRaw = document.getElementById('ef-rest-preset').value;
       const restPreset = restPresetRaw !== '' ? parseInt(restPresetRaw) : null;
+      const isBodyweight = document.getElementById('ef-is-bodyweight').checked;
 
       let finalId = id;
       if (id) {
         const isBuiltin = EXERCISES_DB.some(e => e.id === id);
         if (isBuiltin) {
           state.exerciseOverrides = state.exerciseOverrides || {};
-          state.exerciseOverrides[id] = { name, icon, muscle: primary.join(', '), primary, secondary };
+          state.exerciseOverrides[id] = { name, icon, muscle: primary.join(', '), primary, secondary, isBodyweight };
         } else {
           const ex = state.customExercises.find(e => e.id === id);
-          if (ex) { ex.icon = icon; ex.name = name; ex.primary = primary; ex.secondary = secondary; ex.muscle = primary.join(', '); }
+          if (ex) { ex.icon = icon; ex.name = name; ex.primary = primary; ex.secondary = secondary; ex.muscle = primary.join(', '); ex.isBodyweight = isBodyweight; }
         }
       } else {
         const newId = 'custom-' + name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') + '-' + Date.now().toString(36).slice(-4);
-        state.customExercises.push({ id: newId, name, icon, muscle: primary.join(', '), primary, secondary });
+        state.customExercises.push({ id: newId, name, icon, muscle: primary.join(', '), primary, secondary, isBodyweight });
         finalId = newId;
       }
 
       if (!state.exerciseRestPresets) state.exerciseRestPresets = {};
       if (restPreset !== null && !isNaN(restPreset)) state.exerciseRestPresets[finalId] = restPreset;
       else delete state.exerciseRestPresets[finalId];
+
+      const weightStepRaw = document.getElementById('ef-weight-step').value;
+      const weightStep = weightStepRaw !== '' ? parseFloat(weightStepRaw) : null;
+      if (!state.exerciseWeightSteps) state.exerciseWeightSteps = {};
+      if (weightStep !== null && !isNaN(weightStep) && weightStep > 0) state.exerciseWeightSteps[finalId] = weightStep;
+      else delete state.exerciseWeightSteps[finalId];
 
       saveState();
       pushSync();
@@ -3420,9 +3394,11 @@
       hiddenExerciseIds: [], // built-in or custom exercise ids hidden from pickers
       exerciseOverrides: {}, // built-in exercise edits, keyed by id: { name, icon, muscle, primary, secondary }
       exerciseRestPresets: {}, // per-exercise target rest in seconds, keyed by exId
+      exerciseWeightSteps: {}, // per-exercise +/- stepper increment (kg) for the BW chip, keyed by exId
       favoriteExercises: [], // exercise ids starred in the picker
       recentExerciseIds: [], // exercise ids most recently added, newest first
       measurementHistory: {}, // dated snapshots per measurement field: { key: [{date, value}] }
+      lastBwDelta: {}, // remembered +/- delta per exercise for the bodyweight chip, keyed by exId
       language: 'en', // 'en' | 'pt'
       activeRestRow: null, // the one <tr> whose rest clock is currently ticking, across all exercises
       periodization: null, // { goalDate, athleteLevel, model, mesocycles: [...], generatedAt }
@@ -3476,10 +3452,12 @@
         state.hiddenExerciseIds = parsed.hiddenExerciseIds || [];
         state.exerciseOverrides = parsed.exerciseOverrides || {};
         state.exerciseRestPresets = parsed.exerciseRestPresets || {};
+        state.exerciseWeightSteps = parsed.exerciseWeightSteps || {};
         state.weeklyGoal = parsed.weeklyGoal || 3;
         state.favoriteExercises = parsed.favoriteExercises || [];
         state.recentExerciseIds = parsed.recentExerciseIds || [];
         state.measurementHistory = parsed.measurementHistory || {};
+        state.lastBwDelta = parsed.lastBwDelta || {};
         state.language = parsed.language || (navigator.language && navigator.language.toLowerCase().startsWith('pt') ? 'pt' : 'en');
         state.periodization = parsed.periodization || null;
         // Existing duplicates (e.g. from a prior sync bug) get silently
@@ -3498,28 +3476,27 @@
         hiddenExerciseIds: state.hiddenExerciseIds,
         exerciseOverrides: state.exerciseOverrides,
         exerciseRestPresets: state.exerciseRestPresets,
+        exerciseWeightSteps: state.exerciseWeightSteps,
         weeklyGoal: state.weeklyGoal,
         favoriteExercises: state.favoriteExercises,
         recentExerciseIds: state.recentExerciseIds,
         measurementHistory: state.measurementHistory,
+        lastBwDelta: state.lastBwDelta,
         language: state.language,
         periodization: state.periodization,
       }));
     }
 
     const PROFILE_FIELDS = [
-      { k: 'dob', l: 'DOB', g: 'Basics' }, { k: 'height', l: 'Height (cm)', g: 'Basics' }, { k: 'weight', l: 'Current Weight', g: 'Basics' },
-      { k: 'goalWeight', l: 'Goal Weight', g: 'Basics' }, { k: 'bodyFat', l: 'Body Fat %', g: 'Basics' },
-      { k: 'sport', l: 'Sport', g: 'Training Background' }, { k: 'activityLevel', l: 'Activity Level', g: 'Training Background' },
-      { k: 'trainingStyle', l: 'Training Style', g: 'Training Background' }, { k: 'injuries', l: 'Injuries', g: 'Training Background' },
-      { k: 'surgeries', l: 'Surgeries', g: 'Training Background' }, { k: 'prExercise', l: "PR's Exercise", g: 'Training Background' },
-      { k: 'notes', l: 'Notes', g: 'Training Background' },
-      { k: 'chest', l: 'Chest', g: 'Body Metrics' }, { k: 'waist', l: 'Waist', g: 'Body Metrics' }, { k: 'shoulders', l: 'Shoulders', g: 'Body Metrics' },
-      { k: 'lArm', l: 'L Arm', g: 'Body Metrics' }, { k: 'rArm', l: 'R Arm', g: 'Body Metrics' }, { k: 'lForearm', l: 'L Forearm', g: 'Body Metrics' },
-      { k: 'rForearm', l: 'R Forearm', g: 'Body Metrics' }, { k: 'lThigh', l: 'L Thigh', g: 'Body Metrics' }, { k: 'rThigh', l: 'R Thigh', g: 'Body Metrics' },
-      { k: 'lCalf', l: 'L Calf', g: 'Body Metrics' }, { k: 'rCalf', l: 'R Calf', g: 'Body Metrics' },
+      { k: 'dob', l: 'DOB' }, { k: 'height', l: 'Height (cm)' }, { k: 'weight', l: 'Current Weight' },
+      { k: 'goalWeight', l: 'Goal Weight' }, { k: 'bodyFat', l: 'Body Fat %' }, { k: 'sport', l: 'Sport' },
+      { k: 'activityLevel', l: 'Activity Level' }, { k: 'trainingStyle', l: 'Training Style' },
+      { k: 'injuries', l: 'Injuries' }, { k: 'surgeries', l: 'Surgeries' }, { k: 'prExercise', l: "PR's Exercise" },
+      { k: 'chest', l: 'Chest' }, { k: 'waist', l: 'Waist' }, { k: 'shoulders', l: 'Shoulders' },
+      { k: 'lArm', l: 'L Arm' }, { k: 'rArm', l: 'R Arm' }, { k: 'lForearm', l: 'L Forearm' },
+      { k: 'rForearm', l: 'R Forearm' }, { k: 'lThigh', l: 'L Thigh' }, { k: 'rThigh', l: 'R Thigh' },
+      { k: 'lCalf', l: 'L Calf' }, { k: 'rCalf', l: 'R Calf' }, { k: 'notes', l: 'Notes' },
     ];
-    const PROFILE_GROUPS = ['Basics', 'Training Background', 'Body Metrics'];
     // These fields get a dated history entry on every save (in addition to overwriting
     // the "current" value), so trends over time aren't lost the way a single overwritten
     // value would lose them — mirroring what the plain-text training log used to capture.
@@ -3559,14 +3536,6 @@
         saveState();
         renderGoal();
         showToast('Goal set to ' + state.weeklyGoal + '/week 🎯');
-        closeProfileFieldModal();
-        return;
-      }
-      if (profileFieldEditMode === 'avatar') {
-        if (!state.profile) state.profile = {};
-        state.profile.avatarEmoji = raw.slice(0, 2) || '';
-        saveState();
-        refreshYou();
         closeProfileFieldModal();
         return;
       }
@@ -3672,43 +3641,20 @@
     }
 
 
-    let profileGroupsOpen = { Basics: true, 'Training Background': false, 'Body Metrics': false };
-    function toggleProfileGroup(g) {
-      profileGroupsOpen[g] = !profileGroupsOpen[g];
-      renderProfile();
-    }
-    const CHEVRON = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>';
-
     function renderProfile() {
       const el = document.getElementById('you-profile-list');
       if (!el) return;
-      el.innerHTML = PROFILE_GROUPS.map(g => {
-        const fields = PROFILE_FIELDS.filter(f => f.g === g);
-        const filled = fields.filter(f => state.profile && state.profile[f.k]).length;
-        const open = !!profileGroupsOpen[g];
-        const rows = fields.map(f => {
-          const val = (state.profile && state.profile[f.k]) || '';
-          return `<div class="settings-item" onclick="editProfileField('${f.k}','${f.l}')">
+      el.innerHTML = PROFILE_FIELDS.map(f => {
+        const val = (state.profile && state.profile[f.k]) || '';
+        return `<div class="settings-item" onclick="editProfileField('${f.k}','${f.l}')">
       <span>${f.l}</span>
       <span style="color:var(--text-muted);font-size:13px;display:flex;align-items:center;gap:6px;">
         ${val ? val : '<span style="color:var(--text-dim)">Add</span>'}
         <svg width="18" height="18" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
       </span>
     </div>`;
-        }).join('');
-        return `<div class="profile-group">
-      <div class="profile-group-header" onclick="toggleProfileGroup('${g}')">
-        <span>${g}</span>
-        <span style="display:flex;align-items:center;gap:8px;">
-          <span class="profile-group-count">${filled}/${fields.length}</span>
-          <span style="display:inline-flex;transform:rotate(${open ? 90 : 0}deg);">${CHEVRON}</span>
-        </span>
-      </div>
-      <div style="display:${open ? 'block' : 'none'};">${rows}</div>
-    </div>`;
       }).join('');
     }
-
 
 
 
@@ -3762,7 +3708,6 @@
 
     function goToWorkout() { navigate('workout', document.querySelectorAll('.nav-btn')[1]); startWorkout(); }
 
-
     // ═══════════════════════════════════════════
     //  WORKOUT
     // ═══════════════════════════════════════════
@@ -3776,7 +3721,6 @@
       document.getElementById('workout-note').value = '';
       document.getElementById('workout-date').value = '';
       document.getElementById('workout-duration-input').value = '';
-      document.getElementById('workout-bodyweight-input').value = '';
       document.getElementById('exercises-container').innerHTML = '';
       startTimer();
     }
@@ -3807,10 +3751,9 @@
       const manualDate = document.getElementById('workout-date').value;
       const finalDate = manualDate ? new Date(manualDate).toISOString() : new Date().toISOString();
 
-      // Logging bodyweight here is the same data point as the "Weight" profile field —
-      // feeding both keeps the two in sync instead of drifting apart as separate sources.
-      const bwInput = parseFloat(document.getElementById('workout-bodyweight-input').value);
-      const bodyWeight = isNaN(bwInput) ? null : bwInput;
+      // Manual per-workout bodyweight entry was removed from the UI — bodyweight
+      // now comes solely from the profile (state.profile.weight / You tab).
+      const bodyWeight = null;
 
       // Collect exercises from DOM
       const exBlocks = document.querySelectorAll('.ex-block');
@@ -3832,6 +3775,9 @@
           const tempoEl = row.querySelector('.tempo-input');
           let variations = [];
           try { variations = JSON.parse(row.dataset.variations || '[]'); } catch (e) { variations = []; }
+          const bwWrapEl = row.querySelector('.bw-wrap');
+          const bwMode = bwWrapEl ? bwWrapEl.dataset.mode : undefined;
+          const extWeight = bwWrapEl ? (parseFloat(bwWrapEl.dataset.delta) || 0) : undefined;
           // Live workout: rest was ticking on row.dataset.restSeconds (stopped once the
           // next set was added). Editing a saved workout: rest comes from the editable input.
           let restSeconds = null;
@@ -3850,6 +3796,7 @@
             tempo: (tempoEl?.value || '').trim(),
             variations,
             restSeconds: (restSeconds !== null && !isNaN(restSeconds)) ? restSeconds : null,
+            bwMode, extWeight,
           };
         });
         // Only a set that was followed by another set has a real "rest after it" —
@@ -3883,11 +3830,16 @@
             if (s.weight * s.reps > (prev.volume || 0)) s.prs.push('Volume');
             if (s.reps > (prev.reps || 0)) s.prs.push('Reps');
           }
-          if (!s.warmup && s.reps > 0 && isBodyweightExercise(ex.name)) {
+          if (!s.warmup && s.reps > 0 && exerciseSupportsBW(ex.exId, ex.name)) {
             const bwPrev = getBodyweightBestFor(ex.exId);
             const bw = getUserBodyweight();
-            if (s.weight === 0 && s.reps > (bwPrev.bestReps || 0)) s.prs.push('Bodyweight');
-            else if (s.weight > 0 && (bw + s.weight) > (bwPrev.bestSystemWeight || 0)) s.prs.push('Bodyweight');
+            if (s.bwMode !== undefined) {
+              if (s.bwMode === 'bw' && s.reps > (bwPrev.bestReps || 0)) s.prs.push('Bodyweight');
+              else if (s.bwMode === 'added' && (bw + (s.extWeight || 0)) > (bwPrev.bestSystemWeight || 0)) s.prs.push('Bodyweight');
+            } else {
+              if (s.weight === 0 && s.reps > (bwPrev.bestReps || 0)) s.prs.push('Bodyweight');
+              else if (s.weight > 0 && (bw + s.weight) > (bwPrev.bestSystemWeight || 0)) s.prs.push('Bodyweight');
+            }
           }
         });
       });
@@ -3962,12 +3914,141 @@
       state.workouts.forEach(w => {
         w.exercises.filter(e => e.exId === exId).forEach(ex => {
           ex.sets.filter(s => !s.warmup).forEach(s => {
-            if (s.weight === 0 && s.reps > bestReps) bestReps = s.reps;
-            if (s.weight > 0 && (bw + s.weight) > bestSystemWeight) bestSystemWeight = bw + s.weight;
+            if (s.bwMode !== undefined) {
+              if (s.bwMode === 'bw' && s.reps > bestReps) bestReps = s.reps;
+              else if (s.bwMode === 'added') { const sw = bw + (s.extWeight || 0); if (sw > bestSystemWeight) bestSystemWeight = sw; }
+            } else {
+              if (s.weight === 0 && s.reps > bestReps) bestReps = s.reps;
+              if (s.weight > 0 && (bw + s.weight) > bestSystemWeight) bestSystemWeight = bw + s.weight;
+            }
           });
         });
       });
       return { bestReps, bestSystemWeight };
+    }
+
+    // Whether an exercise supports the bodyweight +/- weight chip: explicit flag
+    // (set via Exercise Manager) wins, otherwise fall back to name-keyword match —
+    // so custom/imported exercises (pushup, ring row, etc.) still get it.
+    function exerciseSupportsBW(exId, name) {
+      const def = exId ? getAllExercises().find(e => e.id === exId) : null;
+      if (def && typeof def.isBodyweight === 'boolean') return def.isBodyweight;
+      return isBodyweightExercise(name);
+    }
+
+    function bwChipLabel(mode, totalVal) {
+      if (mode === 'added') return `＋ Add · ${totalVal}kg`;
+      if (mode === 'assisted') return `− Assist · ${totalVal}kg`;
+      return `BW · ${totalVal}kg`;
+    }
+
+    function computeBwTotal(mode, delta) {
+      const bw = getUserBodyweight();
+      if (mode === 'added') return Math.round((bw + delta) * 100) / 100;
+      if (mode === 'assisted') return Math.max(0, Math.round((bw - delta) * 100) / 100);
+      return bw;
+    }
+
+    // Jumps to the You tab and opens the weight field directly, instead of leaving
+    // the person to remember to go find it themselves.
+    function goSetBodyweight() {
+      navigateToTab('you');
+      editProfileField('weight', 'Current Weight');
+    }
+
+    // Builds the BW weight-cell markup: one pill (styled like the app's other tag
+    // pills — see .variations-btn) that shows both the mode and the resulting total
+    // weight together, cycling Bodyweight → Added → Assisted on tap. A +/- stepper
+    // (using a per-exercise increment, default 2.5kg) appears only for Added/Assisted.
+    // A hidden .w-input holds the total system weight the rest of the app reads.
+    // Warmup rows render a locked, non-interactive BW pill.
+    function renderBwWrapHTML(mode, delta, totalVal, exId, locked) {
+      const bwUnset = !(state.profile && state.profile.weight);
+      const stepperHTML = (mode === 'bw' || locked) ? '' : `<div class="bw-stepper">
+      <button type="button" class="bw-step-btn" onclick="stepBwDelta(this,-1)">−</button>
+      <input type="number" class="bw-delta-input" step="0.5" value="${delta || ''}" placeholder="kg" oninput="updateBwWeight(this)" onkeydown="if(event.key==='Enter'){event.preventDefault();advanceFromBw(this);}">
+      <button type="button" class="bw-step-btn" onclick="stepBwDelta(this,1)">+</button>
+    </div>`;
+      const chipClick = locked ? '' : `onclick="cycleBwMode(this)"`;
+      return `<div class="bw-wrap" data-mode="${mode}" data-delta="${delta}" data-exid="${exId || ''}">
+      <button type="button" class="bw-chip mode-${mode}" ${chipClick} ${locked ? 'style="opacity:.55;cursor:default;"' : ''} title="${locked ? 'Warmup — bodyweight only' : 'Tap to cycle: Bodyweight / Added / Assisted'}">${bwChipLabel(mode, totalVal)}</button>
+      ${stepperHTML}
+      ${bwUnset ? `<span class="bw-warn" onclick="goSetBodyweight()">Set weight →</span>` : ''}
+      <input type="hidden" class="set-input w-input" value="${totalVal}">
+    </div>`;
+    }
+
+    function cycleBwMode(btn) {
+      const wrap = btn.closest('.bw-wrap');
+      const td = wrap.closest('td');
+      const modes = ['bw', 'added', 'assisted'];
+      const mode = modes[(modes.indexOf(wrap.dataset.mode) + 1) % modes.length];
+      const exId = wrap.dataset.exid;
+      // Recall the last delta used for this exercise/mode combo instead of making
+      // the person retype the same added/assisted weight every set.
+      const delta = mode === 'bw' ? 0 : ((state.lastBwDelta && state.lastBwDelta[exId]) || 2.5);
+      td.innerHTML = renderBwWrapHTML(mode, delta, computeBwTotal(mode, delta), exId, false);
+      if (mode !== 'bw') { const di = td.querySelector('.bw-delta-input'); if (di) di.focus(); }
+    }
+
+    // dir is -1 or +1; the actual kg step comes from a per-exercise preset
+    // (Exercise Manager → "Weight step"), defaulting to 2.5kg.
+    function stepBwDelta(btn, dir) {
+      const wrap = btn.closest('.bw-wrap');
+      const input = wrap.querySelector('.bw-delta-input');
+      const exId = wrap.dataset.exid;
+      const step = (state.exerciseWeightSteps && state.exerciseWeightSteps[exId]) || 2.5;
+      input.value = Math.max(0, (parseFloat(input.value) || 0) + dir * step);
+      updateBwWeight(input);
+    }
+
+    function updateBwWeight(inputEl) {
+      const wrap = inputEl.closest('.bw-wrap');
+      const hidden = wrap.querySelector('.w-input');
+      const chipBtn = wrap.querySelector('.bw-chip');
+      const delta = parseFloat(inputEl.value) || 0;
+      wrap.dataset.delta = delta;
+      const total = computeBwTotal(wrap.dataset.mode, delta);
+      hidden.value = total;
+      if (chipBtn) chipBtn.textContent = bwChipLabel(wrap.dataset.mode, total);
+      const exId = wrap.dataset.exid;
+      if (exId && wrap.dataset.mode !== 'bw') {
+        if (!state.lastBwDelta) state.lastBwDelta = {};
+        state.lastBwDelta[exId] = delta;
+        saveState();
+      }
+    }
+
+    // Enter in the delta field jumps straight to Reps — saves a tap vs. tapping out
+    // to the next field manually.
+    function advanceFromBw(inputEl) {
+      const row = inputEl.closest('tr');
+      const reps = row && row.querySelector('.r-input');
+      if (reps) reps.focus();
+    }
+
+    // Rebuilds every set row's weight cell in a block after the exercise was swapped
+    // (openExReplacePicker), so switching between a bodyweight and external-weight
+    // exercise mid-log gets the right input type instead of leaving the old one.
+    function refreshBwCellsForBlock(blockId, isBW) {
+      const tbody = document.getElementById('sets-' + blockId);
+      const exId = document.getElementById(blockId)?.dataset.exId;
+      if (!tbody) return;
+      tbody.querySelectorAll('tr').forEach(tr => {
+        const hidden = tr.querySelector('.w-input');
+        const curWeight = parseFloat(hidden?.value) || 0;
+        const td = hidden.closest('td');
+        const isWarmup = tr.dataset.warmup === 'true';
+        if (isBW) {
+          const bw = getUserBodyweight();
+          let mode = 'bw', delta = 0;
+          if (curWeight > bw) { mode = 'added'; delta = curWeight - bw; }
+          else if (curWeight > 0 && curWeight < bw) { mode = 'assisted'; delta = bw - curWeight; }
+          td.innerHTML = renderBwWrapHTML(isWarmup ? 'bw' : mode, isWarmup ? 0 : delta, isWarmup ? bw : (curWeight || bw), exId, isWarmup);
+        } else {
+          td.innerHTML = `<input class="set-input w-input" type="number" min="0" step="0.5" value="${curWeight}">`;
+        }
+      });
     }
 
     function getBestFor(exId) {
@@ -4132,6 +4213,7 @@
       if (thumb) thumb.textContent = def.icon;
       if (nameEl) nameEl.textContent = def.name;
       if (muscleEl) muscleEl.textContent = def.muscle;
+      refreshBwCellsForBlock(blockId, exerciseSupportsBW(exId, def.name));
       showToast('Exercise changed to ' + def.name);
     }
 
@@ -4331,6 +4413,11 @@
       tr.dataset.restSeconds = '0';
       tr.dataset.restRunning = 'false';
       const badgeClass = isWarmup ? 'warmup' : 'numbered';
+      const exDefForBW = blockEl ? getAllExercises().find(e => e.id === blockEl.dataset.exId) : null;
+      const isBW = exerciseSupportsBW(blockEl?.dataset.exId, exDefForBW?.name);
+      const weightCellHTML = isBW
+        ? renderBwWrapHTML('bw', 0, getUserBodyweight(), blockEl?.dataset.exId, isWarmup)
+        : `<input class="set-input w-input" type="number" min="0" step="0.5" placeholder="${lastSet ? lastSet.weight + 'kg' : 'kg'}" title="${lastSet ? 'Last: ' + lastSet.weight + 'kg x ' + lastSet.reps : ''}">`;
       let restCellHTML;
       if (!tracksRest) {
         // A non-first member of a combined exercise — performed back-to-back with no
@@ -4344,7 +4431,7 @@
       }
       tr.innerHTML = `
     <td><span class="set-badge ${badgeClass}" style="cursor:pointer" onclick="toggleSetType(this)" title="Click to toggle Warmup/Normal">${label}</span></td>
-    <td><input class="set-input w-input" type="number" min="0" step="0.5" placeholder="${lastSet ? lastSet.weight + 'kg' : 'kg'}" title="${lastSet ? 'Last: ' + lastSet.weight + 'kg x ' + lastSet.reps : ''}"></td>
+    <td>${weightCellHTML}</td>
     <td><input class="set-input r-input" type="number" min="0" placeholder="${lastSet ? lastSet.reps : 'reps'}" title="${lastSet ? 'Last: ' + lastSet.weight + 'kg x ' + lastSet.reps : ''}"></td>
     <td><button type="button" class="variations-btn" onclick="openVariationsPicker(this)">+ Tag</button></td>
 
@@ -4572,54 +4659,10 @@
       setDeltaBadge('home-delta-volume', Math.round(totalVolume - lastVolume), ' kg');
       renderStreakBadge();
 
-      // One-line interpretive summary
-      const goal = state.weeklyGoal || 3;
-      const summaryEl = document.getElementById('snapshot-summary');
-      if (summaryEl) {
-        if (weekWorkouts.length >= goal) {
-          summaryEl.textContent = `🎯 Goal reached — ${weekWorkouts.length}/${goal} workouts this week`;
-        } else if (weekWorkouts.length > 0) {
-          summaryEl.textContent = `On track — ${weekWorkouts.length}/${goal} toward your weekly goal`;
-        } else if (state.workouts.length > 0) {
-          const lastDate = new Date(state.workouts[0].date);
-          const days = Math.floor((now - lastDate) / 86400000);
-          summaryEl.textContent = days <= 0 ? `Logged today — nothing else yet this week` : `${days} day${days === 1 ? '' : 's'} since your last session`;
-        } else {
-          summaryEl.textContent = '';
-        }
-      }
-
-      // Compact plan status (only if a periodization plan is active)
-      const planEl = document.getElementById('plan-status-line');
-      if (planEl) {
-        const micro = (typeof getCurrentMicrocycle === 'function') ? getCurrentMicrocycle() : null;
-        if (micro) {
-          planEl.style.display = 'block';
-          planEl.innerHTML = `📋 <span style="color:${PHASE_COLOR[micro.phase] || 'var(--text-muted)'}">${titleCase(micro.phase)}</span> week · target ${micro.plannedVolume} sets`;
-        } else {
-          planEl.style.display = 'none';
-        }
-      }
-
-      // CTA: full prompt for true first-timers, lighter nudge if inactive this week only
-      const cta = document.getElementById('home-cta');
-      if (state.workouts.length === 0) {
-        cta.style.display = 'block';
-        document.getElementById('cta-title-el').textContent = t('cta_title');
-        document.getElementById('cta-desc-el').textContent = t('cta_desc');
-        document.getElementById('cta-btn-el').textContent = t('cta_btn');
-      } else if (weekWorkouts.length === 0) {
-        cta.style.display = 'block';
-        document.getElementById('cta-title-el').textContent = "You haven't logged this week yet";
-        document.getElementById('cta-desc-el').textContent = 'Get back on track — start today\'s session.';
-        document.getElementById('cta-btn-el').textContent = 'Start workout';
-      } else {
-        cta.style.display = 'none';
-      }
+      // CTA visibility
+      document.getElementById('home-cta').style.display = state.workouts.length === 0 ? 'block' : 'none';
 
       // Feed
-      const seeAllEl = document.getElementById('see-all-workouts');
-      if (seeAllEl) seeAllEl.style.display = state.workouts.length > 5 ? 'inline' : 'none';
       const feed = document.getElementById('home-feed');
       if (state.workouts.length === 0) {
         feed.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:14px;">No workouts yet. Start your first one!</div>';
@@ -4645,12 +4688,8 @@
 
     function renderFeedCard(w) {
       const d = new Date(w.date);
-      const dayDiff = Math.round((new Date().setHours(0, 0, 0, 0) - new Date(d).setHours(0, 0, 0, 0)) / 86400000);
-      const dayLabel = dayDiff === 0 ? 'Today' : dayDiff === 1 ? 'Yesterday' : null;
-      const timeStr = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-      const dateStr = dayLabel
-        ? `<strong style="color:var(--accent-blue)">${dayLabel}</strong> at ${timeStr}`
-        : d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) + ' at ' + timeStr;
+      const dateStr = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) + ' at ' +
+        d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 
       const medals = w.records > 0 ? `<span class="medal">🥇</span><span style="font-size:13px;font-weight:700">${w.records}</span>` : '';
       const exerciseCells = w.exercises.slice(0, 6).map(ex => {
@@ -4668,9 +4707,11 @@
       </div>`;
         }
         const sets = ex.sets.filter(s => !s.warmup).length;
+        const exVol = ex.sets.reduce((s, set) => s + set.weight * set.reps, 0);
         return `<div class="exercise-cell">
       <div class="ex-icon">${ex.icon}</div>
       <div class="ex-name">${sets}x ${ex.name.split(' ').slice(0, 3).join(' ')}</div>
+      <div class="ex-sets">🏋️ ${Math.round(exVol)}kg</div>
     </div>`;
       }).join('');
       const extra = w.exercises.length > 6 ? `<div class="exercise-cell" style="align-items:center;justify-content:center;color:var(--text-muted);font-size:12px">+${w.exercises.length - 6} more</div>` : '';
@@ -5089,71 +5130,12 @@
     function switchProgressTab(btn, tab) {
       document.querySelectorAll('.progress-tab').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      ['overview', 'exercises', 'muscles', 'plan'].forEach(t => {
+      ['overview', 'exercises', 'muscles', 'insights', 'plan'].forEach(t => {
         document.getElementById('ptab-' + t).style.display = t === tab ? 'block' : 'none';
       });
       if (tab === 'muscles') renderMuscleSplit();
+      if (tab === 'insights') renderInsights();
       if (tab === 'plan') renderPeriodizationTab();
-    }
-
-    // Insights now live inside Overview as a collapsible section (rather than their
-    // own tab) — collapsed by default, rendered lazily on first expand since its
-    // canvas would otherwise size to 0 while hidden. Re-rendered on every open so
-    // it reflects the latest logged sets.
-    let insightsOpen = false;
-    function toggleInsightsSection() {
-      insightsOpen = !insightsOpen;
-      document.getElementById('insights-body').style.display = insightsOpen ? 'block' : 'none';
-      document.getElementById('insights-chevron').style.transform = insightsOpen ? 'rotate(180deg)' : '';
-      if (insightsOpen) renderInsights();
-    }
-
-    // Combines muscle-volume warnings + PPL imbalance into one count, surfaced two
-    // ways: a small "N to review" pill on the collapsed Insights header, and a
-    // tappable "N things to check" banner at the top of Overview so the warnings
-    // aren't missed just because Insights starts collapsed / isn't its own tab.
-    function updateInsightsWarnPill() {
-      const now = new Date();
-      const weekStart = new Date(now); weekStart.setDate(now.getDate() - now.getDay()); weekStart.setHours(0, 0, 0, 0);
-      const weekWorkouts = state.workouts.filter(w => new Date(w.date) >= weekStart);
-      const sets = weeklyMuscleSets(weekWorkouts);
-      let count = 0;
-      MUSCLE_GROUPS.forEach(m => {
-        const n = sets[m.name] || 0;
-        const [lo, hi] = m.target || [10, 20];
-        if (n > 0 && (n < lo || n > hi)) count++;
-      });
-
-      const allSets = weeklyMuscleSets(state.workouts);
-      const totals = { push: 0, pull: 0, legs: 0 };
-      Object.entries(allSets).forEach(([m, v]) => { const cat = MUSCLE_CATEGORY[m]; if (cat) totals[cat] += v; });
-      const sum = totals.push + totals.pull + totals.legs;
-      if (sum) {
-        const pct = k => Math.round((totals[k] / sum) * 100);
-        if (pct('legs') < 25) count++;
-        if (pct('pull') < pct('push') - 15) count++;
-      }
-
-      const pill = document.getElementById('insights-warn-pill');
-      if (pill) {
-        if (count > 0) { pill.style.display = 'inline'; pill.textContent = `${count} to review`; }
-        else pill.style.display = 'none';
-      }
-      const banner = document.getElementById('overview-warn-banner');
-      if (banner) {
-        if (count > 0) { banner.style.display = 'flex'; document.getElementById('overview-warn-banner-text').textContent = `⚠️ ${count} thing${count > 1 ? 's' : ''} to check`; }
-        else banner.style.display = 'none';
-      }
-    }
-
-    // Jumps from anywhere (Overview banner, Plan tab) into the Deeper Insights
-    // section: switches to Progress → Overview, expands it if collapsed, scrolls
-    // it into view.
-    function jumpToInsights() {
-      navigateToTab('progress');
-      switchProgressTab(document.querySelectorAll('.progress-tab')[0], 'overview');
-      if (!insightsOpen) toggleInsightsSection();
-      setTimeout(() => document.getElementById('insights-body')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);
     }
 
     function switchFilter(btn, f) {
@@ -5163,7 +5145,7 @@
       renderChart();
     }
 
-    function getFilterCutoff() {
+    function getFilteredWorkouts() {
       const now = new Date();
       const cutoff = new Date();
       if (state.currentFilter === 'week') {
@@ -5182,19 +5164,20 @@
       } else {
         cutoff.setMonth(now.getMonth() - 3);
       }
-      return cutoff;
-    }
-
-    function getFilteredWorkouts() {
-      const cutoff = getFilterCutoff();
       return state.workouts.filter(w => new Date(w.date) >= cutoff);
     }
 
-    // Buckets a set of workouts into local-date keys (daily or weekly), returning
-    // sorted labels + per-bucket totals/workout-ids — shared by the current-period
-    // and previous-period (ghost line) computations so both bucket identically.
-    function bucketWorkouts(workouts, useDays) {
+    function renderChart() {
+      const workouts = getFilteredWorkouts();
+      const now = new Date();
+
+      // Decide bucket size based on filter
+      const useDays = state.currentFilter === 'week' || state.currentFilter === 'month';
+
+      // Local-date key (YYYY-MM-DD) — avoids the UTC round-trip that toISOString()
+      // introduces, which shifted bucket dates by a day for timezones behind UTC.
       const localKey = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+
       const buckets = {};
       workouts.forEach(w => {
         const d = new Date(w.date);
@@ -5202,41 +5185,28 @@
         if (useDays) {
           bucketDate = new Date(d.getFullYear(), d.getMonth(), d.getDate());
         } else {
+          // weekly buckets — snap to the local Sunday of that week
           bucketDate = new Date(d.getFullYear(), d.getMonth(), d.getDate());
           bucketDate.setDate(bucketDate.getDate() - bucketDate.getDay());
         }
         const key = localKey(bucketDate);
-        if (!buckets[key]) buckets[key] = { duration: 0, volume: 0, workouts: 0, date: bucketDate, ids: [], hasPR: false };
+        if (!buckets[key]) buckets[key] = { duration: 0, volume: 0, workouts: 0, date: bucketDate };
         buckets[key].duration += w.duration;
         buckets[key].volume += w.volume;
         buckets[key].workouts++;
-        buckets[key].ids.push(w.id);
-        if (w.exercises.some(ex => (ex.sets || []).some(s => s.prs && s.prs.length))) buckets[key].hasPR = true;
       });
-      const keys = Object.keys(buckets).sort();
-      return { buckets, keys };
-    }
 
-    function metricValue(bucket) {
-      if (state.currentMetric === 'duration') return bucket.duration;
-      if (state.currentMetric === 'volume') return Math.round(bucket.volume);
-      return bucket.workouts;
-    }
-
-    function renderChart() {
-      const workouts = getFilteredWorkouts();
-      const now = new Date();
-      const useDays = state.currentFilter === 'week' || state.currentFilter === 'month';
-
-      const { buckets, keys } = bucketWorkouts(workouts, useDays);
-      const labelKeys = keys.slice(-24);
-      const values = labelKeys.map(k => metricValue(buckets[k]));
-      const prFlags = labelKeys.map(k => buckets[k].hasPR);
-      const idsByPoint = labelKeys.map(k => buckets[k].ids);
+      const labels = Object.keys(buckets).sort().slice(-24);
+      const values = labels.map(k => {
+        if (state.currentMetric === 'duration') return buckets[k].duration;
+        if (state.currentMetric === 'volume') return Math.round(buckets[k].volume);
+        return buckets[k].workouts;
+      });
 
       const total = values.reduce((s, v) => s + v, 0);
       const unit = state.currentMetric === 'duration' ? 'min' : state.currentMetric === 'volume' ? 'kg' : '';
 
+      // Period label
       const periodLabels = {
         week: 'This week', month: 'This month',
         '3m': 'Last 3 months', '6m': 'Last 6 months',
@@ -5245,66 +5215,31 @@
       document.getElementById('chart-period-label').textContent = periodLabels[state.currentFilter] || '';
       document.getElementById('chart-main-value').textContent = total + unit;
 
-      // Ghost "previous period" line: same-length window immediately before the
-      // current one, re-bucketed the same way, aligned by position (not calendar
-      // date) so it lines up under the current period's x-axis. Skipped for "all
-      // time" since there's no meaningful "previous" window to compare against.
-      let prevValues = null;
-      if (state.currentFilter !== 'all' && labelKeys.length) {
-        const cutoff = getFilterCutoff();
-        const spanMs = now - cutoff;
-        const prevCutoff = new Date(cutoff.getTime() - spanMs);
-        const prevWorkouts = state.workouts.filter(w => { const d = new Date(w.date); return d >= prevCutoff && d < cutoff; });
-        const prevBuckets = bucketWorkouts(prevWorkouts, useDays);
-        const prevVals = prevBuckets.keys.map(k => metricValue(prevBuckets.buckets[k]));
-        // Align to the tail of the current label count (older buckets padded with null).
-        prevValues = new Array(labelKeys.length).fill(null);
-        for (let i = 0; i < Math.min(prevVals.length, labelKeys.length); i++) {
-          prevValues[labelKeys.length - 1 - i] = prevVals[prevVals.length - 1 - i];
-        }
-      }
-
       const ctx = document.getElementById('progress-chart').getContext('2d');
       if (chartInstance) chartInstance.destroy();
-      const datasets = [{
-        data: values.length ? values : [0],
-        borderColor: '#3b82f6',
-        backgroundColor: 'rgba(59,130,246,0.08)',
-        fill: true,
-        tension: 0.35,
-        pointBackgroundColor: values.map((v, i) => prFlags[i] ? '#f59e0b' : '#3b82f6'),
-        pointStyle: values.map((v, i) => prFlags[i] ? 'star' : 'circle'),
-        pointRadius: values.map((v, i) => prFlags[i] ? 7 : 4),
-        pointHoverRadius: values.map((v, i) => prFlags[i] ? 9 : 6),
-        order: 1,
-      }];
-      if (prevValues) {
-        datasets.push({
-          data: prevValues, borderColor: 'rgba(148,163,184,.55)', backgroundColor: 'transparent',
-          borderDash: [5, 5], fill: false, tension: 0.35, pointRadius: 0, pointHoverRadius: 0,
-          spanGaps: true, order: 2,
-        });
-      }
-
       chartInstance = new Chart(ctx, {
         type: 'line',
         data: {
-          labels: labelKeys.length ? labelKeys.map(k => buckets[k].date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })) : ['No data'],
-          datasets,
+          labels: labels.length ? labels.map(l => {
+            return buckets[l].date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+          }) : ['No data'],
+          datasets: [{
+            data: values.length ? values : [0],
+            borderColor: '#3b82f6',
+            backgroundColor: 'rgba(59,130,246,0.08)',
+            fill: true,
+            tension: 0.35,
+            pointBackgroundColor: '#3b82f6',
+            pointRadius: 4,
+            pointHoverRadius: 6,
+          }]
         },
         options: {
           responsive: true,
-          onClick: (evt, elements) => {
-            if (!elements.length) return;
-            const idx = elements[0].index;
-            const ids = idsByPoint[idx];
-            if (ids && ids.length) openDetail(ids[ids.length - 1]);
-          },
           plugins: {
-            legend: { display: false },
-            tooltip: {
+            legend: { display: false }, tooltip: {
               callbacks: {
-                label: c => (c.datasetIndex === 0 ? (prFlags[c.dataIndex] ? '🏅 PR · ' : '') + c.parsed.y + unit : 'Previous: ' + c.parsed.y + unit)
+                label: ctx => ctx.parsed.y + unit
               }
             }
           },
@@ -5315,8 +5250,7 @@
         }
       });
 
-      document.getElementById('chart-legend-row').style.display = prevValues ? 'flex' : 'none';
-
+      // Also update the summary stats below the chart
       renderFilterStats(workouts);
     }
 
@@ -5388,8 +5322,6 @@
       renderWeeklySummary();
       renderProgressMuscleMap();
       renderExerciseHistory();
-      updateInsightsWarnPill();
-      if (insightsOpen) renderInsights();
     }
 
     function renderGoal() {
@@ -5466,119 +5398,31 @@
       return { arrow, weeksStalled: stalled };
     }
 
-    let exerciseSortMode = 'recent';
-    function switchExerciseSort(btn, mode) {
-      document.querySelectorAll('#ptab-exercises .ex-sort-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      exerciseSortMode = mode;
-      renderExerciseHistory();
-    }
-
     function renderExerciseHistory() {
       const el = document.getElementById('exercise-history-list');
       const seen = {};
       state.workouts.forEach(w => {
         w.exercises.forEach(ex => {
-          if (!seen[ex.exId]) seen[ex.exId] = { exId: ex.exId, name: ex.name, icon: ex.icon, count: 0, volume: 0, lastDate: w.date };
+          if (!seen[ex.exId]) seen[ex.exId] = { exId: ex.exId, name: ex.name, icon: ex.icon, count: 0, volume: 0 };
           seen[ex.exId].count++;
-          if (new Date(w.date) > new Date(seen[ex.exId].lastDate)) seen[ex.exId].lastDate = w.date;
           (ex.sets || []).filter(s => !s.warmup).forEach(s => { seen[ex.exId].volume += s.weight * s.reps; });
         });
       });
-      let items = Object.values(seen);
-      if (!items.length) {
-        el.innerHTML = emptyState('🏋️', 'Log a workout to start building exercise history — trends, volume, and plateau detection will show up here.');
-        return;
-      }
-
-      const query = (document.getElementById('exercise-search')?.value || '').trim().toLowerCase();
-      if (query) items = items.filter(it => it.name.toLowerCase().includes(query));
-
-      // Attach trend/plateau info once so both sorting and rendering reuse it
-      // instead of recomputing per comparison during sort.
-      items = items.map(it => ({ ...it, trend: getExerciseTrend(it.exId), plateaued: isExercisePlateaued(it.exId) }));
-
-      if (exerciseSortMode === 'trained') {
-        items.sort((a, b) => b.count - a.count);
-      } else if (exerciseSortMode === 'plateaued') {
-        items.sort((a, b) => (b.plateaued - a.plateaued) || (b.trend.weeksStalled - a.trend.weeksStalled));
-      } else {
-        items.sort((a, b) => new Date(b.lastDate) - new Date(a.lastDate));
-      }
-
-      if (!items.length) {
-        el.innerHTML = emptyState('🔍', `No exercises match "${query}". Try a different search term.`);
-        return;
-      }
-      if (exerciseSortMode === 'plateaued' && !items.some(it => it.plateaued)) {
-        el.innerHTML = emptyState('✅', `No plateaus detected — every exercise has shown progress across its last ${PLATEAU_SESSION_COUNT} sessions.`);
-        return;
-      }
-
+      const items = Object.values(seen);
+      if (!items.length) { el.innerHTML = ''; return; }
       el.innerHTML = items.map(it => {
-        const plateauTag = it.trend.weeksStalled >= PLATEAU_SESSION_COUNT ? `<span class="plateau-tag">⚠️ Stalled ${it.trend.weeksStalled}x</span>` : '';
+        const trend = getExerciseTrend(it.exId);
+        const plateauTag = trend.weeksStalled >= PLATEAU_SESSION_COUNT ? `<span class="plateau-tag">⚠️ Stalled ${trend.weeksStalled}x</span>` : '';
         return `
     <div class="muscle-item" style="cursor:pointer" onclick="openExerciseDetail('${it.exId}')">
       <div class="muscle-item-icon">${it.icon}</div>
       <div style="flex:1">
-        <div class="muscle-item-name">${it.trend.arrow} ${it.name}${plateauTag}</div>
+        <div class="muscle-item-name">${trend.arrow} ${it.name}${plateauTag}</div>
         <div class="muscle-item-stats">${Math.round(it.volume)}kg total · ${it.count} sessions</div>
       </div>
     </div>
   `;
       }).join('');
-    }
-
-    // Shared purposeful empty-state markup (icon + one sentence tied to the panel
-    // it's in) — replaces the generic muted one-liners that used to sit in Exercises,
-    // Muscles, and the Insights sub-panels.
-    function emptyState(icon, text) {
-      return `<div style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:40px 24px;text-align:center;">
-        <div style="font-size:34px;opacity:.5;">${icon}</div>
-        <div style="font-size:13px;color:var(--text-muted);max-width:260px;line-height:1.5;">${text}</div>
-      </div>`;
-    }
-
-    // Weighted weekly set-count per muscle over the last N weeks (primary=full
-    // credit, secondary=half — same weighting as weeklyMuscleSets), bucketed once
-    // for all muscles together so the Muscle Split sparklines don't re-scan the
-    // full workout history once per muscle row.
-    function computeMuscleWeeklySeries(weeks) {
-      const now = new Date();
-      const weekStarts = [];
-      for (let i = weeks - 1; i >= 0; i--) {
-        const ws = new Date(now); ws.setDate(now.getDate() - now.getDay() - i * 7); ws.setHours(0, 0, 0, 0);
-        weekStarts.push(ws);
-      }
-      const series = {};
-      MUSCLE_GROUPS.forEach(m => { series[m.name] = new Array(weeks).fill(0); });
-      state.workouts.forEach(w => {
-        const d = new Date(w.date);
-        let idx = -1;
-        for (let i = 0; i < weeks; i++) {
-          const we = new Date(weekStarts[i]); we.setDate(we.getDate() + 7);
-          if (d >= weekStarts[i] && d < we) { idx = i; break; }
-        }
-        if (idx === -1) return;
-        w.exercises.forEach(ex => {
-          const workSets = (ex.sets || []).filter(s => !s.warmup);
-          if (!workSets.length) return;
-          const { primary, secondary } = getExerciseMuscles(ex);
-          primary.forEach(m => { if (series[m]) series[m][idx] += workSets.length; });
-          secondary.forEach(m => { if (series[m]) series[m][idx] += workSets.length * 0.5; });
-        });
-      });
-      return series;
-    }
-
-    // Minimal inline trend sparkline — no axes/labels, just shape, so it reads at
-    // a glance inside a list row rather than competing with the bar/kg text.
-    function sparklineSVG(vals, color) {
-      const w = 56, h = 20;
-      const max = Math.max(...vals, 0.001);
-      if (!vals.some(v => v > 0)) return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><line x1="0" y1="${h - 1}" x2="${w}" y2="${h - 1}" stroke="var(--border)" stroke-width="1"/></svg>`;
-      const pts = vals.map((v, i) => `${(i / (vals.length - 1)) * w},${h - (v / max) * (h - 2) - 1}`).join(' ');
-      return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="flex-shrink:0;"><polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
     }
 
     // ═══════════════════════════════════════════
@@ -5614,18 +5458,10 @@
       });
 
       const maxKg = Math.max(...Object.values(stats).map(s => s.kg), 1);
-      const totalKg = Object.values(stats).reduce((s, x) => s + x.kg, 0);
-      const listEl = document.getElementById('muscle-split-list');
-      if (totalKg === 0) {
-        listEl.innerHTML = emptyState('💪', 'Log a few workouts to see your muscle split — which muscles are getting the most volume, and how that shifts week to week.');
-        return;
-      }
-      const weeklySeries = computeMuscleWeeklySeries(8);
       const sorted = [...MUSCLE_GROUPS].sort((a, b) => (stats[a.name]?.kg || 0) - (stats[b.name]?.kg || 0));
-      listEl.innerHTML = sorted.map(m => {
+      document.getElementById('muscle-split-list').innerHTML = sorted.map(m => {
         const s = stats[m.name] || { kg: 0, sets: 0 };
         const barW = Math.max(2, (s.kg / maxKg) * 100);
-        const color = m.color === 'secondary' ? '#3b82f6' : '#ef4444';
         return `<div class="muscle-item" style="cursor:pointer" onclick="openMuscleDetail('${m.name}')">
       <div class="muscle-item-icon">${m.icon}</div>
       <div style="flex:1">
@@ -5633,7 +5469,6 @@
         <div class="muscle-item-stats">${Math.round(s.kg)}kg · ${Math.round(s.sets)} sets</div>
         <div class="muscle-bar ${m.color === 'secondary' ? 'secondary' : ''}" style="width:${barW}%"></div>
       </div>
-      <div title="Last 8 weeks">${sparklineSVG(weeklySeries[m.name], color)}</div>
     </div>`;
       }).join('');
     }
@@ -5704,7 +5539,7 @@
       });
       document.getElementById('muscle-warnings').innerHTML = rows.length
         ? rows.join('')
-        : emptyState('📋', 'Log a few sets this week and this will show which muscles are under, over, or right in your target weekly volume range.');
+        : `<div style="color:var(--text-muted);font-size:13px;">No sets logged this week yet.</div>`;
     }
 
     function renderPPLBalance() {
@@ -5712,7 +5547,7 @@
       const totals = { push: 0, pull: 0, legs: 0 };
       Object.entries(sets).forEach(([m, v]) => { const cat = MUSCLE_CATEGORY[m]; if (cat) totals[cat] += v; });
       const sum = totals.push + totals.pull + totals.legs;
-      if (!sum) { document.getElementById('ppl-balance').innerHTML = emptyState('⚖️', "Once you've logged a few workouts, this will show how your Push/Pull/Legs volume balances out."); return; }
+      if (!sum) { document.getElementById('ppl-balance').innerHTML = `<div style="color:var(--text-muted);font-size:13px;">Not enough data yet.</div>`; return; }
       const pct = k => Math.round((totals[k] / sum) * 100);
       const colors = { push: '#ef4444', pull: '#3b82f6', legs: '#f59e0b' };
       const bar = ['push', 'pull', 'legs'].map(k => `<div style="width:${pct(k)}%;background:${colors[k]};"></div>`).join('');
@@ -5894,14 +5729,13 @@
       document.getElementById('plan-week-card').innerHTML = `
     <div style="font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;">Phase: <span style="color:${PHASE_COLOR[micro.phase]}">${titleCase(micro.phase)}</span> · ${titleCase(state.periodization.model)} model</div>
     <div style="margin-bottom:14px;">
-      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted);margin-bottom:4px;"><span>Weekly Sets</span><span>${actual.volume} / ${micro.plannedVolume} sets ${volFlag ? `<strong style="color:${volDev > 0 ? 'var(--color-attention)' : 'var(--color-secondary-focus)'}">(${volDev > 0 ? '+' : ''}${volDev}%)</strong>` : ''}</span></div>
-      <div style="height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;"><div style="height:100%;width:${barPct(actual.volume, micro.plannedVolume)}%;background:${volFlag ? 'var(--color-attention)' : 'var(--color-secondary-focus)'};"></div></div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted);margin-bottom:4px;"><span>Volume</span><span>${actual.volume} / ${micro.plannedVolume} sets ${volFlag ? `<strong style="color:${volDev > 0 ? 'var(--red)' : 'var(--accent-blue)'}">(${volDev > 0 ? '+' : ''}${volDev}%)</strong>` : ''}</span></div>
+      <div style="height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;"><div style="height:100%;width:${barPct(actual.volume, micro.plannedVolume)}%;background:${volFlag ? 'var(--red)' : 'var(--accent-blue)'};"></div></div>
     </div>
-    <div style="margin-bottom:14px;">
+    <div>
       <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted);margin-bottom:4px;"><span>Intensity</span><span>${actual.intensityPct !== null ? actual.intensityPct + '%' : 'no RIR/RPE logged'} / target ${micro.plannedIntensityPct}%</span></div>
-      <div style="height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;"><div style="height:100%;width:${barPct(actual.intensityPct || 0, micro.plannedIntensityPct)}%;background:var(--color-attention);"></div></div>
+      <div style="height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;"><div style="height:100%;width:${barPct(actual.intensityPct || 0, micro.plannedIntensityPct)}%;background:var(--gold);"></div></div>
     </div>
-    <div onclick="jumpToInsights()" style="cursor:pointer;font-size:12px;color:var(--accent-blue);display:flex;align-items:center;gap:4px;">See how this compares in Deeper Insights →</div>
   `;
 
       document.getElementById('plan-timeline').innerHTML = `
@@ -6302,9 +6136,7 @@
     // ═══════════════════════════════════════════
     function refreshYou() {
       document.getElementById('you-name').textContent = state.userName;
-      const avatarEl = document.getElementById('you-avatar');
-      const customAvatar = state.profile && state.profile.avatarEmoji;
-      avatarEl.childNodes[0].textContent = customAvatar || state.userName.charAt(0).toUpperCase();
+      document.getElementById('you-avatar').textContent = state.userName.charAt(0).toUpperCase();
       document.getElementById('you-total-workouts').textContent = state.workouts.length;
       const totalVol = state.workouts.reduce((s, w) => s + w.volume, 0);
       document.getElementById('you-total-vol').textContent = Math.round(totalVol / 1000 * 10) / 10 + 't';
@@ -6315,34 +6147,19 @@
       renderYouHistory();
       renderBadges();
       updateSyncStatusDisplay();
-
-      // Stat row context: this month's count + most recently earned badge
-      const ctxEl = document.getElementById('you-stats-context');
-      if (ctxEl) {
-        const now = new Date();
-        const monthCount = state.workouts.filter(w => { const d = new Date(w.date); return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear(); }).length;
-        const vol = totalVol;
-        const streak = computeWeekStreak();
-        const metricVal = { workouts: state.workouts.length, volume: vol, streak: streak };
-        const earnedBadges = BADGE_DEFS.filter(b => metricVal[b.metric] >= b.target);
-        const latest = earnedBadges[earnedBadges.length - 1];
-        const parts = [`${monthCount} workout${monthCount === 1 ? '' : 's'} this month`];
-        if (latest) parts.push(`latest badge: ${latest.emoji} ${latest.label}`);
-        ctxEl.textContent = parts.join(' · ');
-      }
     }
 
     const BADGE_DEFS = [
-      { key: 'w10', label: '10 Workouts', emoji: '💪', metric: 'workouts', target: 10 },
-      { key: 'w50', label: '50 Workouts', emoji: '🏆', metric: 'workouts', target: 50 },
-      { key: 'w100', label: '100 Workouts', emoji: '🥇', metric: 'workouts', target: 100 },
-      { key: 'w250', label: '250 Workouts', emoji: '👑', metric: 'workouts', target: 250 },
-      { key: 'vol10t', label: '10t Lifted', emoji: '🏋️', metric: 'volume', target: 10000 },
-      { key: 'vol50t', label: '50t Lifted', emoji: '⚡', metric: 'volume', target: 50000 },
-      { key: 'vol100t', label: '100t Lifted', emoji: '🔱', metric: 'volume', target: 100000 },
-      { key: 'streak4', label: '4 Week Streak', emoji: '🔥', metric: 'streak', target: 4 },
-      { key: 'streak8', label: '8 Week Streak', emoji: '🔥', metric: 'streak', target: 8 },
-      { key: 'streak12', label: '12 Week Streak', emoji: '🔥', metric: 'streak', target: 12 },
+      { key: 'w10', label: '10 Workouts', emoji: '💪', check: (n, vol, streak) => n >= 10 },
+      { key: 'w50', label: '50 Workouts', emoji: '🏆', check: (n, vol, streak) => n >= 50 },
+      { key: 'w100', label: '100 Workouts', emoji: '🥇', check: (n, vol, streak) => n >= 100 },
+      { key: 'w250', label: '250 Workouts', emoji: '👑', check: (n, vol, streak) => n >= 250 },
+      { key: 'vol10t', label: '10t Lifted', emoji: '🏋️', check: (n, vol) => vol >= 10000 },
+      { key: 'vol50t', label: '50t Lifted', emoji: '⚡', check: (n, vol) => vol >= 50000 },
+      { key: 'vol100t', label: '100t Lifted', emoji: '🔱', check: (n, vol) => vol >= 100000 },
+      { key: 'streak4', label: '4 Week Streak', emoji: '🔥', check: (n, vol, streak) => streak >= 4 },
+      { key: 'streak8', label: '8 Week Streak', emoji: '🔥', check: (n, vol, streak) => streak >= 8 },
+      { key: 'streak12', label: '12 Week Streak', emoji: '🔥', check: (n, vol, streak) => streak >= 12 },
     ];
 
     function renderBadges() {
@@ -6351,36 +6168,10 @@
       const n = state.workouts.length;
       const vol = state.workouts.reduce((s, w) => s + w.volume, 0);
       const streak = computeWeekStreak();
-      const metricVal = { workouts: n, volume: vol, streak: streak };
-      const withProgress = BADGE_DEFS.map(b => {
-        const val = metricVal[b.metric];
-        return { ...b, earned: val >= b.target, pct: Math.min(100, Math.round(val / b.target * 100)) };
-      });
-      const earned = withProgress.filter(b => b.earned);
-      const locked = withProgress.filter(b => !b.earned).sort((a, b) => b.pct - a.pct);
-      const next = locked[0];
-
-      const earnedHTML = earned.map(b => `<div class="badge-chip"><span class="badge-emoji">${b.emoji}</span><span class="badge-label">${b.label}</span></div>`).join('');
-      const nextHTML = next ? `<div class="badge-chip badge-chip-locked" title="${next.pct}% there">
-      <div class="badge-ring-outer" style="background:conic-gradient(var(--accent) ${next.pct * 3.6}deg, var(--surface3) 0deg);">
-        <div class="badge-ring-inner"><span style="opacity:.5">${next.emoji}</span></div>
-      </div>
-      <span class="badge-label">${next.label}</span>
-      <span style="font-size:9px;color:var(--text-dim);">${next.pct}%</span>
-    </div>` : '';
-
-      el.innerHTML = (earnedHTML + nextHTML) || `<div style="color:var(--text-muted);font-size:12px;padding:4px;">Keep training to unlock badges 💪</div>`;
-    }
-
-    function editAvatar() {
-      profileFieldEditMode = 'avatar';
-      document.getElementById('pf-modal-title').textContent = 'Avatar Emoji';
-      document.getElementById('pf-modal-input').type = 'text';
-      document.getElementById('pf-modal-input').value = (state.profile && state.profile.avatarEmoji) || '';
-      document.getElementById('pf-modal-input').placeholder = 'e.g. 💪';
-      document.getElementById('pf-modal-history-btn').style.display = 'none';
-      document.getElementById('profile-field-modal').classList.add('open');
-      setTimeout(() => document.getElementById('pf-modal-input').focus(), 50);
+      const earned = BADGE_DEFS.filter(b => b.check(n, vol, streak));
+      el.innerHTML = earned.length
+        ? earned.map(b => `<div class="badge-chip"><span class="badge-emoji">${b.emoji}</span><span class="badge-label">${b.label}</span></div>`).join('')
+        : `<div style="color:var(--text-muted);font-size:12px;padding:4px;">Keep training to unlock badges 💪</div>`;
     }
 
     function editName() {
@@ -6481,13 +6272,24 @@
               : (ex.restSeconds != null ? ex.restSeconds : '');
             return `<input class="rest-input" type="number" min="0" placeholder="sec" value="${restVal}">`;
           })();
+        const isBW = exerciseSupportsBW(ex.exId, def.name);
+        let weightCellHTML;
+        if (isBW) {
+          const bwv = getUserBodyweight();
+          let bwMode = 'bw', bwDelta = 0;
+          if (set.weight > bwv) { bwMode = 'added'; bwDelta = set.weight - bwv; }
+          else if (set.weight > 0 && set.weight < bwv) { bwMode = 'assisted'; bwDelta = bwv - set.weight; }
+          weightCellHTML = renderBwWrapHTML(bwMode, bwDelta, set.weight, ex.exId, isWarmup);
+        } else {
+          weightCellHTML = `<input class="set-input w-input" type="number" min="0" step="0.5" value="${set.weight}">`;
+        }
         const tr = document.createElement('tr');
         tr.className = 'set-row' + (isWarmup ? ' warmup' : '');
         tr.dataset.warmup = isWarmup;
         tr.dataset.variations = JSON.stringify(variations);
         tr.innerHTML = `
         <td><span class="set-badge ${badgeClass}" style="cursor:pointer" onclick="toggleSetType(this)" title="Click to toggle Warmup/Normal">${label}</span></td>
-        <td><input class="set-input w-input" type="number" min="0" step="0.5" value="${set.weight}"></td>
+        <td>${weightCellHTML}</td>
         <td><input class="set-input r-input" type="number" min="0" value="${set.reps}"></td>
         <td><button type="button" class="variations-btn" onclick="openVariationsPicker(this)">+ Tag</button></td>
         <td><input class="rir-input" type="number" min="0" max="10" value="${set.rir || ''}"></td>
@@ -6522,7 +6324,6 @@
       document.getElementById('workout-note').value = '';
       document.getElementById('workout-date').value = '';
       document.getElementById('workout-duration-input').value = '';
-      document.getElementById('workout-bodyweight-input').value = '';
 
       const container = document.getElementById('exercises-container');
       container.innerHTML = '';
@@ -6595,7 +6396,6 @@
       const localDateStr = new Date(d.getTime() - (d.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
       document.getElementById('workout-date').value = localDateStr;
       document.getElementById('workout-duration-input').value = w.duration || '';
-      document.getElementById('workout-bodyweight-input').value = w.bodyWeight || '';
 
       // Populate exercises — group by linkGroup so bi-sets/supersets render as
       // "Combined Exercise" cards instead of separate ones.
@@ -7563,7 +7363,7 @@ Soreness: 6-7</div>
                 if (s.weight * s.reps > (best.volume || 0)) s.prs.push('Volume');
                 if (s.reps > (best.reps || 0)) s.prs.push('Reps');
               }
-              if (s.reps > 0 && isBodyweightExercise(ex.name)) {
+              if (s.reps > 0 && exerciseSupportsBW(ex.exId, ex.name)) {
                 if (s.weight === 0 && s.reps > (bwBest.bestReps || 0)) s.prs.push('Bodyweight');
                 else if (s.weight > 0 && (bw + s.weight) > (bwBest.bestSystemWeight || 0)) s.prs.push('Bodyweight');
               }
