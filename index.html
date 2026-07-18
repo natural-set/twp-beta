@@ -629,21 +629,16 @@
       outline: none;
     }
 
-    .bw-wrap { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+    .bw-wrap { display: flex; align-items: center; gap: 5px; flex-wrap: nowrap; }
     .bw-chip {
       background: var(--surface2); border: 1px solid var(--border); border-radius: 20px;
       font-family: inherit; font-size: 10px; font-weight: 700; padding: 4px 8px; cursor: pointer;
       white-space: nowrap; color: var(--text-muted);
     }
     .bw-chip.mode-added { border-color: var(--accent-blue); color: var(--accent-blue); background: rgba(59,130,246,.12); }
-    .bw-chip.mode-assisted { border-color: #14b8a6; color: #14b8a6; background: rgba(20,184,166,.12); }
+    .bw-chip.mode-assisted { border-color: var(--accent); color: var(--accent); background: rgba(249,115,22,.12); }
+    .bw-kg { font-size: 10px; color: var(--text-muted); white-space: nowrap; }
     .bw-warn { font-size: 9px; color: var(--gold); white-space: nowrap; cursor: pointer; }
-    .bw-stepper { display: flex; align-items: center; gap: 3px; }
-    .bw-step-btn {
-      background: var(--surface2); border: 1px solid var(--border); border-radius: 6px;
-      color: var(--text); width: 20px; height: 20px; font-size: 13px; font-weight: 700;
-      cursor: pointer; padding: 0; line-height: 1; font-family: inherit;
-    }
     .bw-delta-input {
       background: var(--surface2); border: 1px solid var(--border); border-radius: 6px;
       color: var(--text); font-size: 11px; font-family: inherit; text-align: center;
@@ -3708,6 +3703,7 @@
 
     function goToWorkout() { navigate('workout', document.querySelectorAll('.nav-btn')[1]); startWorkout(); }
 
+
     // ═══════════════════════════════════════════
     //  WORKOUT
     // ═══════════════════════════════════════════
@@ -3936,10 +3932,10 @@
       return isBodyweightExercise(name);
     }
 
-    function bwChipLabel(mode, totalVal) {
-      if (mode === 'added') return `＋ Add · ${totalVal}kg`;
-      if (mode === 'assisted') return `− Assist · ${totalVal}kg`;
-      return `BW · ${totalVal}kg`;
+    function bwChipLabel(mode) {
+      if (mode === 'added') return '＋ Add';
+      if (mode === 'assisted') return '− Assist';
+      return 'BW';
     }
 
     function computeBwTotal(mode, delta) {
@@ -3956,23 +3952,18 @@
       editProfileField('weight', 'Current Weight');
     }
 
-    // Builds the BW weight-cell markup: one pill (styled like the app's other tag
-    // pills — see .variations-btn) that shows both the mode and the resulting total
-    // weight together, cycling Bodyweight → Added → Assisted on tap. A +/- stepper
-    // (using a per-exercise increment, default 2.5kg) appears only for Added/Assisted.
-    // A hidden .w-input holds the total system weight the rest of the app reads.
-    // Warmup rows render a locked, non-interactive BW pill.
-    function renderBwWrapHTML(mode, delta, totalVal, exId, locked) {
+    // Builds the BW weight-cell markup: a small pill showing just the mode
+    // (Bodyweight / Added / Assisted, cycled on tap), an inline kg legend next to
+    // it showing the resulting total, and — for Added/Assisted — a plain kg input
+    // (no +/- stepper). A hidden .w-input holds the total system weight the rest
+    // of the app reads. Warmup sets use the same interactive chip as normal sets.
+    function renderBwWrapHTML(mode, delta, totalVal, exId) {
       const bwUnset = !(state.profile && state.profile.weight);
-      const stepperHTML = (mode === 'bw' || locked) ? '' : `<div class="bw-stepper">
-      <button type="button" class="bw-step-btn" onclick="stepBwDelta(this,-1)">−</button>
-      <input type="number" class="bw-delta-input" step="0.5" value="${delta || ''}" placeholder="kg" oninput="updateBwWeight(this)" onkeydown="if(event.key==='Enter'){event.preventDefault();advanceFromBw(this);}">
-      <button type="button" class="bw-step-btn" onclick="stepBwDelta(this,1)">+</button>
-    </div>`;
-      const chipClick = locked ? '' : `onclick="cycleBwMode(this)"`;
+      const deltaHTML = mode === 'bw' ? '' : `<input type="number" class="bw-delta-input" step="0.5" value="${delta || ''}" placeholder="kg" oninput="updateBwWeight(this)" onkeydown="if(event.key==='Enter'){event.preventDefault();advanceFromBw(this);}">`;
       return `<div class="bw-wrap" data-mode="${mode}" data-delta="${delta}" data-exid="${exId || ''}">
-      <button type="button" class="bw-chip mode-${mode}" ${chipClick} ${locked ? 'style="opacity:.55;cursor:default;"' : ''} title="${locked ? 'Warmup — bodyweight only' : 'Tap to cycle: Bodyweight / Added / Assisted'}">${bwChipLabel(mode, totalVal)}</button>
-      ${stepperHTML}
+      <button type="button" class="bw-chip mode-${mode}" onclick="cycleBwMode(this)" title="Tap to cycle: Bodyweight / Added / Assisted">${bwChipLabel(mode)}</button>
+      <span class="bw-kg">${totalVal}kg</span>
+      ${deltaHTML}
       ${bwUnset ? `<span class="bw-warn" onclick="goSetBodyweight()">Set weight →</span>` : ''}
       <input type="hidden" class="set-input w-input" value="${totalVal}">
     </div>`;
@@ -3987,30 +3978,19 @@
       // Recall the last delta used for this exercise/mode combo instead of making
       // the person retype the same added/assisted weight every set.
       const delta = mode === 'bw' ? 0 : ((state.lastBwDelta && state.lastBwDelta[exId]) || 2.5);
-      td.innerHTML = renderBwWrapHTML(mode, delta, computeBwTotal(mode, delta), exId, false);
+      td.innerHTML = renderBwWrapHTML(mode, delta, computeBwTotal(mode, delta), exId);
       if (mode !== 'bw') { const di = td.querySelector('.bw-delta-input'); if (di) di.focus(); }
-    }
-
-    // dir is -1 or +1; the actual kg step comes from a per-exercise preset
-    // (Exercise Manager → "Weight step"), defaulting to 2.5kg.
-    function stepBwDelta(btn, dir) {
-      const wrap = btn.closest('.bw-wrap');
-      const input = wrap.querySelector('.bw-delta-input');
-      const exId = wrap.dataset.exid;
-      const step = (state.exerciseWeightSteps && state.exerciseWeightSteps[exId]) || 2.5;
-      input.value = Math.max(0, (parseFloat(input.value) || 0) + dir * step);
-      updateBwWeight(input);
     }
 
     function updateBwWeight(inputEl) {
       const wrap = inputEl.closest('.bw-wrap');
       const hidden = wrap.querySelector('.w-input');
-      const chipBtn = wrap.querySelector('.bw-chip');
+      const kgEl = wrap.querySelector('.bw-kg');
       const delta = parseFloat(inputEl.value) || 0;
       wrap.dataset.delta = delta;
       const total = computeBwTotal(wrap.dataset.mode, delta);
       hidden.value = total;
-      if (chipBtn) chipBtn.textContent = bwChipLabel(wrap.dataset.mode, total);
+      if (kgEl) kgEl.textContent = total + 'kg';
       const exId = wrap.dataset.exid;
       if (exId && wrap.dataset.mode !== 'bw') {
         if (!state.lastBwDelta) state.lastBwDelta = {};
@@ -4038,13 +4018,12 @@
         const hidden = tr.querySelector('.w-input');
         const curWeight = parseFloat(hidden?.value) || 0;
         const td = hidden.closest('td');
-        const isWarmup = tr.dataset.warmup === 'true';
         if (isBW) {
           const bw = getUserBodyweight();
           let mode = 'bw', delta = 0;
           if (curWeight > bw) { mode = 'added'; delta = curWeight - bw; }
           else if (curWeight > 0 && curWeight < bw) { mode = 'assisted'; delta = bw - curWeight; }
-          td.innerHTML = renderBwWrapHTML(isWarmup ? 'bw' : mode, isWarmup ? 0 : delta, isWarmup ? bw : (curWeight || bw), exId, isWarmup);
+          td.innerHTML = renderBwWrapHTML(mode, delta, curWeight || bw, exId);
         } else {
           td.innerHTML = `<input class="set-input w-input" type="number" min="0" step="0.5" value="${curWeight}">`;
         }
@@ -4416,7 +4395,7 @@
       const exDefForBW = blockEl ? getAllExercises().find(e => e.id === blockEl.dataset.exId) : null;
       const isBW = exerciseSupportsBW(blockEl?.dataset.exId, exDefForBW?.name);
       const weightCellHTML = isBW
-        ? renderBwWrapHTML('bw', 0, getUserBodyweight(), blockEl?.dataset.exId, isWarmup)
+        ? renderBwWrapHTML('bw', 0, getUserBodyweight(), blockEl?.dataset.exId)
         : `<input class="set-input w-input" type="number" min="0" step="0.5" placeholder="${lastSet ? lastSet.weight + 'kg' : 'kg'}" title="${lastSet ? 'Last: ' + lastSet.weight + 'kg x ' + lastSet.reps : ''}">`;
       let restCellHTML;
       if (!tracksRest) {
@@ -6279,7 +6258,7 @@
           let bwMode = 'bw', bwDelta = 0;
           if (set.weight > bwv) { bwMode = 'added'; bwDelta = set.weight - bwv; }
           else if (set.weight > 0 && set.weight < bwv) { bwMode = 'assisted'; bwDelta = bwv - set.weight; }
-          weightCellHTML = renderBwWrapHTML(bwMode, bwDelta, set.weight, ex.exId, isWarmup);
+          weightCellHTML = renderBwWrapHTML(bwMode, bwDelta, set.weight, ex.exId);
         } else {
           weightCellHTML = `<input class="set-input w-input" type="number" min="0" step="0.5" value="${set.weight}">`;
         }
