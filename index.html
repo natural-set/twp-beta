@@ -731,8 +731,8 @@
     }
 
     .warn-pill.high {
-      background: rgba(239, 68, 68, .15);
-      color: var(--red);
+      background: rgba(245, 158, 11, .15);
+      color: var(--gold);
     }
 
     .warn-pill.ok {
@@ -869,6 +869,11 @@
     .pr-badge.bronze {
       background: rgba(205, 127, 50, .15);
       color: var(--bronze);
+    }
+
+    .pr-badge.blue {
+      background: rgba(59, 130, 246, .15);
+      color: var(--accent-blue);
     }
 
     .set-add-btn,
@@ -1751,12 +1756,6 @@
       border-top-color: var(--accent-blue);
       border-radius: 50%;
       animation: spin 0.8s linear infinite;
-    }
-
-    @keyframes spin {
-      to {
-        transform: rotate(360deg);
-      }
     }
 
     .import-loading span {
@@ -2737,6 +2736,20 @@
       </div>
     </div>
 
+    <!-- Confirm Modal (replaces native browser confirm()) -->
+    <div class="modal-overlay" id="confirm-modal">
+      <div class="modal-sheet" style="max-height:40vh;">
+        <div style="padding:22px 20px;">
+          <div style="font-size:16px;font-weight:800;margin-bottom:8px;" id="confirm-modal-title">Are you sure?</div>
+          <div style="font-size:13px;color:var(--text-muted);line-height:1.5;margin-bottom:20px;" id="confirm-modal-message"></div>
+          <div style="display:flex;gap:10px;">
+            <button class="btn-secondary" onclick="closeConfirmModal(false)">Cancel</button>
+            <button class="btn-primary-flex" id="confirm-modal-confirm-btn" onclick="closeConfirmModal(true)" style="background:var(--red);color:#fff;">Confirm</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Toast -->
     <div class="toast" id="toast"></div>
 
@@ -3136,8 +3149,8 @@
       { name: 'Traps', icon: '🎯', color: 'secondary', target: [6, 12] },
       { name: 'Front Delts', icon: '🙌', color: 'secondary', target: [6, 12] },
       { name: 'Side Delts', icon: '🤸', color: 'secondary', target: [12, 20] },
-      { name: 'Rear Delts', icon: '🏹', color: 'secondary', target: [12, 20] },
-      { name: 'Biceps', icon: '💪', color: 'primary', target: [10, 18] },
+      { name: 'Rear Delts', icon: '🛡️', color: 'secondary', target: [12, 20] },
+      { name: 'Biceps', icon: '🦾', color: 'primary', target: [10, 18] },
       { name: 'Triceps', icon: '⬇️', color: 'primary', target: [10, 18] },
       { name: 'Forearms', icon: '✊', color: 'secondary', target: [6, 12] },
       { name: 'Abs', icon: '🧘', color: 'secondary', target: [10, 18] },
@@ -3235,10 +3248,11 @@
         toggleHiddenExercise(exId);
         return;
       }
-      if (!confirm('Delete this exercise?')) return;
-      state.customExercises = (state.customExercises || []).filter(e => e.id !== exId);
-      saveState();
-      renderExerciseManagerList();
+      showConfirmModal('Delete this exercise? This cannot be undone.', () => {
+        state.customExercises = (state.customExercises || []).filter(e => e.id !== exId);
+        saveState();
+        renderExerciseManagerList();
+      }, { title: 'Delete Exercise', confirmLabel: 'Delete' });
     }
 
     let efMuscleSelection = { primary: new Set(), secondary: new Set() };
@@ -3768,6 +3782,8 @@
     }
 
     function goToWorkout() { navigate('workout', document.querySelectorAll('.nav-btn')[1]); startWorkout(); }
+
+
 
 
     // ═══════════════════════════════════════════
@@ -4993,7 +5009,7 @@
       const dateStr = d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }) +
         ' · ' + d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 
-      const prColors = { '1RM': 'gold', 'Volume': 'silver', 'Reps': 'bronze', 'Bodyweight': 'gold' };
+      const prColors = { '1RM': 'gold', 'Volume': 'silver', 'Reps': 'bronze', 'Bodyweight': 'blue' };
 
       // ── Intensity score (0-10 scale derived from volume, set count, soreness) ──
       const workSets = w.exercises.reduce((s, e) => s + (e.sets || []).filter(s => !s.warmup).length, 0);
@@ -5987,10 +6003,11 @@
     }
 
     function resetPeriodizationPlan() {
-      if (!confirm('Reset your periodization plan?')) return;
-      state.periodization = null;
-      saveState();
-      renderPeriodizationTab();
+      showConfirmModal('Reset your periodization plan? This cannot be undone.', () => {
+        state.periodization = null;
+        saveState();
+        renderPeriodizationTab();
+      }, { title: 'Reset Plan', confirmLabel: 'Reset' });
     }
 
     function getCurrentMicrocycle() {
@@ -6491,7 +6508,7 @@
     }
 
     function clearData() {
-      if (confirm('Clear all workout data? This cannot be undone.')) {
+      showConfirmModal('Clear all workout data? This cannot be undone.', () => {
         state.workouts = [];
         saveState();
         // Without an immediate push, the next pullSync (on focus/launch) would
@@ -6501,7 +6518,7 @@
         refreshHome();
         refreshYou();
         showToast('All data cleared');
-      }
+      }, { title: 'Clear All Data', confirmLabel: 'Clear Data' });
     }
 
     // ═══════════════════════════════════════════
@@ -6783,23 +6800,30 @@
       const hasData = document.querySelectorAll('#exercises-container .w-input, #exercises-container .r-input')
         .length > 0 && Array.from(document.querySelectorAll('#exercises-container .w-input, #exercises-container .r-input'))
         .some(el => el.value.trim() !== '');
-      if (hasData && !confirm('Discard this workout? Everything you entered will be lost.')) return;
 
-      clearInterval(state.timerInterval);
-      clearAllRestTimers();
-      const wasEditing = !!state.editingWorkoutId;
-      state.activeWorkout = null;
-      state.editingWorkoutId = null;
+      const doCancel = () => {
+        clearInterval(state.timerInterval);
+        clearAllRestTimers();
+        const wasEditing = !!state.editingWorkoutId;
+        state.activeWorkout = null;
+        state.editingWorkoutId = null;
 
-      // Reset UI
-      document.getElementById('no-workout').style.display = 'block';
-      document.getElementById('active-workout').style.display = 'none';
-      document.getElementById('exercises-container').innerHTML = '';
+        // Reset UI
+        document.getElementById('no-workout').style.display = 'block';
+        document.getElementById('active-workout').style.display = 'none';
+        document.getElementById('exercises-container').innerHTML = '';
 
-      // Undo: nothing was saved (edits are only committed on Finish), so it's safe
-      // to just navigate back to wherever the person was browsing before.
-      navigateToTab(state.returnTo || 'home');
-      showToast(wasEditing ? 'Edit cancelled' : 'Workout discarded');
+        // Undo: nothing was saved (edits are only committed on Finish), so it's safe
+        // to just navigate back to wherever the person was browsing before.
+        navigateToTab(state.returnTo || 'home');
+        showToast(wasEditing ? 'Edit cancelled' : 'Workout discarded');
+      };
+
+      if (hasData) {
+        showConfirmModal('Discard this workout? Everything you entered will be lost.', doCancel, { title: 'Discard Workout', confirmLabel: 'Discard' });
+      } else {
+        doCancel();
+      }
     }
 
     // ═══════════════════════════════════════════
@@ -6939,6 +6963,29 @@
       setTimeout(() => t.classList.remove('show'), 2500);
     }
 
+    // Custom confirm modal — replaces native browser confirm() so destructive
+    // actions match the app's own dark-modal styling instead of an OS dialog.
+    // onConfirm only fires if the person taps Confirm; Cancel/backdrop dismiss is a no-op.
+    let confirmModalCallback = null;
+    function showConfirmModal(message, onConfirm, opts) {
+      opts = opts || {};
+      document.getElementById('confirm-modal-title').textContent = opts.title || 'Are you sure?';
+      document.getElementById('confirm-modal-message').textContent = message;
+      const btn = document.getElementById('confirm-modal-confirm-btn');
+      btn.textContent = opts.confirmLabel || 'Confirm';
+      const danger = opts.danger !== false;
+      btn.style.background = danger ? 'var(--red)' : 'var(--text)';
+      btn.style.color = danger ? '#fff' : '#000';
+      confirmModalCallback = onConfirm;
+      document.getElementById('confirm-modal').classList.add('open');
+    }
+    function closeConfirmModal(confirmed) {
+      document.getElementById('confirm-modal').classList.remove('open');
+      const cb = confirmModalCallback;
+      confirmModalCallback = null;
+      if (confirmed && cb) cb();
+    }
+
     // ── KEBAB MENU & DELETE WORKOUT LOGIC ──
 
     function toggleKebab(event, id) {
@@ -6971,20 +7018,19 @@
     function deleteWorkoutFromFeed(event, id) {
       event.stopPropagation(); // Prevents opening detail view
 
-      if (!confirm("Are you sure you want to delete this workout? This cannot be undone.")) return;
+      showConfirmModal('Are you sure you want to delete this workout? This cannot be undone.', () => {
+        state.workouts = state.workouts.filter(w => w.id !== id);
+        saveState();
+        // Push immediately — otherwise a pull before the next 5-min interval
+        // would fetch the old cloud copy and resurrect the "deleted" workout.
+        pushSync();
 
-      // Remove from state
-      state.workouts = state.workouts.filter(w => w.id !== id);
-      saveState();
-      // Push immediately — otherwise a pull before the next 5-min interval
-      // would fetch the old cloud copy and resurrect the "deleted" workout.
-      pushSync();
-
-      // Refresh wherever this workout could be listed, without forcing navigation
-      // away from whichever screen (Home or You) the person was actually on.
-      refreshHome();
-      refreshYou();
-      showToast('Workout deleted 🗑️');
+        // Refresh wherever this workout could be listed, without forcing navigation
+        // away from whichever screen (Home or You) the person was actually on.
+        refreshHome();
+        refreshYou();
+        showToast('Workout deleted 🗑️');
+      }, { title: 'Delete Workout', confirmLabel: 'Delete' });
     }
 
     // ═══════════════════════════════════════════

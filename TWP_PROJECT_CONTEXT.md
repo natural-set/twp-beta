@@ -39,6 +39,7 @@ Exercise fields: `exId, name, icon, primary[], secondary[], note, sets, restSeco
 - Periodization planner (macro/meso/microcycle, linear/wave models)
 - i18n (en/pt) for static chrome only — never auto-translates user data
 - Weekly snapshot "See more" → full Weekly Detail screen (`openWeeklyDetail`/`renderWeeklyDetail`, day-by-day breakdown, prev/next week nav) — **implemented**, not a gap
+- Custom confirm modal (`showConfirmModal`/`closeConfirmModal`) — replaces all native `confirm()` calls (delete exercise, reset plan, clear data, cancel workout, delete workout)
 
 ## SHIPPED: Bodyweight +/- weight chip
 Per-set weight input for bodyweight-capable exercises is a single cycling chip instead of a plain number field.
@@ -112,6 +113,13 @@ The standalone Insights progress-tab was folded into a collapsible section at th
 
 ## Known gaps
 - RPE/tempo/rest-preset round-trip through text import/export is partial (`^`-tags); `bwMode`/`extWeight` still not round-tripped through the parser/exporter.
+
+## SHIPPED: UI consistency pass (confirm modal, icons, colors)
+- All native `confirm()` calls replaced with a custom `#confirm-modal` (same dark-sheet style as other popovers): `showConfirmModal(message, onConfirm, {title, confirmLabel, danger})` shows it, `closeConfirmModal(confirmed)` dismisses and only fires `onConfirm` on confirm. Used by `deleteCustomExercise`, `resetPeriodizationPlan`, `clearData`, `cancelWorkout`, `deleteWorkoutFromFeed`.
+- `MUSCLE_GROUPS` icons de-duped: Biceps is now 🦾 (was 💪, clashed with Chest), Rear Delts is now 🛡️ (was 🏹, clashed with Hamstrings) — every muscle now has a distinct icon in Muscle Split / manikin legend.
+- Deduped a leftover duplicate `@keyframes spin` CSS rule.
+- `.warn-pill.high` (muscle volume too high) recolored red → gold, matching the "caution" semantic used elsewhere (red reserved for destructive/delete actions only).
+- PR badges: Bodyweight PRs now get their own `.pr-badge.blue` color instead of sharing gold with 1RM PRs.
 
 ## Anthropic API note
 If asked to build "Claude in Claude" features inside this app, use model string `claude-sonnet-4-6`, no API key needed, standard `/v1/messages` shape.
