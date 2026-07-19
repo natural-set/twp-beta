@@ -2345,7 +2345,6 @@
         <button class="progress-tab active" onclick="switchProgressTab(this,'overview')" data-i18n="tab_overview">Overview</button>
         <button class="progress-tab" onclick="switchProgressTab(this,'exercises')" data-i18n="tab_exercises">Exercises</button>
         <button class="progress-tab" onclick="switchProgressTab(this,'muscles')" data-i18n="tab_muscles">Muscles</button>
-        <button class="progress-tab" onclick="switchProgressTab(this,'insights')">Insights</button>
         <button class="progress-tab" onclick="switchProgressTab(this,'plan')">Plan</button>
       </div>
 
@@ -2394,6 +2393,11 @@
 
         <div id="filter-stats"></div>
 
+        <button id="overview-warn-banner" onclick="jumpToInsights()" style="display:none;width:calc(100% - 32px);margin:0 16px 16px;padding:10px 14px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:var(--radius-sm);color:var(--gold);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;text-align:left;align-items:center;justify-content:space-between;">
+          <span id="overview-warn-banner-text"></span>
+          <span>→</span>
+        </button>
+
         <div id="weekly-summary-card"></div>
 
         <div class="section-title" data-i18n="suggested_goal">Suggested Goal</div>
@@ -2414,6 +2418,28 @@
         <div class="section-title" style="padding-top: 8px;" data-i18n="this_week">This Week</div>
         <div class="section-sub" data-i18n="muscle_coverage">Your muscle coverage</div>
         <div id="progress-muscle-map" class="muscle-body-container"></div>
+
+        <div style="margin:8px 16px 20px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;">
+          <button onclick="toggleInsightsSection()" style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:none;border:none;color:var(--text);font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;">
+            <span>Deeper Insights <span id="insights-warn-pill" style="display:none;font-size:11px;font-weight:700;color:var(--gold);background:rgba(245,158,11,.15);padding:2px 8px;border-radius:10px;margin-left:6px;"></span></span>
+            <span id="insights-chevron" style="transition:transform .2s;">▾</span>
+          </button>
+          <div id="insights-body" style="display:none;padding:0 16px 16px;">
+            <div class="insight-card" style="margin:0 0 16px;">
+              <h3>Training Load (last 12 weeks)</h3>
+              <canvas id="training-load-chart" height="140"></canvas>
+              <div id="training-load-note" style="margin-top:10px;"></div>
+            </div>
+            <div class="insight-card" style="margin:0 0 16px;">
+              <h3>Push / Pull / Legs Balance</h3>
+              <div id="ppl-balance"></div>
+            </div>
+            <div class="insight-card" style="margin:0;">
+              <h3>Muscle Volume Warnings (this week)</h3>
+              <div id="muscle-warnings"></div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div id="ptab-exercises" style="display:none; padding: 0 16px;">
@@ -2436,22 +2462,6 @@
         <div class="muscle-section-title">Muscle Split</div>
         <div class="muscle-section-sub">Distribution</div>
         <div class="muscle-list" id="muscle-split-list"></div>
-      </div>
-
-      <div id="ptab-insights" style="display:none;">
-        <div class="insight-card">
-          <h3>Training Load (last 12 weeks)</h3>
-          <canvas id="training-load-chart" height="140"></canvas>
-          <div id="training-load-note" style="margin-top:10px;"></div>
-        </div>
-        <div class="insight-card">
-          <h3>Push / Pull / Legs Balance</h3>
-          <div id="ppl-balance"></div>
-        </div>
-        <div class="insight-card">
-          <h3>Muscle Volume Warnings (this week)</h3>
-          <div id="muscle-warnings"></div>
-        </div>
       </div>
 
       <div id="ptab-plan" style="display:none;">
@@ -3713,6 +3723,7 @@
       if (!state.workouts.length) { el.innerHTML = '<div style="padding:12px 4px;color:var(--text-muted);font-size:13px;">No workouts yet.</div>'; return; }
       el.innerHTML = state.workouts.map(w => renderFeedCard(w)).join('');
     }
+
 
 
     // ═══════════════════════════════════════════
@@ -5164,18 +5175,81 @@
     function switchProgressTab(btn, tab) {
       document.querySelectorAll('.progress-tab').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      ['overview', 'exercises', 'muscles', 'insights', 'plan'].forEach(t => {
+      ['overview', 'exercises', 'muscles', 'plan'].forEach(t => {
         const el = document.getElementById('ptab-' + t);
         el.style.display = t === tab ? 'block' : 'none';
         el.classList.remove('ptab-fade-in');
       });
       if (tab === 'muscles') renderMuscleSplit();
-      if (tab === 'insights') renderInsights();
       if (tab === 'plan') renderPeriodizationTab();
       const activeEl = document.getElementById('ptab-' + tab);
       void activeEl.offsetWidth;
       activeEl.classList.add('ptab-fade-in');
       applyCardStagger(activeEl);
+    }
+
+    // Insights live inside Overview as a collapsible section (rather than their own
+    // tab) — collapsed by default, rendered lazily on first expand since its canvas
+    // would otherwise size to 0 while hidden. Re-rendered on every open so it
+    // reflects the latest logged sets.
+    let insightsOpen = false;
+    function toggleInsightsSection() {
+      insightsOpen = !insightsOpen;
+      const body = document.getElementById('insights-body');
+      body.style.display = insightsOpen ? 'block' : 'none';
+      document.getElementById('insights-chevron').style.transform = insightsOpen ? 'rotate(180deg)' : '';
+      if (insightsOpen) {
+        renderInsights();
+        applyCardStagger(body);
+      }
+    }
+
+    // Combines muscle-volume warnings + PPL imbalance into one count, surfaced two
+    // ways: a small "N to review" pill on the collapsed Insights header, and a
+    // tappable "N things to check" banner at the top of Overview so the warnings
+    // aren't missed just because Insights starts collapsed / isn't its own tab.
+    function updateInsightsWarnPill() {
+      const now = new Date();
+      const weekStart = new Date(now); weekStart.setDate(now.getDate() - now.getDay()); weekStart.setHours(0, 0, 0, 0);
+      const weekWorkouts = state.workouts.filter(w => new Date(w.date) >= weekStart);
+      const sets = weeklyMuscleSets(weekWorkouts);
+      let count = 0;
+      MUSCLE_GROUPS.forEach(m => {
+        const n = sets[m.name] || 0;
+        const [lo, hi] = m.target || [10, 20];
+        if (n > 0 && (n < lo || n > hi)) count++;
+      });
+
+      const allSets = weeklyMuscleSets(state.workouts);
+      const totals = { push: 0, pull: 0, legs: 0 };
+      Object.entries(allSets).forEach(([m, v]) => { const cat = MUSCLE_CATEGORY[m]; if (cat) totals[cat] += v; });
+      const sum = totals.push + totals.pull + totals.legs;
+      if (sum) {
+        const pct = k => Math.round((totals[k] / sum) * 100);
+        if (pct('legs') < 25) count++;
+        if (pct('pull') < pct('push') - 15) count++;
+      }
+
+      const pill = document.getElementById('insights-warn-pill');
+      if (pill) {
+        if (count > 0) { pill.style.display = 'inline'; pill.textContent = `${count} to review`; }
+        else pill.style.display = 'none';
+      }
+      const banner = document.getElementById('overview-warn-banner');
+      if (banner) {
+        if (count > 0) { banner.style.display = 'flex'; document.getElementById('overview-warn-banner-text').textContent = `⚠️ ${count} thing${count > 1 ? 's' : ''} to check`; }
+        else banner.style.display = 'none';
+      }
+    }
+
+    // Jumps from anywhere (Overview banner, Plan tab) into the Deeper Insights
+    // section: switches to Progress → Overview, expands it if collapsed, scrolls
+    // it into view.
+    function jumpToInsights() {
+      navigateToTab('progress');
+      switchProgressTab(document.querySelectorAll('.progress-tab')[0], 'overview');
+      if (!insightsOpen) toggleInsightsSection();
+      setTimeout(() => document.getElementById('insights-body')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);
     }
 
     // Subtle, fast (<300ms) motion helpers for the Progress page — CSS-driven,
@@ -5453,6 +5527,8 @@
       renderWeeklySummary();
       renderProgressMuscleMap();
       renderExerciseHistory();
+      updateInsightsWarnPill();
+      if (insightsOpen) renderInsights();
       applyCardStagger(document.getElementById('ptab-overview'));
     }
 
@@ -5965,6 +6041,7 @@
       <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted);margin-bottom:4px;"><span>Intensity</span><span>${actual.intensityPct !== null ? actual.intensityPct + '%' : 'no RIR/RPE logged'} / target ${micro.plannedIntensityPct}%</span></div>
       <div style="height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;"><div style="height:100%;width:${barPct(actual.intensityPct || 0, micro.plannedIntensityPct)}%;background:var(--gold);"></div></div>
     </div>
+    <div onclick="jumpToInsights()" style="cursor:pointer;font-size:12px;color:var(--accent-blue);display:flex;align-items:center;gap:4px;margin-top:14px;">See how this compares in Deeper Insights →</div>
   `;
 
       document.getElementById('plan-timeline').innerHTML = `
