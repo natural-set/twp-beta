@@ -3734,7 +3734,7 @@
     function renderYouHistory() {
       const el = document.getElementById('you-history-list');
       if (!el) return;
-      if (!state.workouts.length) { el.innerHTML = '<div style="padding:12px 4px;color:var(--text-muted);font-size:13px;">No workouts yet.</div>'; return; }
+      if (!state.workouts.length) { el.innerHTML = emptyState('📋', 'No workouts yet — your training history will appear here.'); return; }
       el.innerHTML = state.workouts.map(w => renderFeedCard(w)).join('');
     }
 
@@ -4726,7 +4726,7 @@
       // Feed
       const feed = document.getElementById('home-feed');
       if (state.workouts.length === 0) {
-        feed.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:14px;">No workouts yet. Start your first one!</div>';
+        feed.innerHTML = emptyState('💪', 'No workouts yet — start your first one and it\'ll show up here.');
         return;
       }
       feed.innerHTML = state.workouts.slice(0, 5).map(w => renderFeedCard(w)).join('');
@@ -5859,7 +5859,7 @@
       });
       document.getElementById('muscle-warnings').innerHTML = rows.length
         ? rows.join('')
-        : `<div style="color:var(--text-muted);font-size:13px;">No sets logged this week yet.</div>`;
+        : emptyState('📊', 'No sets logged this week yet — muscle volume warnings will show up once you log a workout.');
     }
 
     function renderPPLBalance() {
@@ -5867,7 +5867,7 @@
       const totals = { push: 0, pull: 0, legs: 0 };
       Object.entries(sets).forEach(([m, v]) => { const cat = MUSCLE_CATEGORY[m]; if (cat) totals[cat] += v; });
       const sum = totals.push + totals.pull + totals.legs;
-      if (!sum) { document.getElementById('ppl-balance').innerHTML = `<div style="color:var(--text-muted);font-size:13px;">Not enough data yet.</div>`; return; }
+      if (!sum) { document.getElementById('ppl-balance').innerHTML = emptyState('⚖️', 'Not enough data yet — log a few workouts to see your Push/Pull/Legs balance.'); return; }
       const pct = k => Math.round((totals[k] / sum) * 100);
       const colors = { push: '#ef4444', pull: '#3b82f6', legs: '#f59e0b' };
       const bar = ['push', 'pull', 'legs'].map(k => `<div data-w="${pct(k)}" style="width:0%;background:${colors[k]};"></div>`).join('');
@@ -6058,7 +6058,7 @@
       <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted);margin-bottom:4px;"><span>Intensity</span><span>${actual.intensityPct !== null ? actual.intensityPct + '%' : 'no RIR/RPE logged'} / target ${micro.plannedIntensityPct}%</span></div>
       <div style="height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;"><div style="height:100%;width:${barPct(actual.intensityPct || 0, micro.plannedIntensityPct)}%;background:var(--gold);"></div></div>
     </div>
-    <div onclick="jumpToInsights()" style="cursor:pointer;font-size:12px;color:var(--accent-blue);display:flex;align-items:center;gap:4px;margin-top:14px;">See how this compares in Deeper Insights →</div>
+    <div onclick="jumpToInsights()" style="cursor:pointer;font-size:13px;color:var(--accent-blue);display:flex;align-items:center;gap:4px;margin-top:14px;">See how this compares in Deeper Insights →</div>
   `;
 
       document.getElementById('plan-timeline').innerHTML = `
