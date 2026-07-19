@@ -26,7 +26,7 @@ Exercise fields: `exId, name, icon, primary[], secondary[], note, sets, restSeco
 
 ## Shipped features (do not re-explain, just extend)
 - RPE + RIR + tempo per set
-- Insights tab: 12-wk training load chart, Push/Pull/Legs balance, muscle volume warnings — **per-muscle target ranges** (each `MUSCLE_GROUPS` entry carries `target: [lo, hi]` weekly sets instead of one flat band)
+- Deeper Insights (12-wk training load chart, Push/Pull/Legs balance, muscle volume warnings) — collapsible section inside the Progress **Overview** tab, not its own tab (see "SHIPPED: Insights merged into Overview" below) — **per-muscle target ranges** (each `MUSCLE_GROUPS` entry carries `target: [lo, hi]` weekly sets instead of one flat band)
 - Plateau detection (last 3 sessions identical top set → ⚠️ tag)
 - Bodyweight PR badges (keyword-matched via `BODYWEIGHT_EXERCISE_KEYWORDS`/`isBodyweight` flag, tracks best reps or best system weight)
 - Gamification badges (`BADGE_DEFS`): workout counts, tonnage, streaks
@@ -59,15 +59,17 @@ Per-set weight input for bodyweight-capable exercises is a single cycling chip i
 - Feed card exercise cells (`renderFeedCard`) show each exercise's total kg lifted (dumbbell-emoji prefixed), not just set count.
 
 ## SHIPPED: Progress page — UI/UX pass
-**Insights tab:**
+**Deeper Insights (Training Load / PPL / Muscle Warnings):**
 - Per-muscle target ranges (see Core data model / Shipped features above) replace the old flat 10-20 band; warning rows show `n/lo-hi sets`.
 - `daysSinceMuscleTrained(name)` flags any muscle idle 7+ days inline in the warnings list.
 - PPL balance shows a "target ~30-35%" benchmark next to each bar, plus a pull-lagging-push check.
 - Training load chart gets a note (`#training-load-note`) flagging >30% week-over-week volume swings (deload vs. injury-risk framing).
+- Lives inside Overview as a collapsible section, not its own tab — see "SHIPPED: Insights merged into Overview" below.
 
 **Overview tab:**
 - New "This Week At a Glance" card (`renderWeeklySummary`/`#weekly-summary-card`): workouts vs. goal, volume delta % vs. last week, new PRs this week.
 - Chart gained a **ghost previous-period line** (dashed, same-length window immediately prior, aligned by position) via `bucketWorkouts()`/`getFilterCutoff()`/`metricValue()`, plus **★ PR star markers** on chart points containing a PR and **click-to-open-detail** on any point (`onClick` → `openDetail`). `#chart-legend-row` shows/hides to explain the markers.
+- "Deeper Insights" collapsible section (see below), plus a warning banner above it when something needs attention.
 
 **Exercises tab:**
 - Search input (`#exercise-search`) + 3-way sort (`switchExerciseSort`: Recent / Most Trained / Plateaued).
@@ -85,7 +87,16 @@ Per-set weight input for bodyweight-capable exercises is a single cycling chip i
 - `animateBarWidth(el, targetPct)` — Muscle Split bars and PPL segments grow from 0% instead of snapping in.
 - `fadeInEl(el)` — front/back muscle-manikin SVGs fade in (~220ms) on rebuild; `.muscle-region` also carries a `fill`/`stroke` CSS transition for future per-node updates.
 - `.warn-pill` / `.plateau-tag` get a quick pop-in (scale+opacity, ~200ms) whenever re-rendered.
-- **Explicitly declined:** icon-only chip labels (undone per feedback, text labels only) and restructuring Insights into a collapsible section inside Overview (seen in a scratch/parallel version) — kept as its own tab; would conflict with the tab-crossfade motion and is a structural redesign, not an additive feature. Revisit only if explicitly requested.
+- **Explicitly declined:** icon-only chip labels (undone per feedback, text labels only).
+
+## SHIPPED: Insights merged into Overview
+The standalone Insights progress-tab was folded into a collapsible section at the bottom of Overview (previously reviewed from a scratch/parallel version and initially declined as a structural redesign — since implemented on request).
+
+- Progress tabs are now just `overview / exercises / muscles / plan` — no separate `ptab-insights`; `switchProgressTab()`'s tab list and the `.progress-tab` buttons were updated to match.
+- `#ptab-overview` ends with a collapsible "Deeper Insights" card (`toggleInsightsSection()`) wrapping the same three insight-cards (Training Load chart, PPL Balance, Muscle Volume Warnings) that used to live in the separate tab. Collapsed by default; `renderInsights()` runs lazily on first expand (its canvas would size to 0 while hidden) and re-runs every time it's reopened.
+- `updateInsightsWarnPill()` computes a single "things to check" count (muscles outside their target range + PPL imbalance) and surfaces it two places: a small pill on the collapsed header (`#insights-warn-pill`, "N to review") and a tappable banner near the top of Overview (`#overview-warn-banner`, "⚠️ N things to check") — both hidden when the count is 0. Called from `refreshProgress()`.
+- `jumpToInsights()` — navigates to Progress → Overview, force-expands the section if collapsed, scrolls it into view. Wired to the warning banner and to a "See how this compares in Deeper Insights →" link at the bottom of the Plan tab's weekly card.
+- Uses the existing motion system (`applyCardStagger`) on expand rather than introducing new animation.
 
 ## Parser notation (training log import, `.txt`/PDF/Excel)
 - `c` = kg marker (e.g. `12c10` = 12 reps @ 10kg)
@@ -101,7 +112,6 @@ Per-set weight input for bodyweight-capable exercises is a single cycling chip i
 
 ## Known gaps
 - RPE/tempo/rest-preset round-trip through text import/export is partial (`^`-tags); `bwMode`/`extWeight` still not round-tripped through the parser/exporter.
-- Scratch/parallel version's "Insights collapsed inside Overview + warning banner + `jumpToInsights()`" redesign was reviewed but not merged (see Motion section) — revisit if wanted.
 
 ## Anthropic API note
 If asked to build "Claude in Claude" features inside this app, use model string `claude-sonnet-4-6`, no API key needed, standard `/v1/messages` shape.
