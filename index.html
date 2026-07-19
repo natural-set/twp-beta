@@ -645,6 +645,52 @@
       padding: 3px 2px; width: 34px; outline: none;
     }
 
+    /* ── Progress page motion (subtle, <300ms, CSS-only) ── */
+    @keyframes ptabFadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .ptab-fade-in {
+      animation: ptabFadeIn 200ms ease;
+    }
+
+    @keyframes cardStaggerIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .stagger-in {
+      animation: cardStaggerIn 220ms ease both;
+    }
+
+    @keyframes popIn {
+      0% { opacity: 0; transform: scale(.7); }
+      60% { opacity: 1; transform: scale(1.06); }
+      100% { transform: scale(1); }
+    }
+
+    .warn-pill, .plateau-tag {
+      animation: popIn 200ms ease-out;
+    }
+
+    .muscle-bar, .ppl-bar-row>div {
+      transition: width 260ms ease-out;
+    }
+
+    .muscle-region {
+      transition: fill 200ms ease, stroke 200ms ease;
+    }
+
+    @keyframes svgRefreshFade {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .svg-refresh-fade {
+      animation: svgRefreshFade 220ms ease;
+    }
+
     .insight-card {
       margin: 0 16px 16px;
       background: var(--surface);
@@ -2316,6 +2362,10 @@
         <div class="chart-container">
           <div class="chart-label" id="chart-period-label">This week</div>
           <div class="chart-value" id="chart-main-value">0min</div>
+          <div id="chart-legend-row" style="display:none;gap:14px;font-size:11px;color:var(--text-muted);margin:-6px 0 8px;">
+            <span>★ <span style="color:var(--gold)">PR</span></span>
+            <span>┄┄ Previous period</span>
+          </div>
           <canvas id="progress-chart" height="140"></canvas>
           <div class="metric-tabs">
             <button class="metric-tab active" onclick="switchMetric(this,'duration')">
@@ -2367,8 +2417,12 @@
       </div>
 
       <div id="ptab-exercises" style="display:none; padding: 0 16px;">
-        <div style="padding: 20px 0; text-align: center; color: var(--text-muted); font-size: 14px;">
-          Exercise history will appear as you log workouts.
+        <input id="exercise-search" class="modal-search" placeholder="Search exercises…" oninput="renderExerciseHistory()"
+          style="width:100%;margin:12px 0 10px;box-sizing:border-box;">
+        <div class="time-filters" style="margin:0 0 12px;">
+          <button class="ex-sort-btn time-filter active" onclick="switchExerciseSort(this,'recent')">Recent</button>
+          <button class="ex-sort-btn time-filter" onclick="switchExerciseSort(this,'trained')">Most Trained</button>
+          <button class="ex-sort-btn time-filter" onclick="switchExerciseSort(this,'plateaued')">Plateaued</button>
         </div>
         <div id="exercise-history-list"></div>
       </div>
@@ -3659,6 +3713,7 @@
       if (!state.workouts.length) { el.innerHTML = '<div style="padding:12px 4px;color:var(--text-muted);font-size:13px;">No workouts yet.</div>'; return; }
       el.innerHTML = state.workouts.map(w => renderFeedCard(w)).join('');
     }
+
 
     // ═══════════════════════════════════════════
     //  NAVIGATION
@@ -5110,11 +5165,58 @@
       document.querySelectorAll('.progress-tab').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       ['overview', 'exercises', 'muscles', 'insights', 'plan'].forEach(t => {
-        document.getElementById('ptab-' + t).style.display = t === tab ? 'block' : 'none';
+        const el = document.getElementById('ptab-' + t);
+        el.style.display = t === tab ? 'block' : 'none';
+        el.classList.remove('ptab-fade-in');
       });
       if (tab === 'muscles') renderMuscleSplit();
       if (tab === 'insights') renderInsights();
       if (tab === 'plan') renderPeriodizationTab();
+      const activeEl = document.getElementById('ptab-' + tab);
+      void activeEl.offsetWidth;
+      activeEl.classList.add('ptab-fade-in');
+      applyCardStagger(activeEl);
+    }
+
+    // Subtle, fast (<300ms) motion helpers for the Progress page — CSS-driven,
+    // no animation library. Re-triggers by removing+reflowing+re-adding a class.
+    function applyCardStagger(container) {
+      if (!container) return;
+      const items = container.querySelectorAll('.snapshot-card, .cta-card, .chart-container, .goal-card, .insight-card, .muscle-item, .day-card, .week-compare-card');
+      items.forEach((el, i) => {
+        el.classList.remove('stagger-in');
+        el.style.animationDelay = Math.min(i, 8) * 35 + 'ms';
+        void el.offsetWidth;
+        el.classList.add('stagger-in');
+      });
+    }
+
+    function animateNumber(el, target, suffix, duration) {
+      if (!el) return;
+      duration = duration || 260;
+      const isInt = Number.isInteger(target);
+      const t0 = performance.now();
+      function tick(now) {
+        const p = Math.min(1, (now - t0) / duration);
+        const eased = 1 - Math.pow(1 - p, 3);
+        const cur = target * eased;
+        el.textContent = (isInt ? Math.round(cur) : Math.round(cur * 10) / 10) + suffix;
+        if (p < 1) requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    }
+
+    function animateBarWidth(el, targetPct) {
+      if (!el) return;
+      el.style.width = '0%';
+      requestAnimationFrame(() => requestAnimationFrame(() => { el.style.width = targetPct + '%'; }));
+    }
+
+    function fadeInEl(el) {
+      if (!el) return;
+      el.classList.remove('svg-refresh-fade');
+      void el.offsetWidth;
+      el.classList.add('svg-refresh-fade');
     }
 
     function switchFilter(btn, f) {
@@ -5124,7 +5226,7 @@
       renderChart();
     }
 
-    function getFilteredWorkouts() {
+    function getFilterCutoff() {
       const now = new Date();
       const cutoff = new Date();
       if (state.currentFilter === 'week') {
@@ -5143,20 +5245,19 @@
       } else {
         cutoff.setMonth(now.getMonth() - 3);
       }
+      return cutoff;
+    }
+
+    function getFilteredWorkouts() {
+      const cutoff = getFilterCutoff();
       return state.workouts.filter(w => new Date(w.date) >= cutoff);
     }
 
-    function renderChart() {
-      const workouts = getFilteredWorkouts();
-      const now = new Date();
-
-      // Decide bucket size based on filter
-      const useDays = state.currentFilter === 'week' || state.currentFilter === 'month';
-
-      // Local-date key (YYYY-MM-DD) — avoids the UTC round-trip that toISOString()
-      // introduces, which shifted bucket dates by a day for timezones behind UTC.
+    // Buckets a set of workouts into local-date keys (daily or weekly), returning
+    // sorted labels + per-bucket totals/workout-ids — shared by the current-period
+    // and previous-period (ghost line) computations so both bucket identically.
+    function bucketWorkouts(workouts, useDays) {
       const localKey = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-
       const buckets = {};
       workouts.forEach(w => {
         const d = new Date(w.date);
@@ -5164,61 +5265,108 @@
         if (useDays) {
           bucketDate = new Date(d.getFullYear(), d.getMonth(), d.getDate());
         } else {
-          // weekly buckets — snap to the local Sunday of that week
           bucketDate = new Date(d.getFullYear(), d.getMonth(), d.getDate());
           bucketDate.setDate(bucketDate.getDate() - bucketDate.getDay());
         }
         const key = localKey(bucketDate);
-        if (!buckets[key]) buckets[key] = { duration: 0, volume: 0, workouts: 0, date: bucketDate };
+        if (!buckets[key]) buckets[key] = { duration: 0, volume: 0, workouts: 0, date: bucketDate, ids: [], hasPR: false };
         buckets[key].duration += w.duration;
         buckets[key].volume += w.volume;
         buckets[key].workouts++;
+        buckets[key].ids.push(w.id);
+        if (w.exercises.some(ex => (ex.sets || []).some(s => s.prs && s.prs.length))) buckets[key].hasPR = true;
       });
+      const keys = Object.keys(buckets).sort();
+      return { buckets, keys };
+    }
 
-      const labels = Object.keys(buckets).sort().slice(-24);
-      const values = labels.map(k => {
-        if (state.currentMetric === 'duration') return buckets[k].duration;
-        if (state.currentMetric === 'volume') return Math.round(buckets[k].volume);
-        return buckets[k].workouts;
-      });
+    function metricValue(bucket) {
+      if (state.currentMetric === 'duration') return bucket.duration;
+      if (state.currentMetric === 'volume') return Math.round(bucket.volume);
+      return bucket.workouts;
+    }
+
+    function renderChart() {
+      const workouts = getFilteredWorkouts();
+      const now = new Date();
+      const useDays = state.currentFilter === 'week' || state.currentFilter === 'month';
+
+      const { buckets, keys } = bucketWorkouts(workouts, useDays);
+      const labelKeys = keys.slice(-24);
+      const values = labelKeys.map(k => metricValue(buckets[k]));
+      const prFlags = labelKeys.map(k => buckets[k].hasPR);
+      const idsByPoint = labelKeys.map(k => buckets[k].ids);
 
       const total = values.reduce((s, v) => s + v, 0);
       const unit = state.currentMetric === 'duration' ? 'min' : state.currentMetric === 'volume' ? 'kg' : '';
 
-      // Period label
       const periodLabels = {
         week: 'This week', month: 'This month',
         '3m': 'Last 3 months', '6m': 'Last 6 months',
         year: 'This year', all: 'All time'
       };
       document.getElementById('chart-period-label').textContent = periodLabels[state.currentFilter] || '';
-      document.getElementById('chart-main-value').textContent = total + unit;
+      animateNumber(document.getElementById('chart-main-value'), total, unit);
+
+      // Ghost "previous period" line: same-length window immediately before the
+      // current one, re-bucketed the same way, aligned by position (not calendar
+      // date) so it lines up under the current period's x-axis. Skipped for "all
+      // time" since there's no meaningful "previous" window to compare against.
+      let prevValues = null;
+      if (state.currentFilter !== 'all' && labelKeys.length) {
+        const cutoff = getFilterCutoff();
+        const spanMs = now - cutoff;
+        const prevCutoff = new Date(cutoff.getTime() - spanMs);
+        const prevWorkouts = state.workouts.filter(w => { const d = new Date(w.date); return d >= prevCutoff && d < cutoff; });
+        const prevBuckets = bucketWorkouts(prevWorkouts, useDays);
+        const prevVals = prevBuckets.keys.map(k => metricValue(prevBuckets.buckets[k]));
+        prevValues = new Array(labelKeys.length).fill(null);
+        for (let i = 0; i < Math.min(prevVals.length, labelKeys.length); i++) {
+          prevValues[labelKeys.length - 1 - i] = prevVals[prevVals.length - 1 - i];
+        }
+      }
 
       const ctx = document.getElementById('progress-chart').getContext('2d');
       if (chartInstance) chartInstance.destroy();
+      const datasets = [{
+        data: values.length ? values : [0],
+        borderColor: '#3b82f6',
+        backgroundColor: 'rgba(59,130,246,0.08)',
+        fill: true,
+        tension: 0.35,
+        pointBackgroundColor: values.map((v, i) => prFlags[i] ? '#f59e0b' : '#3b82f6'),
+        pointStyle: values.map((v, i) => prFlags[i] ? 'star' : 'circle'),
+        pointRadius: values.map((v, i) => prFlags[i] ? 7 : 4),
+        pointHoverRadius: values.map((v, i) => prFlags[i] ? 9 : 6),
+        order: 1,
+      }];
+      if (prevValues) {
+        datasets.push({
+          data: prevValues, borderColor: 'rgba(148,163,184,.55)', backgroundColor: 'transparent',
+          borderDash: [5, 5], fill: false, tension: 0.35, pointRadius: 0, pointHoverRadius: 0,
+          spanGaps: true, order: 2,
+        });
+      }
+
       chartInstance = new Chart(ctx, {
         type: 'line',
         data: {
-          labels: labels.length ? labels.map(l => {
-            return buckets[l].date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-          }) : ['No data'],
-          datasets: [{
-            data: values.length ? values : [0],
-            borderColor: '#3b82f6',
-            backgroundColor: 'rgba(59,130,246,0.08)',
-            fill: true,
-            tension: 0.35,
-            pointBackgroundColor: '#3b82f6',
-            pointRadius: 4,
-            pointHoverRadius: 6,
-          }]
+          labels: labelKeys.length ? labelKeys.map(k => buckets[k].date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })) : ['No data'],
+          datasets,
         },
         options: {
           responsive: true,
+          onClick: (evt, elements) => {
+            if (!elements.length) return;
+            const idx = elements[0].index;
+            const ids = idsByPoint[idx];
+            if (ids && ids.length) openDetail(ids[ids.length - 1]);
+          },
           plugins: {
-            legend: { display: false }, tooltip: {
+            legend: { display: false },
+            tooltip: {
               callbacks: {
-                label: ctx => ctx.parsed.y + unit
+                label: c => (c.datasetIndex === 0 ? (prFlags[c.dataIndex] ? '🏅 PR · ' : '') + c.parsed.y + unit : 'Previous: ' + c.parsed.y + unit)
               }
             }
           },
@@ -5229,7 +5377,9 @@
         }
       });
 
-      // Also update the summary stats below the chart
+      const legendRow = document.getElementById('chart-legend-row');
+      if (legendRow) legendRow.style.display = prevValues ? 'flex' : 'none';
+
       renderFilterStats(workouts);
     }
 
@@ -5289,10 +5439,12 @@
       <div class="snapshot-header"><span>This Week At a Glance</span></div>
       <div class="snapshot-stats" style="flex-wrap:wrap;row-gap:12px;">
         <div class="stat-item"><div class="val">${weekWorkouts.length}/${goal}</div><div class="lbl">Workouts</div></div>
-        <div class="stat-item"><div class="val">${Math.round(vol)}kg</div><div class="lbl">Volume</div><div class="stat-delta ${volPct === null ? '' : volPct >= 0 ? 'up' : 'down'}">${volDelta}</div></div>
-        <div class="stat-item"><div class="val">🏅 ${newPRs}</div><div class="lbl">New PRs</div></div>
+        <div class="stat-item"><div class="val" id="wsum-volume">0kg</div><div class="lbl">Volume</div><div class="stat-delta ${volPct === null ? '' : volPct >= 0 ? 'up' : 'down'}">${volDelta}</div></div>
+        <div class="stat-item"><div class="val">🏅 <span id="wsum-prs">0</span></div><div class="lbl">New PRs</div></div>
       </div>
     </div>`;
+      animateNumber(document.getElementById('wsum-volume'), Math.round(vol), 'kg');
+      animateNumber(document.getElementById('wsum-prs'), newPRs, '');
     }
 
     function refreshProgress() {
@@ -5301,6 +5453,7 @@
       renderWeeklySummary();
       renderProgressMuscleMap();
       renderExerciseHistory();
+      applyCardStagger(document.getElementById('ptab-overview'));
     }
 
     function renderGoal() {
@@ -5330,6 +5483,7 @@
       const weekWorkouts = state.workouts.filter(w => new Date(w.date) >= weekStart);
       const stats = computeMuscleActivation(weekWorkouts);
       document.getElementById('progress-muscle-map').innerHTML = buildBodySVGs('small', stats);
+      fadeInEl(document.getElementById('progress-muscle-map'));
     }
 
     // An exercise is "plateaued" if its top working set (max weight, tie-broken by
@@ -5377,26 +5531,69 @@
       return { arrow, weeksStalled: stalled };
     }
 
+    // Shared purposeful empty-state markup (icon + one sentence tied to the panel
+    // it's in) — replaces generic muted one-liners in Exercises/Muscles panels.
+    function emptyState(icon, text) {
+      return `<div style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:40px 24px;text-align:center;">
+        <div style="font-size:34px;opacity:.5;">${icon}</div>
+        <div style="font-size:13px;color:var(--text-muted);max-width:260px;line-height:1.5;">${text}</div>
+      </div>`;
+    }
+
+    let exerciseSortMode = 'recent';
+    function switchExerciseSort(btn, mode) {
+      document.querySelectorAll('#ptab-exercises .ex-sort-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      exerciseSortMode = mode;
+      renderExerciseHistory();
+    }
+
     function renderExerciseHistory() {
       const el = document.getElementById('exercise-history-list');
       const seen = {};
       state.workouts.forEach(w => {
         w.exercises.forEach(ex => {
-          if (!seen[ex.exId]) seen[ex.exId] = { exId: ex.exId, name: ex.name, icon: ex.icon, count: 0, volume: 0 };
+          if (!seen[ex.exId]) seen[ex.exId] = { exId: ex.exId, name: ex.name, icon: ex.icon, count: 0, volume: 0, lastDate: w.date };
           seen[ex.exId].count++;
+          if (new Date(w.date) > new Date(seen[ex.exId].lastDate)) seen[ex.exId].lastDate = w.date;
           (ex.sets || []).filter(s => !s.warmup).forEach(s => { seen[ex.exId].volume += s.weight * s.reps; });
         });
       });
-      const items = Object.values(seen);
-      if (!items.length) { el.innerHTML = ''; return; }
+      let items = Object.values(seen);
+      if (!items.length) {
+        el.innerHTML = emptyState('🏋️', 'Log a workout to start building exercise history — trends, volume, and plateau detection will show up here.');
+        return;
+      }
+
+      const query = (document.getElementById('exercise-search')?.value || '').trim().toLowerCase();
+      if (query) items = items.filter(it => it.name.toLowerCase().includes(query));
+
+      items = items.map(it => ({ ...it, trend: getExerciseTrend(it.exId), plateaued: isExercisePlateaued(it.exId) }));
+
+      if (exerciseSortMode === 'trained') {
+        items.sort((a, b) => b.count - a.count);
+      } else if (exerciseSortMode === 'plateaued') {
+        items.sort((a, b) => (b.plateaued - a.plateaued) || (b.trend.weeksStalled - a.trend.weeksStalled));
+      } else {
+        items.sort((a, b) => new Date(b.lastDate) - new Date(a.lastDate));
+      }
+
+      if (!items.length) {
+        el.innerHTML = emptyState('🔍', `No exercises match "${query}". Try a different search term.`);
+        return;
+      }
+      if (exerciseSortMode === 'plateaued' && !items.some(it => it.plateaued)) {
+        el.innerHTML = emptyState('✅', `No plateaus detected — every exercise has shown progress across its last ${PLATEAU_SESSION_COUNT} sessions.`);
+        return;
+      }
+
       el.innerHTML = items.map(it => {
-        const trend = getExerciseTrend(it.exId);
-        const plateauTag = trend.weeksStalled >= PLATEAU_SESSION_COUNT ? `<span class="plateau-tag">⚠️ Stalled ${trend.weeksStalled}x</span>` : '';
+        const plateauTag = it.trend.weeksStalled >= PLATEAU_SESSION_COUNT ? `<span class="plateau-tag">⚠️ Stalled ${it.trend.weeksStalled}x</span>` : '';
         return `
     <div class="muscle-item" style="cursor:pointer" onclick="openExerciseDetail('${it.exId}')">
       <div class="muscle-item-icon">${it.icon}</div>
       <div style="flex:1">
-        <div class="muscle-item-name">${trend.arrow} ${it.name}${plateauTag}</div>
+        <div class="muscle-item-name">${it.trend.arrow} ${it.name}${plateauTag}</div>
         <div class="muscle-item-stats">${Math.round(it.volume)}kg total · ${it.count} sessions</div>
       </div>
     </div>
@@ -5409,6 +5606,7 @@
     // ═══════════════════════════════════════════
     function renderMuscleSplit() {
       document.getElementById('muscle-map-full').innerHTML = buildBodySVGs('full', computeMuscleActivation(state.workouts));
+      fadeInEl(document.getElementById('muscle-map-full'));
 
       const stats = {};
       MUSCLE_GROUPS.forEach(m => { stats[m.name] = { kg: 0, sets: 0, color: m.color }; });
@@ -5437,19 +5635,70 @@
       });
 
       const maxKg = Math.max(...Object.values(stats).map(s => s.kg), 1);
+      const totalKg = Object.values(stats).reduce((s, x) => s + x.kg, 0);
+      const listEl = document.getElementById('muscle-split-list');
+      if (totalKg === 0) {
+        listEl.innerHTML = emptyState('💪', 'Log a few workouts to see your muscle split — which muscles are getting the most volume, and how that shifts week to week.');
+        return;
+      }
+      const weeklySeries = computeMuscleWeeklySeries(8);
       const sorted = [...MUSCLE_GROUPS].sort((a, b) => (stats[a.name]?.kg || 0) - (stats[b.name]?.kg || 0));
-      document.getElementById('muscle-split-list').innerHTML = sorted.map(m => {
+      listEl.innerHTML = sorted.map(m => {
         const s = stats[m.name] || { kg: 0, sets: 0 };
         const barW = Math.max(2, (s.kg / maxKg) * 100);
+        const color = m.color === 'secondary' ? '#3b82f6' : '#ef4444';
         return `<div class="muscle-item" style="cursor:pointer" onclick="openMuscleDetail('${m.name}')">
       <div class="muscle-item-icon">${m.icon}</div>
       <div style="flex:1">
         <div class="muscle-item-name">${m.name}</div>
         <div class="muscle-item-stats">${Math.round(s.kg)}kg · ${Math.round(s.sets)} sets</div>
-        <div class="muscle-bar ${m.color === 'secondary' ? 'secondary' : ''}" style="width:${barW}%"></div>
+        <div class="muscle-bar ${m.color === 'secondary' ? 'secondary' : ''}" data-w="${barW}" style="width:0%"></div>
       </div>
+      <div title="Last 8 weeks">${sparklineSVG(weeklySeries[m.name], color)}</div>
     </div>`;
       }).join('');
+      document.querySelectorAll('#muscle-split-list .muscle-bar').forEach(el => animateBarWidth(el, el.dataset.w));
+    }
+
+    // Weighted weekly set-count per muscle over the last N weeks (primary=full
+    // credit, secondary=half), bucketed once for all muscles together so the
+    // Muscle Split sparklines don't re-scan the full workout history per muscle.
+    function computeMuscleWeeklySeries(weeks) {
+      const now = new Date();
+      const weekStarts = [];
+      for (let i = weeks - 1; i >= 0; i--) {
+        const ws = new Date(now); ws.setDate(now.getDate() - now.getDay() - i * 7); ws.setHours(0, 0, 0, 0);
+        weekStarts.push(ws);
+      }
+      const series = {};
+      MUSCLE_GROUPS.forEach(m => { series[m.name] = new Array(weeks).fill(0); });
+      state.workouts.forEach(w => {
+        const d = new Date(w.date);
+        let idx = -1;
+        for (let i = 0; i < weeks; i++) {
+          const we = new Date(weekStarts[i]); we.setDate(we.getDate() + 7);
+          if (d >= weekStarts[i] && d < we) { idx = i; break; }
+        }
+        if (idx === -1) return;
+        w.exercises.forEach(ex => {
+          const workSets = (ex.sets || []).filter(s => !s.warmup);
+          if (!workSets.length) return;
+          const { primary, secondary } = getExerciseMuscles(ex);
+          primary.forEach(m => { if (series[m]) series[m][idx] += workSets.length; });
+          secondary.forEach(m => { if (series[m]) series[m][idx] += workSets.length * 0.5; });
+        });
+      });
+      return series;
+    }
+
+    // Minimal inline trend sparkline — no axes/labels, just shape, so it reads at
+    // a glance inside a list row rather than competing with the bar/kg text.
+    function sparklineSVG(vals, color) {
+      const w = 56, h = 20;
+      const max = Math.max(...vals, 0.001);
+      if (!vals.some(v => v > 0)) return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><line x1="0" y1="${h - 1}" x2="${w}" y2="${h - 1}" stroke="var(--border)" stroke-width="1"/></svg>`;
+      const pts = vals.map((v, i) => `${(i / (vals.length - 1)) * w},${h - (v / max) * (h - 2) - 1}`).join(' ');
+      return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="flex-shrink:0;"><polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
     }
 
     // ═══════════════════════════════════════════
@@ -5529,12 +5778,13 @@
       if (!sum) { document.getElementById('ppl-balance').innerHTML = `<div style="color:var(--text-muted);font-size:13px;">Not enough data yet.</div>`; return; }
       const pct = k => Math.round((totals[k] / sum) * 100);
       const colors = { push: '#ef4444', pull: '#3b82f6', legs: '#f59e0b' };
-      const bar = ['push', 'pull', 'legs'].map(k => `<div style="width:${pct(k)}%;background:${colors[k]};"></div>`).join('');
+      const bar = ['push', 'pull', 'legs'].map(k => `<div data-w="${pct(k)}" style="width:0%;background:${colors[k]};"></div>`).join('');
       const legend = ['push', 'pull', 'legs'].map(k => `<div class="warn-row"><span><span class="legend-dot" style="background:${colors[k]}"></span>${titleCase(k)}<span style="color:var(--text-dim);font-size:11px;margin-left:6px;">target ~30-35%</span></span><strong>${pct(k)}%</strong></div>`).join('');
       const warnings = [];
       if (pct('legs') < 25) warnings.push('⚠️ Legs volume is low relative to upper body.');
       if (pct('pull') < pct('push') - 15) warnings.push('⚠️ Pull volume trails push — watch posture/shoulder balance.');
       document.getElementById('ppl-balance').innerHTML = `<div class="ppl-bar-row">${bar}</div>${legend}${warnings.map(w => `<div style="color:var(--gold);font-size:12px;margin-top:8px;">${w}</div>`).join('')}`;
+      document.querySelectorAll('#ppl-balance .ppl-bar-row > div').forEach(el => animateBarWidth(el, el.dataset.w));
     }
 
     let trainingLoadChartInstance = null;
