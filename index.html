@@ -645,7 +645,7 @@
       padding: 3px 2px; width: 34px; outline: none;
     }
 
-    /* ── Progress page motion (subtle, <300ms, CSS-only) ── */
+    /* ── App-wide motion (subtle, <300ms, CSS-only) ── */
     @keyframes ptabFadeIn {
       from { opacity: 0; transform: translateY(4px); }
       to { opacity: 1; transform: translateY(0); }
@@ -670,11 +670,11 @@
       100% { transform: scale(1); }
     }
 
-    .warn-pill, .plateau-tag {
+    .warn-pill, .plateau-tag, .pr-badge, .badge-chip, .medal, .today-pill {
       animation: popIn 200ms ease-out;
     }
 
-    .muscle-bar, .ppl-bar-row>div {
+    .muscle-bar, .ppl-bar-row>div, .plan-bar-fill {
       transition: width 260ms ease-out;
     }
 
@@ -689,6 +689,45 @@
 
     .svg-refresh-fade {
       animation: svgRefreshFade 220ms ease;
+    }
+
+    /* table rows: opacity-only fade (transform on <tr> is unreliable across browsers) */
+    @keyframes rowFadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .row-fade-in {
+      animation: rowFadeIn 200ms ease;
+    }
+
+    /* Screen switches (bottom nav) crossfade+lift instead of a hard display cut */
+    @keyframes screenFadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .screen.active {
+      animation: screenFadeIn 180ms ease;
+    }
+
+    /* Every modal sheet slides up + fades in on open, no JS/display changes needed */
+    @keyframes sheetSlideUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .modal-overlay.open .modal-sheet,
+    .modal-overlay.open .import-modal-sheet {
+      animation: sheetSlideUp 220ms ease;
+    }
+
+    /* Toast already animates via its existing transition; button press gives a touch of tactile feedback */
+    .btn-primary, .btn-primary-flex, .btn-secondary, .btn-finish, .goal-btn {
+      transition: transform 120ms ease, opacity .15s;
+    }
+    .btn-primary:active, .btn-primary-flex:active, .btn-secondary:active, .btn-finish:active, .goal-btn:active {
+      transform: scale(.97);
     }
 
     .insight-card {
@@ -3188,6 +3227,7 @@
       document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
       document.getElementById('screen-exercise-manager').classList.add('active');
       renderExerciseManagerList();
+      applyCardStagger(document.getElementById('screen-exercise-manager'));
     }
 
     function isExerciseInUse(exId) {
@@ -4298,7 +4338,7 @@
       const isCombo = !!linkGroupPrefill;
       const blockId = 'ex-' + Date.now() + Math.random().toString(36).slice(2, 6);
       const div = document.createElement('div');
-      div.className = 'ex-block'; div.id = blockId; div.dataset.exId = exId;
+      div.className = 'ex-block stagger-in'; div.id = blockId; div.dataset.exId = exId;
       div.dataset.trackRest = trackRest ? 'true' : 'false';
       div.innerHTML = `
     <div class="ex-block-header">
@@ -4357,7 +4397,7 @@
       const comboId = 'combo-' + Date.now() + Math.random().toString(36).slice(2, 5);
       const container = document.getElementById('exercises-container');
       const wrapper = document.createElement('div');
-      wrapper.className = 'combo-block'; wrapper.id = comboId;
+      wrapper.className = 'combo-block stagger-in'; wrapper.id = comboId;
       wrapper.innerHTML = `<div class="combo-header">
       <div class="combo-header-top">
         <span class="combo-header-title">🔗 Combined Exercise</span>
@@ -4468,7 +4508,7 @@
       const lastSets = (!isWarmup && blockEl) ? getLastExerciseSets(blockEl.dataset.exId) : null;
       const lastSet = lastSets ? lastSets[regCount] : null;
       const tr = document.createElement('tr');
-      tr.className = 'set-row' + (isWarmup ? ' warmup' : '');
+      tr.className = 'set-row row-fade-in' + (isWarmup ? ' warmup' : '');
       tr.dataset.warmup = isWarmup;
       tr.dataset.variations = '[]';
       tr.dataset.restSeconds = '0';
@@ -4711,9 +4751,9 @@
       const lastDuration = lastWeekWorkouts.reduce((s, w) => s + w.duration, 0);
       const lastVolume = lastWeekWorkouts.reduce((s, w) => s + w.volume, 0);
 
-      document.getElementById('home-workouts').textContent = weekWorkouts.length;
-      document.getElementById('home-duration').textContent = totalDuration + 'min';
-      document.getElementById('home-volume').textContent = Math.round(totalVolume) + 'kg';
+      animateNumber(document.getElementById('home-workouts'), weekWorkouts.length, '');
+      animateNumber(document.getElementById('home-duration'), totalDuration, 'min');
+      animateNumber(document.getElementById('home-volume'), Math.round(totalVolume), 'kg');
 
       setDeltaBadge('home-delta-workouts', weekWorkouts.length - lastWeekWorkouts.length, '');
       setDeltaBadge('home-delta-duration', totalDuration - lastDuration, 'min');
@@ -4730,6 +4770,7 @@
         return;
       }
       feed.innerHTML = state.workouts.slice(0, 5).map(w => renderFeedCard(w)).join('');
+      applyCardStagger(document.getElementById('screen-home'));
     }
 
     function setDeltaBadge(elId, delta, unit) {
@@ -4993,6 +5034,7 @@
     <div class="section-sub">Monday – Sunday</div>
     ${daysHTML}
   `;
+      applyCardStagger(document.getElementById('weekly-detail-content'));
     }
 
     // ═══════════════════════════════════════════
@@ -5183,6 +5225,7 @@
       document.getElementById('screen-detail').classList.add('active');
       const labelMap = { home: 'Home', progress: 'Progress', you: 'You', workout: 'Workout', 'weekly-detail': 'Weekly Details' };
       document.getElementById('back-btn-label').textContent = labelMap[state.prevScreen] || 'Back';
+      applyCardStagger(document.getElementById('detail-content'));
     }
 
     // ═══════════════════════════════════════════
@@ -5272,7 +5315,7 @@
     // no animation library. Re-triggers by removing+reflowing+re-adding a class.
     function applyCardStagger(container) {
       if (!container) return;
-      const items = container.querySelectorAll('.snapshot-card, .cta-card, .chart-container, .goal-card, .insight-card, .muscle-item, .day-card, .week-compare-card');
+      const items = container.querySelectorAll('.snapshot-card, .cta-card, .chart-container, .goal-card, .insight-card, .muscle-item, .day-card, .week-compare-card, .feed-card, .import-card, .detail-stat, .you-stat, .badge-chip, .wc-item');
       items.forEach((el, i) => {
         el.classList.remove('stagger-in');
         el.style.animationDelay = Math.min(i, 8) * 35 + 'ms';
@@ -6052,14 +6095,15 @@
     <div style="font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;">Phase: <span style="color:${PHASE_COLOR[micro.phase]}">${titleCase(micro.phase)}</span> · ${titleCase(state.periodization.model)} model</div>
     <div style="margin-bottom:14px;">
       <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted);margin-bottom:4px;"><span>Volume</span><span>${actual.volume} / ${micro.plannedVolume} sets ${volFlag ? `<strong style="color:${volDev > 0 ? 'var(--red)' : 'var(--accent-blue)'}">(${volDev > 0 ? '+' : ''}${volDev}%)</strong>` : ''}</span></div>
-      <div style="height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;"><div style="height:100%;width:${barPct(actual.volume, micro.plannedVolume)}%;background:${volFlag ? 'var(--red)' : 'var(--accent-blue)'};"></div></div>
+      <div style="height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;"><div class="plan-bar-fill" data-w="${barPct(actual.volume, micro.plannedVolume)}" style="height:100%;width:0%;background:${volFlag ? 'var(--red)' : 'var(--accent-blue)'};"></div></div>
     </div>
     <div>
       <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted);margin-bottom:4px;"><span>Intensity</span><span>${actual.intensityPct !== null ? actual.intensityPct + '%' : 'no RIR/RPE logged'} / target ${micro.plannedIntensityPct}%</span></div>
-      <div style="height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;"><div style="height:100%;width:${barPct(actual.intensityPct || 0, micro.plannedIntensityPct)}%;background:var(--gold);"></div></div>
+      <div style="height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;"><div class="plan-bar-fill" data-w="${barPct(actual.intensityPct || 0, micro.plannedIntensityPct)}" style="height:100%;width:0%;background:var(--gold);"></div></div>
     </div>
     <div onclick="jumpToInsights()" style="cursor:pointer;font-size:13px;color:var(--accent-blue);display:flex;align-items:center;gap:4px;margin-top:14px;">See how this compares in Deeper Insights →</div>
   `;
+      document.querySelectorAll('#plan-week-card .plan-bar-fill').forEach(el => animateBarWidth(el, el.dataset.w));
 
       document.getElementById('plan-timeline').innerHTML = `
     <div style="display:flex;height:28px;border-radius:6px;overflow:hidden;margin-bottom:10px;">
@@ -6070,6 +6114,7 @@
     </div>
     <div style="font-size:12px;color:var(--text-dim);margin-top:10px;">Goal date: ${new Date(state.periodization.goalDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
   `;
+      applyCardStagger(document.getElementById('ptab-plan'));
     }
 
     // ── Muscle activation → color helpers ──
@@ -6460,16 +6505,17 @@
     function refreshYou() {
       document.getElementById('you-name').textContent = state.userName;
       document.getElementById('you-avatar').textContent = state.userName.charAt(0).toUpperCase();
-      document.getElementById('you-total-workouts').textContent = state.workouts.length;
+      animateNumber(document.getElementById('you-total-workouts'), state.workouts.length, '');
       const totalVol = state.workouts.reduce((s, w) => s + w.volume, 0);
-      document.getElementById('you-total-vol').textContent = Math.round(totalVol / 1000 * 10) / 10 + 't';
+      animateNumber(document.getElementById('you-total-vol'), Math.round(totalVol / 1000 * 10) / 10, 't');
       const prs = state.workouts.reduce((s, w) => s + w.exercises.reduce((ss, ex) =>
         ss + ex.sets.filter(s => s.prs && s.prs.length).length, 0), 0);
-      document.getElementById('you-prs').textContent = prs;
+      animateNumber(document.getElementById('you-prs'), prs, '');
       renderProfile();
       renderYouHistory();
       renderBadges();
       updateSyncStatusDisplay();
+      applyCardStagger(document.getElementById('screen-you'));
     }
 
     const BADGE_DEFS = [
@@ -6674,7 +6720,7 @@
         if (members.length > 1) {
           const comboId = 'combo-' + Date.now() + Math.random().toString(36).slice(2, 5);
           const wrapper = document.createElement('div');
-          wrapper.className = 'combo-block'; wrapper.id = comboId;
+          wrapper.className = 'combo-block stagger-in'; wrapper.id = comboId;
           wrapper.innerHTML = `<div class="combo-header">
         <div class="combo-header-top">
           <span class="combo-header-title">🔗 Combined Exercise</span>
@@ -6744,7 +6790,7 @@
         if (members.length > 1) {
           const comboId = 'combo-' + Date.now() + Math.random().toString(36).slice(2, 5);
           const wrapper = document.createElement('div');
-          wrapper.className = 'combo-block'; wrapper.id = comboId;
+          wrapper.className = 'combo-block stagger-in'; wrapper.id = comboId;
           wrapper.innerHTML = `<div class="combo-header">
         <div class="combo-header-top">
           <span class="combo-header-title">🔗 Combined Exercise</span>

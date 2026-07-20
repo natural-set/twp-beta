@@ -121,5 +121,18 @@ The standalone Insights progress-tab was folded into a collapsible section at th
 - `.warn-pill.high` (muscle volume too high) recolored red → gold, matching the "caution" semantic used elsewhere (red reserved for destructive/delete actions only).
 - PR badges: Bodyweight PRs now get their own `.pr-badge.blue` color instead of sharing gold with 1RM PRs.
 
+## SHIPPED: App-wide motion pass
+Extends the Progress-only motion system to the whole app. Still CSS-only, no library, all <300ms.
+
+- `.screen.active` crossfades+lifts on every bottom-nav switch (`screenFadeIn`), not just Progress sub-tabs.
+- **All modals** slide up + fade in on open (`sheetSlideUp`, keyed off `.modal-overlay.open`) — zero JS needed, covers every modal in the app.
+- `popIn` extended from `.warn-pill`/`.plateau-tag` to `.pr-badge`, `.badge-chip`, `.medal`, `.today-pill`.
+- New `.plan-bar-fill` + `animateBarWidth()` for Plan tab Volume/Intensity bars.
+- New `.row-fade-in` (opacity-only — `transform` on `<tr>` is unreliable cross-browser) for newly-added set rows.
+- New exercise/combo blocks fade in on creation (`stagger-in`).
+- Primary/secondary/finish/goal buttons get `scale(.97)` press feedback on `:active`.
+- `applyCardStagger()` selector list expanded: `.feed-card`, `.import-card`, `.detail-stat`, `.you-stat`, `.badge-chip`, `.wc-item`.
+- Wired into `refreshHome()`, `refreshYou()`, `openDetail()`, `renderWeeklyDetail()`, `openExerciseManager()`, `renderPeriodizationTab()` (count-up numbers + stagger/bar-fill).
+
 ## Anthropic API note
 If asked to build "Claude in Claude" features inside this app, use model string `claude-sonnet-4-6`, no API key needed, standard `/v1/messages` shape.
