@@ -398,7 +398,18 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 16px 20px 0;
+      padding: 16px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: var(--bg);
+      border-bottom: 1px solid transparent;
+      transition: border-color .2s, box-shadow .2s;
+    }
+
+    .workout-top-bar.scrolled {
+      border-bottom-color: var(--border);
+      box-shadow: 0 8px 16px -8px rgba(0, 0, 0, .5);
     }
 
     .workout-timer {
@@ -3971,9 +3982,6 @@
     function goToWorkout() { navigate('workout', document.querySelectorAll('.nav-btn')[1]); startWorkout(); }
 
 
-
-
-
     // ═══════════════════════════════════════════
     //  WORKOUT
     // ═══════════════════════════════════════════
@@ -7303,6 +7311,15 @@
       if (!e.target.closest('.kebab-menu')) {
         document.querySelectorAll('.kebab-dropdown').forEach(d => d.style.display = 'none');
       }
+    });
+
+    // Gives the sticky workout timer bar a border/shadow once the user has scrolled
+    // past it, so it reads as "floating above" the content instead of blending in
+    // flush against it. #screen-workout itself is the scrolling container (the bar
+    // is sticky relative to it), so we listen there rather than on window.
+    document.getElementById('screen-workout')?.addEventListener('scroll', (e) => {
+      const bar = document.querySelector('.workout-top-bar');
+      if (bar) bar.classList.toggle('scrolled', e.target.scrollTop > 4);
     });
 
     function deleteWorkoutFromFeed(event, id) {
