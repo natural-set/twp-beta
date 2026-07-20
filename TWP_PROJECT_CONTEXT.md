@@ -12,24 +12,25 @@ Single-file `index.html` (vanilla HTML/CSS/JS). localStorage primary storage + G
 - User uploads current `index.html`, requests targeted change, gets file back.
 - **Prefer minimal chat explanation, code output first.** Keep responses short.
 - Batch clarifying questions upfront if needed; avoid mid-build back-and-forth.
-- Syntax-check JS before delivering.
+- Syntax-check JS before delivering (extract the non-CDN inline `<script>` block specifically — naive `<script>`/`</script>` splitting breaks on the CDN `<script src>` tags earlier in `<head>`/before `</body>`).
 - Use `str_replace` for targeted edits when possible instead of full-file rewrites.
-- Structural HTML integrity matters: missing closing tag on `#screen-workout` once broke all nav — verify structure after big edits.
+- Structural HTML integrity matters: missing closing tag on `#screen-workout` once broke all nav — verify `<div>` open/close counts and duplicate-id checks after big edits.
 - When merging work from parallel/scratch versions of the file, check for structural conflicts before merging wholesale (e.g. a scratch's tab restructure vs. the current tab layout) — port additive features, flag conflicting redesigns instead of silently dropping or force-merging them.
+- When multiple candidate "latest version" files exist (e.g. old project snapshot vs. freshly uploaded parts), diff them before trusting either — the freshest upload isn't always what's labeled "latest" in the request text.
 
 ## Core data model
 `state.workouts[]`, each workout has `exercises[]`, each exercise has `sets[]`.
 Set fields: `weight, reps, warmup, rir, rpe, tempo, variations[], restSeconds, prs[], bwMode, extWeight`.
 Exercise fields: `exId, name, icon, primary[], secondary[], note, sets, restSeconds, linkGroup` (linkGroup = combo/superset grouping).
 
-`exerciseOverrides` (built-in edits, incl. `isBodyweight` flag), `customExercises`, `hiddenExerciseIds`, `exerciseRestPresets`, `exerciseWeightSteps` (BW chip stepper increment per exercise), `favoriteExercises`, `recentExerciseIds`, `measurementHistory`, `profile{}`, `periodization`, `lastBwDelta` (per-exercise remembered BW delta).
+`exerciseOverrides` (built-in edits, incl. `isBodyweight` flag), `customExercises`, `hiddenExerciseIds`, `exerciseRestPresets`, `exerciseWeightSteps` (BW chip stepper increment per exercise), `favoriteExercises`, `recentExerciseIds`, `measurementHistory`, `profile{}` (now incl. `avatarPhoto`, see You-page section below), `periodization`, `lastBwDelta` (per-exercise remembered BW delta), `agent{}` (AI Coach state, see below).
 
 ## Shipped features (do not re-explain, just extend)
 - RPE + RIR + tempo per set
 - Deeper Insights (12-wk training load chart, Push/Pull/Legs balance, muscle volume warnings) — collapsible section inside the Progress **Overview** tab, not its own tab (see "SHIPPED: Insights merged into Overview" below) — **per-muscle target ranges** (each `MUSCLE_GROUPS` entry carries `target: [lo, hi]` weekly sets instead of one flat band)
 - Plateau detection (last 3 sessions identical top set → ⚠️ tag)
 - Bodyweight PR badges (keyword-matched via `BODYWEIGHT_EXERCISE_KEYWORDS`/`isBodyweight` flag, tracks best reps or best system weight)
-- Gamification badges (`BADGE_DEFS`): workout counts, tonnage, streaks
+- Gamification badges (`BADGE_DEFS`): workout counts, tonnage, streaks — **now with next-badge progress bar**, see You-page section below
 - Per-exercise rest presets (Exercise Manager)
 - Anatomical muscle manikin (front/back SVG, 17 muscle groups, activation-based fill via `computeMuscleActivation`)
 - Combined Sets (bi-set/superset) via `comboId`/`linkGroup`
@@ -40,6 +41,7 @@ Exercise fields: `exId, name, icon, primary[], secondary[], note, sets, restSeco
 - i18n (en/pt) for static chrome only — never auto-translates user data
 - Weekly snapshot "See more" → full Weekly Detail screen (`openWeeklyDetail`/`renderWeeklyDetail`, day-by-day breakdown, prev/next week nav) — **implemented**, not a gap
 - Custom confirm modal (`showConfirmModal`/`closeConfirmModal`) — replaces all native `confirm()` calls (delete exercise, reset plan, clear data, cancel workout, delete workout)
+- AI Coach agent (`AICoach`) — see dedicated section below
 
 ## SHIPPED: Bodyweight +/- weight chip
 Per-set weight input for bodyweight-capable exercises is a single cycling chip instead of a plain number field.
@@ -71,6 +73,7 @@ Per-set weight input for bodyweight-capable exercises is a single cycling chip i
 - New "This Week At a Glance" card (`renderWeeklySummary`/`#weekly-summary-card`): workouts vs. goal, volume delta % vs. last week, new PRs this week.
 - Chart gained a **ghost previous-period line** (dashed, same-length window immediately prior, aligned by position) via `bucketWorkouts()`/`getFilterCutoff()`/`metricValue()`, plus **★ PR star markers** on chart points containing a PR and **click-to-open-detail** on any point (`onClick` → `openDetail`). `#chart-legend-row` shows/hides to explain the markers.
 - "Deeper Insights" collapsible section (see below), plus a warning banner above it when something needs attention.
+- **AI Coach widget** (`#ai-coach-widget-container`) sits above the weekly summary card — see dedicated AI Coach section below.
 
 **Exercises tab:**
 - Search input (`#exercise-search`) + 3-way sort (`switchExerciseSort`: Recent / Most Trained / Plateaued).
@@ -85,7 +88,7 @@ Per-set weight input for bodyweight-capable exercises is a single cycling chip i
 - `applyCardStagger()` — top-level cards (snapshot/insight/goal cards, muscle-item/day-card rows) fade+slide in with ~35ms stagger on tab open/refresh (`.stagger-in`).
 - `switchProgressTab()` crossfades the newly-shown sub-tab panel (`.ptab-fade-in`, ~200ms) instead of a hard `display` cut.
 - `animateNumber(el, target, suffix)` — ease-out count-up for chart total and weekly-summary Volume/PRs.
-- `animateBarWidth(el, targetPct)` — Muscle Split bars and PPL segments grow from 0% instead of snapping in.
+- `animateBarWidth(el, targetPct)` — Muscle Split bars, PPL segments, Plan bars, and the You-tab next-badge progress bar all grow from 0% instead of snapping in.
 - `fadeInEl(el)` — front/back muscle-manikin SVGs fade in (~220ms) on rebuild; `.muscle-region` also carries a `fill`/`stroke` CSS transition for future per-node updates.
 - `.warn-pill` / `.plateau-tag` get a quick pop-in (scale+opacity, ~200ms) whenever re-rendered.
 - **Explicitly declined:** icon-only chip labels (undone per feedback, text labels only).
@@ -98,6 +101,28 @@ The standalone Insights progress-tab was folded into a collapsible section at th
 - `updateInsightsWarnPill()` computes a single "things to check" count (muscles outside their target range + PPL imbalance) and surfaces it two places: a small pill on the collapsed header (`#insights-warn-pill`, "N to review") and a tappable banner near the top of Overview (`#overview-warn-banner`, "⚠️ N things to check") — both hidden when the count is 0. Called from `refreshProgress()`.
 - `jumpToInsights()` — navigates to Progress → Overview, force-expands the section if collapsed, scrolls it into view. Wired to the warning banner and to a "See how this compares in Deeper Insights →" link at the bottom of the Plan tab's weekly card.
 - Uses the existing motion system (`applyCardStagger`) on expand rather than introducing new animation.
+
+## SHIPPED: You page — UI/UX pass
+- **Profile & Measurements** (`#you-profile-list`) is grouped into two collapsible sections instead of one flat 23-row list: "Personal Info" (DOB, height, sport, activity/training style, injuries, surgeries, PR exercise, notes — starts open) and "Body Measurements" (weight, goal weight, body fat, chest/waist/shoulders/arms/forearms/thighs/calves — starts collapsed). `PROFILE_FIELDS` entries carry a `group` key; `PROFILE_GROUPS` defines the two sections; `profileGroupOpenState` (in-memory, resets each load) tracks open/closed; `toggleProfileGroup(key)` toggles + re-renders. Each section header shows a filled-count badge (e.g. "6/13").
+- Each measurement row with history (`MEASUREMENT_KEYS`) shows an inline trend sparkline (`profileFieldSparkline(key)`, reuses `sparklineSVG()`) next to its value — surfaces the trend without opening the History modal.
+- **Workout History** (`#you-history-list`) auto-loads instead of using a "Load more" button: `YOU_HISTORY_PAGE_SIZE = 10` renders in batches; a sentinel div with a small spinner sits after the last loaded card, and an `IntersectionObserver` (`youHistoryObserver`, 200px rootMargin) triggers the next batch as it scrolls into view (with a ~250ms delay so the spinner is perceptible). `youHistoryShown` resets to the page size every time `refreshYou()` runs (i.e. each time the You tab is opened).
+- **Badges** (`#you-badges`, `renderBadges()`) now show a progress bar toward the next unearned badge below the earned-badge chips, not just a trophy case: each `BADGE_DEFS` entry carries a `progress(n, vol, streak) → {cur, target}` fn; the closest-to-unlocking unearned badge is picked and rendered with `.plan-bar-fill` (animated via `animateBarWidth`).
+- **Cloud Sync** got a dedicated status card (snapshot-card style) near the top of the tab — status dot (`#sync-status-dot`, gray/gold/green for never-synced/syncing/synced) + relative-time text (`#sync-status-text-2`) + separate **Pull** and **Sync now** buttons, in addition to (not replacing) the existing Cloud Sync row under Account. `updateSyncStatusDisplay()` drives both the old row and the new card/dot together.
+- **Clear All Data** moved out of the Account settings list entirely and now sits as its own full-width, bordered, red-tinted button at the very bottom of the You page (below Workout History), with a trash icon and a one-line "cannot be undone" caption underneath — visually isolated from neutral/reversible actions above it.
+- **Profile photo** (avatar) is editable again: tapping the avatar circle (or the "Change Profile Photo" row in Account) opens a hidden file input (`#avatar-file-input`); `handleAvatarUpload()` reads the image, downscales/crops it to a 240×240 JPEG via an offscreen `<canvas>` (quality 0.85) to keep localStorage/sync payload size reasonable, and stores the result as a dataURL in `state.profile.avatarPhoto`. `renderAvatar()` shows the photo as the avatar's `background-image` with a small ✕ badge (`removeAvatarPhoto()`) when a photo is set, falling back to the existing initials-letter behavior otherwise. Rides on the existing `profile{}` save/load/cloud-sync path — no new storage plumbing needed.
+
+## SHIPPED: AI Coach (`AICoach`)
+Adaptive strength-coach agent embedded in the app, calling the Anthropic API directly from the browser (`claude-sonnet-4-6`, standard `/v1/messages`, no key wiring needed in this environment per the Anthropic API note below).
+
+- `state.agent = { memory, unlockedConcepts[], interactionHistory[], lastAnalyzedWorkoutId, pendingTip }`, persisted via the normal `loadState`/`saveState` path (defensive-merged on load so pre-existing saved state without `agent` doesn't break). **Not** currently included in the cloud-sync payload (`buildSyncPayload`) — kept local-only so chat history doesn't bloat every GitHub-committed sync.
+- `AICoach.compileContext()` — builds a compact payload (last 5 workouts w/ per-exercise top weight + avg RPE, plateaued exercises via the existing `isExercisePlateaued()`, muscles idle 7+ days via `daysSinceMuscleTrained()`, current periodization phase, profile weight/goal, agent memory + already-unlocked concepts) instead of sending raw workout JSON.
+- `AICoach.fetchCoachResponse(systemPrompt, userMessage)` — non-blocking fetch to `api.anthropic.com/v1/messages`; any failure (offline, network) is caught and logged as a console warning (`AICoach: unavailable, skipping this cycle.`) rather than surfaced to the user or allowed to block the UI.
+- `AICoach.evolveAndAnalyze(workoutId)` — hooked into `finishWorkout()` via a 500ms `setTimeout` after the workout is already saved/synced, so it never delays navigation. Skips if `workoutId` was already analyzed. Expects strict JSON back (`updatedMemory`, `newConceptUnlock: {title, explanation}`, `proactiveTip`); updates `state.agent` fields and calls `triggerConceptUnlockModal()` if a genuinely new concept comes back.
+- Concept unlocks and the chat console use **dedicated modals** (`#coach-unlock-modal`, `#coach-console-modal`) rather than the existing `showConfirmModal`, since that one only supports plain text (`textContent`), not chat bubbles/inputs.
+- `AICoach.renderWidget()` — compact card in Progress → Overview (`#ai-coach-widget-container`, above `#weekly-summary-card`): shows the current `pendingTip`, unlocked-concept count, latest concept, a "Consult Coach →" button, and a "View memory" link. Wired into both `refreshProgress()` and `switchProgressTab()` (fires when Overview becomes active).
+- `AICoach.openInteractiveConsole()` / `handleUserMessage()` — simple chat UI in `#coach-console-modal`; each turn re-sends `compileContext()` + the question, capped at 40 stored turns (`state.agent.interactionHistory`) to bound localStorage growth.
+- `AICoach.viewMemory()` — shows the raw evolving memory string via `showConfirmModal` (informational; Cancel/Close both just dismiss, no destructive action).
+- **Not verified end-to-end from this environment** (no network access to `api.anthropic.com` here) — confirmed via static analysis only (syntax check, all referenced helper functions exist, no dangling `onclick` refs). Worth a live smoke test after deploy: finish a workout and confirm a tip appears in the Overview widget within a few seconds, or check the console warning if not.
 
 ## Parser notation (training log import, `.txt`/PDF/Excel)
 - `c` = kg marker (e.g. `12c10` = 12 reps @ 10kg)
@@ -113,6 +138,8 @@ The standalone Insights progress-tab was folded into a collapsible section at th
 
 ## Known gaps
 - RPE/tempo/rest-preset round-trip through text import/export is partial (`^`-tags); `bwMode`/`extWeight` still not round-tripped through the parser/exporter.
+- `state.agent` (AI Coach memory/chat history) is local-only, not yet part of `buildSyncPayload` — a second device won't see the same coach memory/history until this is added.
+- AI Coach live API behavior unverified from within this build environment (no outbound access to `api.anthropic.com` here) — see AI Coach section above.
 
 ## SHIPPED: UI consistency pass (confirm modal, icons, colors)
 - All native `confirm()` calls replaced with a custom `#confirm-modal` (same dark-sheet style as other popovers): `showConfirmModal(message, onConfirm, {title, confirmLabel, danger})` shows it, `closeConfirmModal(confirmed)` dismisses and only fires `onConfirm` on confirm. Used by `deleteCustomExercise`, `resetPeriodizationPlan`, `clearData`, `cancelWorkout`, `deleteWorkoutFromFeed`.
@@ -125,9 +152,9 @@ The standalone Insights progress-tab was folded into a collapsible section at th
 Extends the Progress-only motion system to the whole app. Still CSS-only, no library, all <300ms.
 
 - `.screen.active` crossfades+lifts on every bottom-nav switch (`screenFadeIn`), not just Progress sub-tabs.
-- **All modals** slide up + fade in on open (`sheetSlideUp`, keyed off `.modal-overlay.open`) — zero JS needed, covers every modal in the app.
+- **All modals** slide up + fade in on open (`sheetSlideUp`, keyed off `.modal-overlay.open`) — zero JS needed, covers every modal in the app (including the newer coach-unlock/coach-console/sync-card additions, since they reuse `.modal-overlay`).
 - `popIn` extended from `.warn-pill`/`.plateau-tag` to `.pr-badge`, `.badge-chip`, `.medal`, `.today-pill`.
-- New `.plan-bar-fill` + `animateBarWidth()` for Plan tab Volume/Intensity bars.
+- New `.plan-bar-fill` + `animateBarWidth()` for Plan tab Volume/Intensity bars (also reused by the You-tab next-badge progress bar).
 - New `.row-fade-in` (opacity-only — `transform` on `<tr>` is unreliable cross-browser) for newly-added set rows.
 - New exercise/combo blocks fade in on creation (`stagger-in`).
 - Primary/secondary/finish/goal buttons get `scale(.97)` press feedback on `:active`.
@@ -135,4 +162,4 @@ Extends the Progress-only motion system to the whole app. Still CSS-only, no lib
 - Wired into `refreshHome()`, `refreshYou()`, `openDetail()`, `renderWeeklyDetail()`, `openExerciseManager()`, `renderPeriodizationTab()` (count-up numbers + stagger/bar-fill).
 
 ## Anthropic API note
-If asked to build "Claude in Claude" features inside this app, use model string `claude-sonnet-4-6`, no API key needed, standard `/v1/messages` shape.
+If asked to build "Claude in Claude" features inside this app, use model string `claude-sonnet-4-6`, no API key needed, standard `/v1/messages` shape. This is what `AICoach.fetchCoachResponse()` uses (see AI Coach section above).
