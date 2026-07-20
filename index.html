@@ -3982,6 +3982,9 @@
     function goToWorkout() { navigate('workout', document.querySelectorAll('.nav-btn')[1]); startWorkout(); }
 
 
+
+
+
     // ═══════════════════════════════════════════
     //  WORKOUT
     // ═══════════════════════════════════════════
@@ -4518,11 +4521,7 @@
     <div class="ex-block-note">
       <textarea class="ex-note-ta" placeholder="Add notes…" rows="1"></textarea>
     </div>
-    <div style="display:flex;gap:8px;padding:8px 14px;border-bottom:1px solid var(--border);">
-      ${isCombo
-          ? `<input class="ex-link-input" type="hidden" value="${linkGroupPrefill}">`
-          : `<input class="ex-link-input" type="text" placeholder="Superset group (optional)" value="" style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:6px;font-size:12px;font-family:inherit;outline:none;">`}
-    </div>
+    ${isCombo ? `<input class="ex-link-input" type="hidden" value="${linkGroupPrefill}">` : ''}
     <div style="overflow-x:auto;">
     <table class="sets-table">
       <thead><tr>
@@ -6847,11 +6846,7 @@
       <div class="ex-block-note">
         <textarea class="ex-note-ta" placeholder="Add notes…" rows="1">${ex.note || ''}</textarea>
       </div>
-      <div style="display:flex;gap:8px;padding:8px 14px;border-bottom:1px solid var(--border);">
-        ${isCombo
-          ? `<input class="ex-link-input" type="hidden" value="${ex.linkGroup}">`
-          : `<input class="ex-link-input" type="text" placeholder="Superset group (optional)" value="${ex.linkGroup || ''}" style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:6px;font-size:12px;font-family:inherit;outline:none;">`}
-      </div>
+      ${isCombo ? `<input class="ex-link-input" type="hidden" value="${ex.linkGroup}">` : ''}
       <div style="overflow-x:auto;">
       <table class="sets-table">
         <thead><tr><th style="width:34px">Set</th><th>Weight</th><th>Reps</th><th>Variations</th><th style="width:44px">RIR</th><th style="width:44px">RPE</th><th style="width:56px">Tempo</th><th style="width:54px">Rest</th><th style="width:28px"></th></tr></thead>

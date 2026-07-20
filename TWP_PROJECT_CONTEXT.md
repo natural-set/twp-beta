@@ -33,7 +33,7 @@ Exercise fields: `exId, name, icon, primary[], secondary[], note, sets, restSeco
 - Gamification badges (`BADGE_DEFS`): workout counts, tonnage, streaks — **now with next-badge progress bar**, see You-page section below
 - Per-exercise rest presets (Exercise Manager)
 - Anatomical muscle manikin (front/back SVG, 17 muscle groups, activation-based fill via `computeMuscleActivation`)
-- Combined Sets (bi-set/superset) via `comboId`/`linkGroup`
+- Combined Sets (bi-set/superset) via `comboId`/`linkGroup`. **Manual free-text "Superset group (optional)" input removed** — `linkGroup` is now only ever set by the combo picker (`toggleComboMode`/`continueCombo`) or preserved from imported/legacy data; `.ex-link-input` renders as a hidden carrier only on combo-created blocks, not as a visible field on standalone exercises (`addExercise()`, `populateExBlock()`).
 - Variations system (multi-select tags: Negatives, Partials, Pyramids, Explosives, Slow, custom)
 - Cloud sync w/ content-fingerprint dedup (`workoutFingerprint()`), `lastPushedPayload` cache
 - Exercise Manager: edit built-ins via overrides, `(edited)` label, Reset button
