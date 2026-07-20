@@ -2436,6 +2436,8 @@
           <span>→</span>
         </button>
 
+        <div id="ai-coach-widget-container"></div>
+
         <div id="weekly-summary-card"></div>
 
         <div class="section-title" data-i18n="suggested_goal">Suggested Goal</div>
@@ -2548,7 +2550,8 @@
         <h1 data-i18n="header_you">You</h1>
       </div>
       <div class="you-header">
-        <div class="avatar" id="you-avatar">W</div>
+        <div class="avatar" id="you-avatar" onclick="triggerAvatarUpload()" style="cursor:pointer;background-size:cover;background-position:center;position:relative;" title="Tap to change photo">W</div>
+        <input type="file" id="avatar-file-input" accept="image/*" style="display:none;" onchange="handleAvatarUpload(event)">
         <div>
           <div class="you-name" id="you-name">Athlete</div>
           <div class="you-sub">Member since today</div>
@@ -2569,6 +2572,17 @@
         </div>
       </div>
       <div class="badge-row" id="you-badges"></div>
+
+      <div class="snapshot-card" style="display:flex;align-items:center;gap:12px;">
+        <div id="sync-status-dot" style="width:10px;height:10px;border-radius:50%;background:var(--text-dim);flex-shrink:0;"></div>
+        <div style="flex:1;">
+          <div style="font-size:13px;font-weight:700;">Cloud Sync</div>
+          <div style="font-size:12px;color:var(--text-muted);" id="sync-status-text-2">Never synced</div>
+        </div>
+        <button class="btn-secondary" style="flex:none;padding:8px 14px;font-size:12px;" onclick="pullSync().then(()=>showToast('☁️ Pulled latest'))">Pull</button>
+        <button class="btn-primary-flex" style="flex:none;padding:8px 14px;font-size:12px;" onclick="pushSync(true)">Sync now</button>
+      </div>
+
       <div class="settings-section">
         <div
           style="font-size: 11px; color: var(--text-dim); letter-spacing: .08em; text-transform: uppercase; margin-bottom: 8px; padding: 0 4px;"
@@ -2576,6 +2590,12 @@
           Account</div>
         <div class="settings-item" onclick="editName()">
           <span data-i18n="edit_name">Edit Name</span>
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+          </svg>
+        </div>
+        <div class="settings-item" onclick="triggerAvatarUpload()">
+          <span>Change Profile Photo</span>
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
           </svg>
@@ -2593,12 +2613,6 @@
           <span data-i18n="cloud_sync">Cloud Sync</span>
           <span style="color:var(--text-muted);font-size:13px;" id="sync-status-text">Never synced</span>
         </div>
-        <div class="settings-item" onclick="clearData()">
-          <span style="color: var(--red)" data-i18n="clear_all_data">Clear All Data</span>
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
-          </svg>
-        </div>
       </div>
 
       <div
@@ -2612,6 +2626,17 @@
         data-i18n="section_workout_history">
         Workout History</div>
       <div id="you-history-list" style="margin: 0 0 16px;"></div>
+
+      <div style="margin: 24px 16px 16px;padding-top:16px;border-top:1px solid var(--border);">
+        <button onclick="clearData()"
+          style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.3);color:var(--red);padding:14px;border-radius:var(--radius-sm);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+          </svg>
+          <span data-i18n="clear_all_data">Clear All Data</span>
+        </button>
+        <div style="font-size:11px;color:var(--text-dim);text-align:center;margin-top:8px;">This permanently deletes all local workout data and cannot be undone.</div>
+      </div>
     </div>
 
 
@@ -2827,6 +2852,39 @@
         </div>
       </div>
     </div>
+
+    <!-- AI Coach: Concept Unlock celebration -->
+    <div class="modal-overlay" id="coach-unlock-modal">
+      <div class="modal-sheet" style="max-height:60vh;">
+        <div style="padding:24px 20px;text-align:center;">
+          <div style="font-size:40px;margin-bottom:10px;">🎓</div>
+          <div style="font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">Concept Unlocked</div>
+          <div style="font-size:18px;font-weight:800;margin-bottom:12px;" id="coach-unlock-title"></div>
+          <div style="font-size:13px;color:var(--text-muted);line-height:1.6;text-align:left;background:var(--surface2);border-radius:var(--radius-sm);padding:14px;margin-bottom:18px;" id="coach-unlock-explanation"></div>
+          <button class="btn-primary" onclick="document.getElementById('coach-unlock-modal').classList.remove('open')">Add to My Training Arsenal</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI Coach: Interactive Console -->
+    <div class="modal-overlay" id="coach-console-modal">
+      <div class="modal-sheet" style="max-height:82vh;">
+        <div class="modal-header">
+          <div style="font-size:16px;font-weight:800;flex:1;">🤖 AI Coach</div>
+          <button class="modal-close-btn" onclick="document.getElementById('coach-console-modal').classList.remove('open')" aria-label="Close">✕</button>
+        </div>
+        <div style="padding:14px 20px 20px;">
+          <div id="coach-chat-history" style="max-height:340px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;margin-bottom:12px;padding:10px;background:var(--bg);border-radius:var(--radius-sm);border:1px solid var(--border);"></div>
+          <div style="display:flex;gap:8px;">
+            <input type="text" id="coach-user-input" class="modal-search" placeholder="Ask about plateaus, deloads, RPE…" style="flex:1;">
+            <button class="btn-primary-flex" style="flex:none;padding:10px 18px;" onclick="AICoach.handleUserMessage()">Send</button>
+          </div>
+          <div style="margin-top:10px;text-align:right;">
+            <span style="font-size:12px;color:var(--accent-blue);cursor:pointer;" onclick="AICoach.viewMemory()">🧠 View Coach Memory</span>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -2865,8 +2923,15 @@
 
     function updateSyncStatusDisplay() {
       const el = document.getElementById('sync-status-text');
-      if (!el) return;
-      el.textContent = syncInProgress ? 'Syncing…' : formatRelativeTime(lastSyncTime);
+      const text = syncInProgress ? 'Syncing…' : formatRelativeTime(lastSyncTime);
+      if (el) el.textContent = text;
+
+      const el2 = document.getElementById('sync-status-text-2');
+      if (el2) el2.textContent = text;
+      const dot = document.getElementById('sync-status-dot');
+      if (dot) {
+        dot.style.background = syncInProgress ? 'var(--gold)' : (lastSyncTime ? 'var(--green)' : 'var(--text-dim)');
+      }
     }
 
     // Keeps the relative time fresh (e.g. "just now" -> "2m ago") while the You tab is open.
@@ -3515,6 +3580,13 @@
       language: 'en', // 'en' | 'pt'
       activeRestRow: null, // the one <tr> whose rest clock is currently ticking, across all exercises
       periodization: null, // { goalDate, athleteLevel, model, mesocycles: [...], generatedAt }
+      agent: {
+        memory: "New athlete profile initialized. Monitoring baseline volume, exercise preferences, and RPE accuracy.",
+        unlockedConcepts: [],        // e.g. ['Progressive Overload', 'RIR Calibration']
+        interactionHistory: [],     // { role: 'user'|'assistant', text, timestamp }
+        lastAnalyzedWorkoutId: null,// prevents duplicate analysis calls for the same session
+        pendingTip: null,           // latest proactive tip shown in the Overview widget
+      },
     };
 
     let chartInstance = null;
@@ -3573,6 +3645,10 @@
         state.lastBwDelta = parsed.lastBwDelta || {};
         state.language = parsed.language || (navigator.language && navigator.language.toLowerCase().startsWith('pt') ? 'pt' : 'en');
         state.periodization = parsed.periodization || null;
+        // Defensive merge so existing users (saved state predates the AI Coach)
+        // don't lose the field entirely, but also don't get a blank object if a
+        // partial one was already persisted.
+        state.agent = Object.assign({}, state.agent, parsed.agent || {});
         // Existing duplicates (e.g. from a prior sync bug) get silently
         // cleaned up and persisted right away so they don't keep reappearing.
         if (state.workouts.length !== rawWorkouts.length) saveState();
@@ -3597,19 +3673,31 @@
         lastBwDelta: state.lastBwDelta,
         language: state.language,
         periodization: state.periodization,
+        agent: state.agent,
       }));
     }
 
     const PROFILE_FIELDS = [
-      { k: 'dob', l: 'DOB' }, { k: 'height', l: 'Height (cm)' }, { k: 'weight', l: 'Current Weight' },
-      { k: 'goalWeight', l: 'Goal Weight' }, { k: 'bodyFat', l: 'Body Fat %' }, { k: 'sport', l: 'Sport' },
-      { k: 'activityLevel', l: 'Activity Level' }, { k: 'trainingStyle', l: 'Training Style' },
-      { k: 'injuries', l: 'Injuries' }, { k: 'surgeries', l: 'Surgeries' }, { k: 'prExercise', l: "PR's Exercise" },
-      { k: 'chest', l: 'Chest' }, { k: 'waist', l: 'Waist' }, { k: 'shoulders', l: 'Shoulders' },
-      { k: 'lArm', l: 'L Arm' }, { k: 'rArm', l: 'R Arm' }, { k: 'lForearm', l: 'L Forearm' },
-      { k: 'rForearm', l: 'R Forearm' }, { k: 'lThigh', l: 'L Thigh' }, { k: 'rThigh', l: 'R Thigh' },
-      { k: 'lCalf', l: 'L Calf' }, { k: 'rCalf', l: 'R Calf' }, { k: 'notes', l: 'Notes' },
+      { k: 'dob', l: 'DOB', group: 'personal' }, { k: 'height', l: 'Height (cm)', group: 'personal' },
+      { k: 'sport', l: 'Sport', group: 'personal' }, { k: 'activityLevel', l: 'Activity Level', group: 'personal' },
+      { k: 'trainingStyle', l: 'Training Style', group: 'personal' }, { k: 'injuries', l: 'Injuries', group: 'personal' },
+      { k: 'surgeries', l: 'Surgeries', group: 'personal' }, { k: 'prExercise', l: "PR's Exercise", group: 'personal' },
+      { k: 'notes', l: 'Notes', group: 'personal' },
+      { k: 'weight', l: 'Current Weight', group: 'body' }, { k: 'goalWeight', l: 'Goal Weight', group: 'body' },
+      { k: 'bodyFat', l: 'Body Fat %', group: 'body' },
+      { k: 'chest', l: 'Chest', group: 'body' }, { k: 'waist', l: 'Waist', group: 'body' }, { k: 'shoulders', l: 'Shoulders', group: 'body' },
+      { k: 'lArm', l: 'L Arm', group: 'body' }, { k: 'rArm', l: 'R Arm', group: 'body' }, { k: 'lForearm', l: 'L Forearm', group: 'body' },
+      { k: 'rForearm', l: 'R Forearm', group: 'body' }, { k: 'lThigh', l: 'L Thigh', group: 'body' }, { k: 'rThigh', l: 'R Thigh', group: 'body' },
+      { k: 'lCalf', l: 'L Calf', group: 'body' }, { k: 'rCalf', l: 'R Calf', group: 'body' },
     ];
+    // Profile & Measurements renders as collapsible sections instead of one long flat
+    // list — Personal Info starts open (small, low-friction), Body Measurements starts
+    // collapsed (long list of tape-measure numbers most people update rarely).
+    const PROFILE_GROUPS = [
+      { key: 'personal', label: 'Personal Info', defaultOpen: true },
+      { key: 'body', label: 'Body Measurements', defaultOpen: false },
+    ];
+    let profileGroupOpenState = { personal: true, body: false };
     // These fields get a dated history entry on every save (in addition to overwriting
     // the "current" value), so trends over time aren't lost the way a single overwritten
     // value would lose them — mirroring what the plain-text training log used to capture.
@@ -3754,28 +3842,87 @@
     }
 
 
+    function toggleProfileGroup(key) {
+      profileGroupOpenState[key] = !profileGroupOpenState[key];
+      renderProfile();
+    }
+
+    // Small inline trend sparkline for a measurement field's row, reusing the same
+    // sparklineSVG() the Muscle Split list already draws with — surfaces the weight
+    // (or any tracked measurement) trend at a glance instead of requiring a tap into
+    // the History modal just to see whether it's moving.
+    function profileFieldSparkline(key) {
+      const hist = (state.measurementHistory && state.measurementHistory[key]) || [];
+      if (hist.length < 2) return '';
+      const chrono = hist.slice().sort((a, b) => new Date(a.date) - new Date(b.date)).slice(-8);
+      const vals = chrono.map(e => parseFloat(e.value)).filter(v => !isNaN(v));
+      if (vals.length < 2) return '';
+      return sparklineSVG(vals, '#f97316');
+    }
+
     function renderProfile() {
       const el = document.getElementById('you-profile-list');
       if (!el) return;
-      el.innerHTML = PROFILE_FIELDS.map(f => {
-        const val = (state.profile && state.profile[f.k]) || '';
-        return `<div class="settings-item" onclick="editProfileField('${f.k}','${f.l}')">
+      el.innerHTML = PROFILE_GROUPS.map(g => {
+        const fields = PROFILE_FIELDS.filter(f => f.group === g.key);
+        const open = profileGroupOpenState[g.key];
+        const rows = fields.map(f => {
+          const val = (state.profile && state.profile[f.k]) || '';
+          const spark = MEASUREMENT_KEYS.has(f.k) ? profileFieldSparkline(f.k) : '';
+          return `<div class="settings-item" onclick="editProfileField('${f.k}','${f.l}')">
       <span>${f.l}</span>
-      <span style="color:var(--text-muted);font-size:13px;display:flex;align-items:center;gap:6px;">
+      <span style="color:var(--text-muted);font-size:13px;display:flex;align-items:center;gap:8px;">
+        ${spark}
         ${val ? val : '<span style="color:var(--text-dim)">Add</span>'}
         <svg width="18" height="18" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
       </span>
+    </div>`;
+        }).join('');
+        const filledCount = fields.filter(f => state.profile && state.profile[f.k]).length;
+        return `<div style="margin-bottom:10px;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;">
+      <button onclick="toggleProfileGroup('${g.key}')" style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:var(--surface);border:none;color:var(--text);font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;">
+        <span>${g.label} <span style="font-size:11px;font-weight:500;color:var(--text-dim);">${filledCount}/${fields.length}</span></span>
+        <span style="transition:transform .2s;display:inline-block;transform:rotate(${open ? '180deg' : '0deg'});">▾</span>
+      </button>
+      <div style="display:${open ? 'block' : 'none'};padding:0 16px;">${rows}</div>
     </div>`;
       }).join('');
     }
 
 
 
+    // Workout history on the You page loads a page at a time instead of rendering
+    // every logged workout at once — keeps the DOM light and the tab scrollable for
+    // people with a year+ of history. Instead of a "Load more" button, a sentinel
+    // row at the bottom auto-triggers the next page via IntersectionObserver as it
+    // scrolls into view, showing a brief spinner while the next batch renders.
+    const YOU_HISTORY_PAGE_SIZE = 10;
+    let youHistoryShown = YOU_HISTORY_PAGE_SIZE;
+    let youHistoryObserver = null;
+
     function renderYouHistory() {
       const el = document.getElementById('you-history-list');
       if (!el) return;
+      if (youHistoryObserver) { youHistoryObserver.disconnect(); youHistoryObserver = null; }
       if (!state.workouts.length) { el.innerHTML = emptyState('📋', 'No workouts yet — your training history will appear here.'); return; }
-      el.innerHTML = state.workouts.map(w => renderFeedCard(w)).join('');
+      const slice = state.workouts.slice(0, youHistoryShown);
+      const remaining = state.workouts.length - slice.length;
+      el.innerHTML = slice.map(w => renderFeedCard(w)).join('') +
+        (remaining > 0
+          ? `<div id="you-history-sentinel" style="display:flex;justify-content:center;padding:20px;"><div class="spinner" style="width:22px;height:22px;border-width:2px;"></div></div>`
+          : '');
+      if (remaining > 0) {
+        const sentinel = document.getElementById('you-history-sentinel');
+        youHistoryObserver = new IntersectionObserver((entries) => {
+          if (entries[0].isIntersecting) {
+            youHistoryObserver.disconnect();
+            youHistoryShown += YOU_HISTORY_PAGE_SIZE;
+            // Tiny delay so the spinner is actually perceptible instead of an instant swap.
+            setTimeout(renderYouHistory, 250);
+          }
+        }, { rootMargin: '200px' });
+        youHistoryObserver.observe(sentinel);
+      }
     }
 
 
@@ -3822,6 +3969,7 @@
     }
 
     function goToWorkout() { navigate('workout', document.querySelectorAll('.nav-btn')[1]); startWorkout(); }
+
 
 
 
@@ -4015,6 +4163,12 @@
 
       // Refresh detail view
       openDetail(workout.id);
+
+      // Non-blocking AI Coach evolution — never delays saving/navigating away from
+      // the workout; failures (offline, etc.) are swallowed inside AICoach itself.
+      if (typeof AICoach !== 'undefined') {
+        setTimeout(() => AICoach.evolveAndAnalyze(workout.id), 500);
+      }
     }
 
     const BODYWEIGHT_EXERCISE_KEYWORDS = ['pull-up', 'pullup', 'pull up', 'chin-up', 'chinup', 'dip', 'push-up', 'pushup', 'muscle-up', 'muscleup'];
@@ -5241,6 +5395,7 @@
       });
       if (tab === 'muscles') renderMuscleSplit();
       if (tab === 'plan') renderPeriodizationTab();
+      if (tab === 'overview' && typeof AICoach !== 'undefined') AICoach.renderWidget();
       const activeEl = document.getElementById('ptab-' + tab);
       void activeEl.offsetWidth;
       activeEl.classList.add('ptab-fade-in');
@@ -5583,6 +5738,7 @@
     function refreshProgress() {
       renderChart();
       renderGoal();
+      if (typeof AICoach !== 'undefined') AICoach.renderWidget();
       renderWeeklySummary();
       renderProgressMuscleMap();
       renderExerciseHistory();
@@ -6502,9 +6658,71 @@
     // ═══════════════════════════════════════════
     //  YOU
     // ═══════════════════════════════════════════
+    // ── Profile photo (avatar) ──
+    // Stored as a compressed base64 dataURL in state.profile.avatarPhoto. Tapping the
+    // avatar (or the "Change Profile Photo" settings row) opens the file picker;
+    // images are downscaled to a small square via canvas before storing, since raw
+    // phone-camera photos would otherwise bloat localStorage significantly.
+    function triggerAvatarUpload() {
+      document.getElementById('avatar-file-input').click();
+    }
+
+    function handleAvatarUpload(event) {
+      const file = event.target.files[0];
+      event.target.value = '';
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const size = 240;
+          const canvas = document.createElement('canvas');
+          canvas.width = size; canvas.height = size;
+          const ctx = canvas.getContext('2d');
+          const scale = Math.max(size / img.width, size / img.height);
+          const w = img.width * scale, h = img.height * scale;
+          ctx.drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+          if (!state.profile) state.profile = {};
+          state.profile.avatarPhoto = dataUrl;
+          saveState();
+          pushSync();
+          renderAvatar();
+          showToast('Profile photo updated 📸');
+        };
+        img.onerror = () => showToast('Could not read that image');
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function removeAvatarPhoto() {
+      if (!state.profile) return;
+      delete state.profile.avatarPhoto;
+      saveState();
+      pushSync();
+      renderAvatar();
+      showToast('Profile photo removed');
+    }
+
+    function renderAvatar() {
+      const el = document.getElementById('you-avatar');
+      if (!el) return;
+      const photo = state.profile && state.profile.avatarPhoto;
+      if (photo) {
+        el.style.backgroundImage = `url('${photo}')`;
+        el.innerHTML = `<button onclick="event.stopPropagation();removeAvatarPhoto()" title="Remove photo" aria-label="Remove photo"
+          style="position:absolute;bottom:-2px;right:-2px;width:20px;height:20px;border-radius:50%;background:var(--red);border:2px solid var(--bg);color:#fff;font-size:11px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>`;
+      } else {
+        el.style.backgroundImage = 'none';
+        el.textContent = (state.userName || 'A').charAt(0).toUpperCase();
+      }
+    }
+
     function refreshYou() {
+      youHistoryShown = YOU_HISTORY_PAGE_SIZE;
       document.getElementById('you-name').textContent = state.userName;
-      document.getElementById('you-avatar').textContent = state.userName.charAt(0).toUpperCase();
+      renderAvatar();
       animateNumber(document.getElementById('you-total-workouts'), state.workouts.length, '');
       const totalVol = state.workouts.reduce((s, w) => s + w.volume, 0);
       animateNumber(document.getElementById('you-total-vol'), Math.round(totalVol / 1000 * 10) / 10, 't');
@@ -6519,16 +6737,16 @@
     }
 
     const BADGE_DEFS = [
-      { key: 'w10', label: '10 Workouts', emoji: '💪', check: (n, vol, streak) => n >= 10 },
-      { key: 'w50', label: '50 Workouts', emoji: '🏆', check: (n, vol, streak) => n >= 50 },
-      { key: 'w100', label: '100 Workouts', emoji: '🥇', check: (n, vol, streak) => n >= 100 },
-      { key: 'w250', label: '250 Workouts', emoji: '👑', check: (n, vol, streak) => n >= 250 },
-      { key: 'vol10t', label: '10t Lifted', emoji: '🏋️', check: (n, vol) => vol >= 10000 },
-      { key: 'vol50t', label: '50t Lifted', emoji: '⚡', check: (n, vol) => vol >= 50000 },
-      { key: 'vol100t', label: '100t Lifted', emoji: '🔱', check: (n, vol) => vol >= 100000 },
-      { key: 'streak4', label: '4 Week Streak', emoji: '🔥', check: (n, vol, streak) => streak >= 4 },
-      { key: 'streak8', label: '8 Week Streak', emoji: '🔥', check: (n, vol, streak) => streak >= 8 },
-      { key: 'streak12', label: '12 Week Streak', emoji: '🔥', check: (n, vol, streak) => streak >= 12 },
+      { key: 'w10', label: '10 Workouts', emoji: '💪', check: (n, vol, streak) => n >= 10, progress: (n) => ({ cur: n, target: 10 }) },
+      { key: 'w50', label: '50 Workouts', emoji: '🏆', check: (n, vol, streak) => n >= 50, progress: (n) => ({ cur: n, target: 50 }) },
+      { key: 'w100', label: '100 Workouts', emoji: '🥇', check: (n, vol, streak) => n >= 100, progress: (n) => ({ cur: n, target: 100 }) },
+      { key: 'w250', label: '250 Workouts', emoji: '👑', check: (n, vol, streak) => n >= 250, progress: (n) => ({ cur: n, target: 250 }) },
+      { key: 'vol10t', label: '10t Lifted', emoji: '🏋️', check: (n, vol) => vol >= 10000, progress: (n, vol) => ({ cur: Math.round(vol), target: 10000 }) },
+      { key: 'vol50t', label: '50t Lifted', emoji: '⚡', check: (n, vol) => vol >= 50000, progress: (n, vol) => ({ cur: Math.round(vol), target: 50000 }) },
+      { key: 'vol100t', label: '100t Lifted', emoji: '🔱', check: (n, vol) => vol >= 100000, progress: (n, vol) => ({ cur: Math.round(vol), target: 100000 }) },
+      { key: 'streak4', label: '4 Week Streak', emoji: '🔥', check: (n, vol, streak) => streak >= 4, progress: (n, vol, streak) => ({ cur: streak, target: 4 }) },
+      { key: 'streak8', label: '8 Week Streak', emoji: '🔥', check: (n, vol, streak) => streak >= 8, progress: (n, vol, streak) => ({ cur: streak, target: 8 }) },
+      { key: 'streak12', label: '12 Week Streak', emoji: '🔥', check: (n, vol, streak) => streak >= 12, progress: (n, vol, streak) => ({ cur: streak, target: 12 }) },
     ];
 
     function renderBadges() {
@@ -6538,9 +6756,35 @@
       const vol = state.workouts.reduce((s, w) => s + w.volume, 0);
       const streak = computeWeekStreak();
       const earned = BADGE_DEFS.filter(b => b.check(n, vol, streak));
-      el.innerHTML = earned.length
+      const earnedHTML = earned.length
         ? earned.map(b => `<div class="badge-chip"><span class="badge-emoji">${b.emoji}</span><span class="badge-label">${b.label}</span></div>`).join('')
-        : `<div style="color:var(--text-muted);font-size:12px;padding:4px;">Keep training to unlock badges 💪</div>`;
+        : '';
+
+      // Next unearned badge (closest by proportional progress) shown with a bar, so
+      // the trophy case doubles as motivation instead of only celebrating what's done.
+      const unearned = BADGE_DEFS.filter(b => !b.check(n, vol, streak));
+      let nextHTML = '';
+      if (unearned.length) {
+        const withPct = unearned.map(b => {
+          const { cur, target } = b.progress(n, vol, streak);
+          return { b, cur, target, pct: Math.min(99, Math.round((cur / target) * 100)) };
+        });
+        // Closest to unlocking first
+        withPct.sort((a, b2) => b2.pct - a.pct);
+        const next = withPct[0];
+        nextHTML = `<div style="width:100%;margin-top:4px;">
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-bottom:4px;">
+        <span>Next: ${next.b.emoji} ${next.b.label}</span>
+        <span>${next.cur}/${next.target}</span>
+      </div>
+      <div style="height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;">
+        <div class="plan-bar-fill" data-w="${next.pct}" style="height:100%;width:0%;background:var(--accent);"></div>
+      </div>
+    </div>`;
+      }
+
+      el.innerHTML = (earnedHTML || `<div style="color:var(--text-muted);font-size:12px;padding:4px;">Keep training to unlock badges 💪</div>`) + nextHTML;
+      if (nextHTML) el.querySelectorAll('.plan-bar-fill').forEach(bar => animateBarWidth(bar, bar.dataset.w));
     }
 
     function editName() {
@@ -7952,6 +8196,228 @@ Soreness: 6-7</div>
       URL.revokeObjectURL(url);
       showToast('Training log exported 📄');
     }
+
+    // ═══════════════════════════════════════════
+    //  AI COACH  (adaptive strength-coach agent, claude-sonnet-4-6)
+    // ═══════════════════════════════════════════
+    const AICoach = {
+      /**
+       * Synthesizes the last few sessions + plateau/muscle-balance signals TWP
+       * already computes into a compact, high-signal payload — sending the raw
+       * workouts array would burn tokens without adding insight the model needs.
+       */
+      compileContext() {
+        const recentWorkouts = (state.workouts || []).slice(0, 5).map(w => ({
+          name: w.name,
+          date: w.date,
+          durationMin: w.duration || 0,
+          totalVolumeKg: Math.round(w.volume || 0),
+          exercises: (w.exercises || []).map(e => {
+            const workSets = (e.sets || []).filter(s => !s.warmup);
+            const rpes = workSets.filter(s => s.rpe > 0).map(s => s.rpe);
+            return {
+              name: e.name,
+              sets: workSets.length,
+              topWeight: workSets.length ? Math.max(...workSets.map(s => s.weight || 0)) : 0,
+              avgRpe: rpes.length ? Math.round((rpes.reduce((a, b) => a + b, 0) / rpes.length) * 10) / 10 : null,
+            };
+          }),
+        }));
+
+        // Reuse the app's own plateau detector rather than re-deriving stalled
+        // exercises from scratch.
+        const exIds = new Set();
+        (state.workouts || []).slice(0, 12).forEach(w => w.exercises.forEach(e => exIds.add(e.exId)));
+        const stalledExercises = Array.from(exIds).filter(id => typeof isExercisePlateaued === 'function' && isExercisePlateaued(id))
+          .map(id => {
+            const match = state.workouts.find(w => w.exercises.some(e => e.exId === id));
+            const ex = match && match.exercises.find(e => e.exId === id);
+            return ex ? ex.name : id;
+          });
+
+        const idleMuscles = typeof MUSCLE_GROUPS !== 'undefined' && typeof daysSinceMuscleTrained === 'function'
+          ? MUSCLE_GROUPS.filter(m => {
+            const d = daysSinceMuscleTrained(m.name);
+            return d !== null && d >= 7;
+          }).map(m => m.name)
+          : [];
+
+        return {
+          profile: {
+            weight: (state.profile && state.profile.weight) || 'Not set',
+            goal: (state.profile && state.profile.goal) || 'Hypertrophy & Strength',
+          },
+          periodization: state.periodization ? {
+            model: state.periodization.model,
+            phase: (getCurrentMicrocycle && getCurrentMicrocycle()) ? getCurrentMicrocycle().phase : null,
+          } : null,
+          agentMemory: state.agent.memory,
+          alreadyUnlockedConcepts: state.agent.unlockedConcepts,
+          recentWorkouts,
+          stalledExercises,
+          idleMuscles,
+        };
+      },
+
+      /**
+       * Non-blocking call to the Anthropic API. Any failure (offline, no network
+       * access configured, etc.) is swallowed — the coach is a nice-to-have layer
+       * on top of TWP, never something that should block saving a workout.
+       */
+      async fetchCoachResponse(systemPrompt, userMessage) {
+        try {
+          const response = await fetch('https://api.anthropic.com/v1/messages', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              model: 'claude-sonnet-4-6',
+              max_tokens: 600,
+              system: systemPrompt,
+              messages: [{ role: 'user', content: userMessage }],
+            }),
+          });
+          if (!response.ok) throw new Error(`API Error: ${response.status}`);
+          const data = await response.json();
+          const text = (data.content || []).map(b => b.text || '').join('\n').trim();
+          return text || null;
+        } catch (err) {
+          console.warn('AICoach: unavailable, skipping this cycle.', err);
+          return null;
+        }
+      },
+
+      /**
+       * Runs once per finished workout: evolves the coach's memory summary, checks
+       * for a newly-earned educational concept, and stashes a proactive one-line
+       * tip for the Overview widget. Never blocks finishWorkout() — called with a
+       * small setTimeout after the workout is already saved.
+       */
+      async evolveAndAnalyze(workoutId) {
+        if (!workoutId || state.agent.lastAnalyzedWorkoutId === workoutId) return;
+
+        const context = this.compileContext();
+        const systemPrompt = `You are an elite, adaptive strength & conditioning AI Coach embedded inside the TWP (Training With Purpose) app.
+Study the athlete's recent training data, evolve your memory of their patterns, and decide whether they're ready for a new concept.
+
+Respond ONLY with a valid JSON object, no markdown fences, no extra text:
+{
+  "updatedMemory": "string, cumulative, <100 words, evolves the previous memory rather than replacing its useful context",
+  "newConceptUnlock": { "title": "string or null", "explanation": "string or null, 2-3 sentences, practical and specific to what's in TWP" },
+  "proactiveTip": "string, 1 sharp actionable sentence based on stalled exercises or muscle balance"
+}
+Only unlock a concept if the data actually supports it (plateaus, volume swings, RPE/RIR patterns, muscle imbalance). Never repeat a concept already in alreadyUnlockedConcepts.`;
+
+        const raw = await this.fetchCoachResponse(systemPrompt, JSON.stringify(context));
+        if (!raw) return;
+
+        try {
+          const cleaned = raw.replace(/```json/i, '').replace(/```/g, '').trim();
+          const result = JSON.parse(cleaned);
+
+          if (result.updatedMemory) state.agent.memory = result.updatedMemory;
+          if (result.proactiveTip) state.agent.pendingTip = result.proactiveTip;
+
+          if (result.newConceptUnlock && result.newConceptUnlock.title) {
+            const title = result.newConceptUnlock.title;
+            if (!state.agent.unlockedConcepts.includes(title)) {
+              state.agent.unlockedConcepts.push(title);
+              this.triggerConceptUnlockModal(title, result.newConceptUnlock.explanation || '');
+            }
+          }
+
+          state.agent.lastAnalyzedWorkoutId = workoutId;
+          saveState();
+          if (document.getElementById('screen-progress').classList.contains('active')) this.renderWidget();
+        } catch (err) {
+          console.error('AICoach: failed to parse response', err, raw);
+        }
+      },
+
+      triggerConceptUnlockModal(title, explanation) {
+        document.getElementById('coach-unlock-title').textContent = title;
+        document.getElementById('coach-unlock-explanation').textContent = explanation;
+        document.getElementById('coach-unlock-modal').classList.add('open');
+      },
+
+      /** Compact card shown at the top of Progress → Overview. */
+      renderWidget() {
+        const container = document.getElementById('ai-coach-widget-container');
+        if (!container) return;
+        const tip = state.agent.pendingTip || 'Log your next session so I can calibrate your recovery and volume curves.';
+        const unlockCount = state.agent.unlockedConcepts.length;
+        const latest = unlockCount ? state.agent.unlockedConcepts[unlockCount - 1] : 'None yet';
+
+        container.innerHTML = `
+      <div class="insight-card" style="border-left:3px solid var(--accent-blue);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:8px;">
+          <div style="display:flex;align-items:center;gap:6px;font-weight:700;font-size:13px;">
+            <span>🤖</span><span>AI COACH</span>
+          </div>
+          <div style="display:flex;gap:6px;align-items:center;">
+            <span style="background:var(--surface2);color:var(--text-muted);font-size:11px;padding:3px 8px;border-radius:10px;">🎓 ${unlockCount}</span>
+            <button class="variations-btn has-tags" onclick="AICoach.openInteractiveConsole()">Consult Coach →</button>
+          </div>
+        </div>
+        <div style="font-size:13px;color:var(--text);line-height:1.5;font-style:italic;background:var(--surface2);padding:10px 12px;border-radius:8px;margin-bottom:8px;">"${tip}"</div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);">
+          <span>Latest focus: <strong style="color:var(--text);">${latest}</strong></span>
+          <span style="cursor:pointer;color:var(--accent-blue);" onclick="AICoach.viewMemory()">View memory</span>
+        </div>
+      </div>`;
+        applyCardStagger(document.getElementById('ptab-overview'));
+      },
+
+      openInteractiveConsole() {
+        const historyEl = document.getElementById('coach-chat-history');
+        historyEl.innerHTML = `<div style="align-self:flex-start;background:var(--surface2);padding:8px 12px;border-radius:8px;max-width:85%;font-size:13px;">👋 I've looked over your recent sessions. What would you like to tweak about your training?</div>` +
+          (state.agent.interactionHistory || []).map(m => this._bubble(m.role, m.text)).join('');
+        historyEl.scrollTop = historyEl.scrollHeight;
+        document.getElementById('coach-console-modal').classList.add('open');
+        setTimeout(() => document.getElementById('coach-user-input')?.focus(), 100);
+      },
+
+      _bubble(role, text) {
+        const isUser = role === 'user';
+        return `<div style="align-self:${isUser ? 'flex-end' : 'flex-start'};background:${isUser ? 'var(--accent-blue)' : 'var(--surface2)'};color:${isUser ? '#fff' : 'var(--text)'};padding:8px 12px;border-radius:8px;max-width:85%;font-size:13px;">${text}</div>`;
+      },
+
+      async handleUserMessage() {
+        const inputEl = document.getElementById('coach-user-input');
+        const historyEl = document.getElementById('coach-chat-history');
+        if (!inputEl || !inputEl.value.trim()) return;
+        const userText = inputEl.value.trim();
+        inputEl.value = '';
+
+        state.agent.interactionHistory.push({ role: 'user', text: userText, timestamp: Date.now() });
+        historyEl.insertAdjacentHTML('beforeend', this._bubble('user', userText));
+        historyEl.scrollTop = historyEl.scrollHeight;
+
+        const loadingId = 'coach-loading-' + Date.now();
+        historyEl.insertAdjacentHTML('beforeend', `<div id="${loadingId}" style="align-self:flex-start;background:var(--surface2);padding:8px 12px;border-radius:8px;font-size:13px;font-style:italic;color:var(--text-muted);">Coach is thinking…</div>`);
+        historyEl.scrollTop = historyEl.scrollHeight;
+
+        const systemPrompt = `You are the TWP AI Coach. Reply in under 4 sentences — concise, practical, motivating — grounded in the athlete's context and memory provided.`;
+        const userPayload = `Context: ${JSON.stringify(this.compileContext())}\n\nAthlete's question: ${userText}`;
+        const reply = await this.fetchCoachResponse(systemPrompt, userPayload)
+          || "I'm having trouble connecting right now — let's just focus on your next set!";
+
+        document.getElementById(loadingId)?.remove();
+        state.agent.interactionHistory.push({ role: 'assistant', text: reply, timestamp: Date.now() });
+        // Cap history so localStorage doesn't grow unbounded over a long-lived app.
+        if (state.agent.interactionHistory.length > 40) state.agent.interactionHistory = state.agent.interactionHistory.slice(-40);
+        saveState();
+        historyEl.insertAdjacentHTML('beforeend', this._bubble('assistant', reply));
+        historyEl.scrollTop = historyEl.scrollHeight;
+      },
+
+      viewMemory() {
+        showConfirmModal(
+          state.agent.memory,
+          () => {},
+          { title: '🧠 Coach Memory', confirmLabel: 'Close', danger: false }
+        );
+      },
+    };
 
     // ── Init ──
     loadState();
