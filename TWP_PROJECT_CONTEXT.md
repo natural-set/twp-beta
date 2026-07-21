@@ -36,7 +36,7 @@ Exercise fields: `exId, name, icon, primary[], secondary[], note, sets, restSeco
 - Combined Sets (bi-set/superset) via `comboId`/`linkGroup`. **Manual free-text "Superset group (optional)" input removed** — `linkGroup` is now only ever set by the combo picker (`toggleComboMode`/`continueCombo`) or preserved from imported/legacy data; `.ex-link-input` renders as a hidden carrier only on combo-created blocks, not as a visible field on standalone exercises (`addExercise()`, `populateExBlock()`).
 - Variations system (multi-select tags: Negatives, Partials, Pyramids, Explosives, Slow, custom)
 - Cloud sync w/ content-fingerprint dedup (`workoutFingerprint()`), `lastPushedPayload` cache
-- Exercise Manager: edit built-ins via overrides, `(edited)` label, Reset button
+- Exercise Manager: edit built-ins via overrides, `(edited)` label, Reset button — **now with search/sort/usage stats, see "SHIPPED: Exercise Manager pass" below**
 - Periodization planner (macro/meso/microcycle, linear/wave models)
 - i18n (en/pt) for static chrome only — never auto-translates user data
 - Weekly snapshot "See more" → full Weekly Detail screen (`openWeeklyDetail`/`renderWeeklyDetail`, day-by-day breakdown, prev/next week nav) — **implemented**, not a gap
@@ -135,6 +135,15 @@ Adaptive strength-coach agent embedded in the app, calling the Anthropic API dir
 - `+` joins bi-set/superset exercise names and per-set values
 - `^r`/`^e`/`^t` tags = RIR/RPE/tempo round-trip (export/import)
 - Export/import round-trip still **missing**: bodyweight PR data / `bwMode`/`extWeight` (partially fixed for RPE/tempo/rest via `^`-tags)
+
+## SHIPPED: Exercise Manager pass
+- `#exercise-manager-search` filters by name/muscle; `switchExerciseManagerSort()` sorts by Name / Muscle / Most Used / Recent (`exerciseManagerSort` state).
+- `exerciseUsageStats(exId)` (times logged + last-used date) shown per row and reused in the delete-blocked toast ("used in N workouts" instead of a vague message).
+- Row actions are icon buttons (🗑️ Delete custom, ↺ Reset override) instead of text links.
+- **Hide/Unhide undone**: the 👁️/🙈 button was added then explicitly reverted per feedback. `toggleHiddenExercise()` is still defined (harmless, unused) and `hiddenExerciseIds`/`getAllExercises()` filtering/cloud-sync plumbing is untouched, but nothing in the UI calls it anymore — no exercise can currently be hidden from the picker via the app. `deleteCustomExercise()`'s in-use guard no longer auto-hides as a fallback; it just blocks deletion with a toast showing the usage count.
+- `EXERCISES_DB` expanded from 15 → **56** built-in exercises, now covering every `MUSCLE_GROUPS` entry with multiple options: +6 Chest (incline/decline bench, dumbbell fly, cable crossover, push-up, machine press), +4 Back (seated cable row, T-bar row, chin-up, pullover), +6 Shoulders (lateral/front/rear-delt raise, Arnold press, upright row, shrug), +7 Arms (hammer/preacher curl, skull crusher, close-grip bench, overhead tricep extension, wrist curl, reverse curl, farmer's carry), +9 Legs (front squat, leg press, leg extension, leg curl, Bulgarian split squat, hip thrust, glute bridge, hip abduction, seated calf raise, sumo deadlift), +5 Core (crunch, hanging leg raise, Russian twist, cable woodchop, sit-up), +2 full-body (kettlebell swing, clean & press). All ids unique, `isBodyweight` set where relevant (push-up, chin-up, glute bridge, crunch, hanging leg raise, sit-up).
+
+**Not implemented (flagged, not forgotten):** bulk delete, manual reorder/priority list, duplicate-name detection on add, muscle-map visual preview in the add/edit form, merge-duplicate-into-built-in, default set/rep suggestion per exercise, independent Push/Pull/Legs/Cardio category tag, verifying override propagation into search/filter matching, undo after "Reset to default", section-header dividers when sorted by Muscle, grouped/sectioned muscle chip picker (Upper/Core/Lower) in the form.
 
 ## Known gaps
 - RPE/tempo/rest-preset round-trip through text import/export is partial (`^`-tags); `bwMode`/`extWeight` still not round-tripped through the parser/exporter.
