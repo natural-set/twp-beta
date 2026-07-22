@@ -110,11 +110,7 @@
               "tempo": "",
               "variations": [],
               "restSeconds": null,
-              "prs": [
-                "1RM",
-                "Volume",
-                "Reps"
-              ]
+              "prs": []
             },
             {
               "warmup": false,
@@ -125,11 +121,7 @@
               "tempo": "",
               "variations": [],
               "restSeconds": null,
-              "prs": [
-                "1RM",
-                "Volume",
-                "Reps"
-              ]
+              "prs": []
             },
             {
               "warmup": false,
@@ -140,11 +132,7 @@
               "tempo": "",
               "variations": [],
               "restSeconds": null,
-              "prs": [
-                "1RM",
-                "Volume",
-                "Reps"
-              ]
+              "prs": []
             },
             {
               "warmup": false,
@@ -155,11 +143,7 @@
               "tempo": "",
               "variations": [],
               "restSeconds": null,
-              "prs": [
-                "1RM",
-                "Volume",
-                "Reps"
-              ]
+              "prs": []
             }
           ],
           "restSeconds": null,
@@ -191,12 +175,7 @@
               "restSeconds": 120,
               "bwMode": "bw",
               "extWeight": 0,
-              "prs": [
-                "1RM",
-                "Volume",
-                "Reps",
-                "Bodyweight"
-              ]
+              "prs": []
             }
           ],
           "restSeconds": null,
@@ -236,10 +215,7 @@
               "restSeconds": 200,
               "bwMode": "added",
               "extWeight": 10,
-              "prs": [
-                "1RM",
-                "Volume"
-              ]
+              "prs": []
             },
             {
               "warmup": false,
@@ -259,16 +235,16 @@
           "linkGroup": "combo-1784724615193h99"
         },
         {
-          "exId": "custom-goblet-squat-k6vv",
-          "name": "Goblet squat",
-          "icon": "⛳️",
+          "exId": "custom-free-squat-tvrp",
+          "name": "Free squat",
+          "icon": "🦵",
           "primary": [
-            "Glutes",
             "Quadriceps"
           ],
           "secondary": [
             "Abs",
-            "Hamstrings"
+            "Hamstrings",
+            "Glutes"
           ],
           "note": "",
           "sets": [
@@ -335,7 +311,7 @@
       "duration": 63,
       "date": "2026-07-22T13:03:00.000Z",
       "bodyWeight": null,
-      "records": 9
+      "records": 3
     },
     {
       "id": 1784560436713,
@@ -12270,6 +12246,21 @@
         "Hamstrings"
       ],
       "isBodyweight": true
+    },
+    {
+      "id": "custom-free-squat-tvrp",
+      "name": "Free squat",
+      "icon": "🦵",
+      "muscle": "Quadriceps",
+      "primary": [
+        "Quadriceps"
+      ],
+      "secondary": [
+        "Abs",
+        "Hamstrings",
+        "Glutes"
+      ],
+      "isBodyweight": true
     }
   ],
   "hiddenExerciseIds": [],
@@ -12344,7 +12335,35 @@
       ],
       "secondary": [],
       "isBodyweight": true
+    },
+    "squat": {
+      "name": "Barbell Squat",
+      "icon": "🦵",
+      "muscle": "Quadriceps",
+      "primary": [
+        "Quadriceps"
+      ],
+      "secondary": [
+        "Hamstrings",
+        "Glutes",
+        "Abs"
+      ],
+      "isBodyweight": false
+    },
+    "front-squat": {
+      "name": "Front Squat",
+      "icon": "🦵",
+      "muscle": "Quadriceps",
+      "primary": [
+        "Quadriceps"
+      ],
+      "secondary": [
+        "Glutes",
+        "Abs",
+        "Hamstrings"
+      ],
+      "isBodyweight": false
     }
   },
-  "timestamp": 1784742815067
+  "timestamp": 1784742942527
 }
