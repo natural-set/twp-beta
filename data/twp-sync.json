@@ -38,11 +38,7 @@
               "tempo": "",
               "variations": [],
               "restSeconds": 311,
-              "prs": [
-                "1RM",
-                "Volume",
-                "Reps"
-              ]
+              "prs": []
             },
             {
               "warmup": false,
@@ -53,11 +49,7 @@
               "tempo": "",
               "variations": [],
               "restSeconds": 312,
-              "prs": [
-                "1RM",
-                "Volume",
-                "Reps"
-              ]
+              "prs": []
             },
             {
               "warmup": false,
@@ -68,11 +60,7 @@
               "tempo": "",
               "variations": [],
               "restSeconds": 345,
-              "prs": [
-                "1RM",
-                "Volume",
-                "Reps"
-              ]
+              "prs": []
             },
             {
               "warmup": false,
@@ -83,11 +71,7 @@
               "tempo": "",
               "variations": [],
               "restSeconds": 375,
-              "prs": [
-                "1RM",
-                "Volume",
-                "Reps"
-              ]
+              "prs": []
             },
             {
               "warmup": false,
@@ -98,6 +82,79 @@
               "tempo": "",
               "variations": [],
               "restSeconds": 69,
+              "prs": []
+            }
+          ],
+          "restSeconds": 373,
+          "linkGroup": "combo-178474252441071q"
+        },
+        {
+          "exId": "custom-side-walks-banded-72ow",
+          "name": "Side walks banded",
+          "icon": "↔️",
+          "primary": [
+            "Glutes"
+          ],
+          "secondary": [
+            "Quadriceps",
+            "Calves"
+          ],
+          "note": "",
+          "sets": [
+            {
+              "warmup": false,
+              "weight": 10,
+              "reps": 12,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": null,
+              "prs": [
+                "1RM",
+                "Volume",
+                "Reps"
+              ]
+            },
+            {
+              "warmup": false,
+              "weight": 10,
+              "reps": 16,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": null,
+              "prs": [
+                "1RM",
+                "Volume",
+                "Reps"
+              ]
+            },
+            {
+              "warmup": false,
+              "weight": 10,
+              "reps": 16,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": null,
+              "prs": [
+                "1RM",
+                "Volume",
+                "Reps"
+              ]
+            },
+            {
+              "warmup": false,
+              "weight": 10,
+              "reps": 16,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": null,
               "prs": [
                 "1RM",
                 "Volume",
@@ -105,7 +162,44 @@
               ]
             }
           ],
-          "restSeconds": 373,
+          "restSeconds": null,
+          "linkGroup": "combo-178474252441071q"
+        },
+        {
+          "exId": "custom-copenhagen-plank-raises-e31u",
+          "name": "Copenhagen plank raises",
+          "icon": "⤴️",
+          "primary": [
+            "Obliques",
+            "Abs",
+            "Quadriceps"
+          ],
+          "secondary": [
+            "Side Delts",
+            "Glutes"
+          ],
+          "note": "",
+          "sets": [
+            {
+              "warmup": false,
+              "weight": 82,
+              "reps": 12,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 120,
+              "bwMode": "bw",
+              "extWeight": 0,
+              "prs": [
+                "1RM",
+                "Volume",
+                "Reps",
+                "Bodyweight"
+              ]
+            }
+          ],
+          "restSeconds": null,
           "linkGroup": ""
         },
         {
@@ -120,24 +214,28 @@
           "sets": [
             {
               "warmup": true,
-              "weight": 80,
+              "weight": 82,
               "reps": 15,
               "rir": 0,
               "rpe": 0,
               "tempo": "",
               "variations": [],
-              "restSeconds": 0,
+              "restSeconds": 150,
+              "bwMode": "bw",
+              "extWeight": 0,
               "prs": []
             },
             {
               "warmup": false,
-              "weight": 90,
+              "weight": 92,
               "reps": 20,
               "rir": 0,
               "rpe": 0,
               "tempo": "",
               "variations": [],
-              "restSeconds": 0,
+              "restSeconds": 200,
+              "bwMode": "added",
+              "extWeight": 10,
               "prs": [
                 "1RM",
                 "Volume"
@@ -145,90 +243,99 @@
             },
             {
               "warmup": false,
-              "weight": 110,
+              "weight": 102,
               "reps": 10,
               "rir": 0,
               "rpe": 0,
               "tempo": "",
               "variations": [],
-              "restSeconds": 0,
-              "prs": [
-                "1RM",
-                "Volume"
-              ]
+              "restSeconds": 200,
+              "bwMode": "added",
+              "extWeight": 20,
+              "prs": []
             }
           ],
-          "restSeconds": 0,
+          "restSeconds": 175,
           "linkGroup": "combo-1784724615193h99"
         },
         {
-          "exId": "squat",
-          "name": "Barbell Squat",
-          "icon": "🦵",
+          "exId": "custom-goblet-squat-k6vv",
+          "name": "Goblet squat",
+          "icon": "⛳️",
           "primary": [
+            "Glutes",
             "Quadriceps"
           ],
           "secondary": [
-            "Hamstrings",
-            "Glutes"
+            "Abs",
+            "Hamstrings"
           ],
           "note": "",
           "sets": [
             {
               "warmup": false,
-              "weight": 80,
+              "weight": 82,
               "reps": 20,
               "rir": 0,
               "rpe": 0,
               "tempo": "",
               "variations": [],
-              "restSeconds": 339,
+              "restSeconds": null,
+              "bwMode": "bw",
+              "extWeight": 0,
               "prs": [
                 "1RM",
                 "Volume",
-                "Reps"
+                "Reps",
+                "Bodyweight"
               ]
             },
             {
               "warmup": false,
-              "weight": 80,
+              "weight": 82,
               "reps": 20,
               "rir": 0,
               "rpe": 0,
               "tempo": "",
               "variations": [],
-              "restSeconds": 201,
+              "restSeconds": null,
+              "bwMode": "bw",
+              "extWeight": 0,
               "prs": [
                 "1RM",
                 "Volume",
-                "Reps"
+                "Reps",
+                "Bodyweight"
               ]
             },
             {
               "warmup": false,
-              "weight": 80,
+              "weight": 82,
               "reps": 20,
               "rir": 0,
               "rpe": 0,
               "tempo": "",
               "variations": [],
-              "restSeconds": 7,
+              "restSeconds": null,
+              "bwMode": "bw",
+              "extWeight": 0,
               "prs": [
                 "1RM",
                 "Volume",
-                "Reps"
+                "Reps",
+                "Bodyweight"
               ]
             }
           ],
-          "restSeconds": 270,
+          "restSeconds": null,
           "linkGroup": "combo-1784724615193h99"
         }
       ],
-      "volume": 11168,
+      "volume": 12862,
       "duration": 63,
-      "date": "2026-07-22T13:03:35.584Z",
+      "date": "2026-07-22T13:03:00.000Z",
       "bodyWeight": null,
-      "records": 10
+      "records": 9
     },
     {
       "id": 1784560436713,
@@ -12116,6 +12223,53 @@
         "Calves"
       ],
       "isBodyweight": false
+    },
+    {
+      "id": "custom-copenhagen-plank-raises-e31u",
+      "name": "Copenhagen plank raises",
+      "icon": "⤴️",
+      "muscle": "Obliques, Abs, Quadriceps",
+      "primary": [
+        "Obliques",
+        "Abs",
+        "Quadriceps"
+      ],
+      "secondary": [
+        "Side Delts",
+        "Glutes"
+      ],
+      "isBodyweight": true
+    },
+    {
+      "id": "custom-copenhagen-plank-fuhk",
+      "name": "Copenhagen plank",
+      "icon": "➖️",
+      "muscle": "Quadriceps, Obliques",
+      "primary": [
+        "Quadriceps",
+        "Obliques"
+      ],
+      "secondary": [
+        "Glutes",
+        "Abs",
+        "Side Delts"
+      ],
+      "isBodyweight": true
+    },
+    {
+      "id": "custom-goblet-squat-k6vv",
+      "name": "Goblet squat",
+      "icon": "⛳️",
+      "muscle": "Glutes, Quadriceps",
+      "primary": [
+        "Glutes",
+        "Quadriceps"
+      ],
+      "secondary": [
+        "Abs",
+        "Hamstrings"
+      ],
+      "isBodyweight": true
     }
   ],
   "hiddenExerciseIds": [],
@@ -12180,7 +12334,17 @@
         "Chest"
       ],
       "isBodyweight": false
+    },
+    "calf": {
+      "name": "Calf Raise",
+      "icon": "🦶",
+      "muscle": "Calves",
+      "primary": [
+        "Calves"
+      ],
+      "secondary": [],
+      "isBodyweight": true
     }
   },
-  "timestamp": 1784741816739
+  "timestamp": 1784742815067
 }
