@@ -1,6 +1,424 @@
 {
   "workouts": [
     {
+      "id": 1784896808192,
+      "name": "Workout",
+      "note": "",
+      "exercises": [
+        {
+          "exId": "pullup",
+          "name": "Pull-Up",
+          "icon": "🔝",
+          "primary": [
+            "Lats",
+            "Traps",
+            "Biceps",
+            "Forearms"
+          ],
+          "secondary": [
+            "Rear Delts",
+            "Upper Back",
+            "Side Delts",
+            "Abs"
+          ],
+          "note": "",
+          "sets": [
+            {
+              "warmup": true,
+              "weight": 82,
+              "reps": 20,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [
+                {
+                  "type": "pyramids"
+                }
+              ],
+              "restSeconds": 160,
+              "bwMode": "bw",
+              "extWeight": 0,
+              "prs": []
+            }
+          ],
+          "restSeconds": null,
+          "linkGroup": ""
+        },
+        {
+          "exId": "pullup",
+          "name": "Pull-Up",
+          "icon": "🔝",
+          "primary": [
+            "Lats",
+            "Traps",
+            "Biceps",
+            "Forearms"
+          ],
+          "secondary": [
+            "Rear Delts",
+            "Upper Back",
+            "Side Delts",
+            "Abs"
+          ],
+          "note": "",
+          "sets": [
+            {
+              "warmup": false,
+              "weight": 82,
+              "reps": 8,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 196,
+              "bwMode": "bw",
+              "extWeight": 0,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 82,
+              "reps": 10,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 222,
+              "bwMode": "bw",
+              "extWeight": 0,
+              "prs": [
+                "Bodyweight"
+              ]
+            },
+            {
+              "warmup": false,
+              "weight": 82,
+              "reps": 10,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 269,
+              "bwMode": "bw",
+              "extWeight": 0,
+              "prs": [
+                "Bodyweight"
+              ]
+            },
+            {
+              "warmup": false,
+              "weight": 82,
+              "reps": 14,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [
+                {
+                  "type": "explosives"
+                }
+              ],
+              "restSeconds": 286,
+              "bwMode": "bw",
+              "extWeight": 0,
+              "prs": [
+                "1RM",
+                "Volume",
+                "Reps",
+                "Bodyweight"
+              ]
+            },
+            {
+              "warmup": false,
+              "weight": 82,
+              "reps": 17,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 369,
+              "bwMode": "bw",
+              "extWeight": 0,
+              "prs": [
+                "1RM",
+                "Volume",
+                "Reps",
+                "Bodyweight"
+              ]
+            }
+          ],
+          "restSeconds": 243,
+          "linkGroup": ""
+        },
+        {
+          "exId": "incline-bench",
+          "name": "Incline Bench Press",
+          "icon": "🏋️",
+          "primary": [
+            "Chest"
+          ],
+          "secondary": [
+            "Triceps",
+            "Front Delts"
+          ],
+          "note": "",
+          "sets": [
+            {
+              "warmup": true,
+              "weight": 10,
+              "reps": 15,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 183,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 20,
+              "reps": 20,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [
+                {
+                  "type": "pyramids"
+                }
+              ],
+              "restSeconds": 206,
+              "prs": [
+                "1RM",
+                "Volume",
+                "Reps"
+              ]
+            },
+            {
+              "warmup": false,
+              "weight": 25,
+              "reps": 8,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 162,
+              "prs": [
+                "1RM",
+                "Volume",
+                "Reps"
+              ]
+            },
+            {
+              "warmup": false,
+              "weight": 25,
+              "reps": 8,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 169,
+              "prs": [
+                "1RM",
+                "Volume",
+                "Reps"
+              ]
+            },
+            {
+              "warmup": false,
+              "weight": 25,
+              "reps": 8,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 331,
+              "prs": [
+                "1RM",
+                "Volume",
+                "Reps"
+              ]
+            }
+          ],
+          "restSeconds": 180,
+          "linkGroup": ""
+        },
+        {
+          "exId": "custom-kettlebell-halo-7cpj",
+          "name": "Kettlebell halo",
+          "icon": "😇",
+          "primary": [
+            "Rear Delts",
+            "Side Delts",
+            "Front Delts",
+            "Upper Back"
+          ],
+          "secondary": [
+            "Abs",
+            "Forearms",
+            "Biceps"
+          ],
+          "note": "",
+          "sets": [
+            {
+              "warmup": false,
+              "weight": 10,
+              "reps": 6,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 89,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 10,
+              "reps": 7,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 519,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 10,
+              "reps": 6,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 16,
+              "prs": []
+            }
+          ],
+          "restSeconds": 304,
+          "linkGroup": "combo-17848961830109w6"
+        },
+        {
+          "exId": "upright-row",
+          "name": "Upright Row",
+          "icon": "🙌",
+          "primary": [
+            "Side Delts",
+            "Traps"
+          ],
+          "secondary": [
+            "Biceps"
+          ],
+          "note": "",
+          "sets": [
+            {
+              "warmup": false,
+              "weight": 10,
+              "reps": 8,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 0,
+              "prs": [
+                "1RM",
+                "Volume",
+                "Reps"
+              ]
+            },
+            {
+              "warmup": false,
+              "weight": 10,
+              "reps": 6,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 0,
+              "prs": [
+                "1RM",
+                "Volume",
+                "Reps"
+              ]
+            },
+            {
+              "warmup": false,
+              "weight": 10,
+              "reps": 3,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 0,
+              "prs": [
+                "1RM",
+                "Volume",
+                "Reps"
+              ]
+            }
+          ],
+          "restSeconds": 0,
+          "linkGroup": "combo-17848961830109w6"
+        },
+        {
+          "exId": "ohp",
+          "name": "Overhead Press",
+          "icon": "🙌",
+          "primary": [
+            "Front Delts",
+            "Side Delts",
+            "Triceps"
+          ],
+          "secondary": [
+            "Traps",
+            "Lower Back",
+            "Abs",
+            "Chest"
+          ],
+          "note": "",
+          "sets": [
+            {
+              "warmup": false,
+              "weight": 10,
+              "reps": 8,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 0,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 10,
+              "reps": 6,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 0,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 10,
+              "reps": 8,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 0,
+              "prs": []
+            }
+          ],
+          "restSeconds": 0,
+          "linkGroup": "combo-17848961830109w6"
+        }
+      ],
+      "volume": 8208,
+      "duration": 61,
+      "date": "2026-07-24T12:40:08.184Z",
+      "bodyWeight": null,
+      "records": 11
+    },
+    {
       "id": 1784725415587,
       "name": "Workout",
       "note": "",
@@ -12377,5 +12795,5 @@
       "isBodyweight": false
     }
   },
-  "timestamp": 1784892838065
+  "timestamp": 1784896810045
 }
