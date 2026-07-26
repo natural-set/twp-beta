@@ -2977,8 +2977,15 @@
     function buildSyncPayload() {
       return {
         workouts: state.workouts,
-        userName: state.userName,
-        profile: state.profile || {},
+        // You-page fields (name, photo, profile, measurements, goal) are kept in
+        // their own bucket, separate from workouts — so a workout delete/import
+        // can never clobber them and vice versa.
+        youData: {
+          userName: state.userName,
+          profile: state.profile || {},
+          measurementHistory: state.measurementHistory || {},
+          weeklyGoal: state.weeklyGoal,
+        },
         customTags: state.customTags || [],
         customExercises: state.customExercises || [],
         hiddenExerciseIds: state.hiddenExerciseIds || [],
@@ -3102,6 +3109,27 @@
         if (serverData.exerciseOverrides && typeof serverData.exerciseOverrides === 'object') {
           // Server's overrides win per-id on conflict — simplest resolution for a rare edit case.
           state.exerciseOverrides = { ...(state.exerciseOverrides || {}), ...serverData.exerciseOverrides };
+        }
+
+        // You-page data (name, photo, profile fields, measurements, goal) — merged
+        // separately from workouts so neither can clobber the other. Local name/goal
+        // win if already set; profile fields fill in only what's missing locally;
+        // measurement history unions by date per field so no logged value is lost.
+        if (serverData.youData) {
+          const yd = serverData.youData;
+          if (yd.userName && !state.userName) state.userName = yd.userName;
+          state.profile = { ...(yd.profile || {}), ...(state.profile || {}) };
+          if (typeof yd.weeklyGoal === 'number' && !state.weeklyGoal) state.weeklyGoal = yd.weeklyGoal;
+          const localMH = state.measurementHistory || {};
+          const serverMH = yd.measurementHistory || {};
+          const mergedMH = { ...serverMH };
+          Object.keys(localMH).forEach(k => {
+            const seen = new Set((mergedMH[k] || []).map(e => e.date));
+            mergedMH[k] = [...(mergedMH[k] || []), ...localMH[k].filter(e => !seen.has(e.date))];
+          });
+          state.measurementHistory = mergedMH;
+          saveState();
+          if (document.getElementById('screen-you')?.classList.contains('active')) refreshYou();
         }
 
         return true;
