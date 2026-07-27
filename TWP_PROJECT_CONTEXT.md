@@ -137,6 +137,11 @@ Adaptive strength-coach agent embedded in the app, calling the Anthropic API dir
 - `^r`/`^e`/`^t` tags = RIR/RPE/tempo round-trip (export/import)
 - Export/import round-trip still **missing**: bodyweight PR data / `bwMode`/`extWeight` (partially fixed for RPE/tempo/rest via `^`-tags)
 
+## SHIPPED: Exercise picker — combo-on-replace + quick-add
+- `openExReplacePicker` no longer hides the combo-toggle button — picking 2+ exercises while "changing exercise" on an existing block now converts that block into a Combined Exercise via `convertBlockToCombo(blockId, ids)` (inserts a fresh combo-block in the old block's position, removes the old single block, re-adds each selected exercise via `addExercise(..., comboId, idx===0)`). `continueCombo()` branches on whether `exReplaceTargetBlockId` is set to call this vs. the existing `createComboBlock`.
+- `renderExList` shows an empty state ("Didn't find any exercise? Add a new one and keep working!" + "+ Add New Exercise" button) whenever the search yields zero results, in place of a blank list.
+- `quickAddExercise()` opens the existing Add/Edit Exercise modal (prefilled with the current search text as the name), bumping its z-index above the ex-picker overlay so it renders on top. `exPickerQuickAddActive` flag lets `saveExerciseForm()` know to clear the search box and re-render the picker list after saving, so the newly created exercise is immediately selectable. `closeExerciseForm()` resets the z-index override.
+
 ## SHIPPED: Exercise Manager pass
 - `#exercise-manager-search` filters by name/muscle; `switchExerciseManagerSort()` sorts by Name / Muscle / Most Used / Recent (`exerciseManagerSort` state).
 - `exerciseUsageStats(exId)` (times logged + last-used date) shown per row and reused in the delete-blocked toast ("used in N workouts" instead of a vague message).

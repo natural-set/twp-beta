@@ -2977,15 +2977,8 @@
     function buildSyncPayload() {
       return {
         workouts: state.workouts,
-        // You-page fields (name, photo, profile, measurements, goal) are kept in
-        // their own bucket, separate from workouts — so a workout delete/import
-        // can never clobber them and vice versa.
-        youData: {
-          userName: state.userName,
-          profile: state.profile || {},
-          measurementHistory: state.measurementHistory || {},
-          weeklyGoal: state.weeklyGoal,
-        },
+        userName: state.userName,
+        profile: state.profile || {},
         customTags: state.customTags || [],
         customExercises: state.customExercises || [],
         hiddenExerciseIds: state.hiddenExerciseIds || [],
@@ -3109,27 +3102,6 @@
         if (serverData.exerciseOverrides && typeof serverData.exerciseOverrides === 'object') {
           // Server's overrides win per-id on conflict — simplest resolution for a rare edit case.
           state.exerciseOverrides = { ...(state.exerciseOverrides || {}), ...serverData.exerciseOverrides };
-        }
-
-        // You-page data (name, photo, profile fields, measurements, goal) — merged
-        // separately from workouts so neither can clobber the other. Local name/goal
-        // win if already set; profile fields fill in only what's missing locally;
-        // measurement history unions by date per field so no logged value is lost.
-        if (serverData.youData) {
-          const yd = serverData.youData;
-          if (yd.userName && !state.userName) state.userName = yd.userName;
-          state.profile = { ...(yd.profile || {}), ...(state.profile || {}) };
-          if (typeof yd.weeklyGoal === 'number' && !state.weeklyGoal) state.weeklyGoal = yd.weeklyGoal;
-          const localMH = state.measurementHistory || {};
-          const serverMH = yd.measurementHistory || {};
-          const mergedMH = { ...serverMH };
-          Object.keys(localMH).forEach(k => {
-            const seen = new Set((mergedMH[k] || []).map(e => e.date));
-            mergedMH[k] = [...(mergedMH[k] || []), ...localMH[k].filter(e => !seen.has(e.date))];
-          });
-          state.measurementHistory = mergedMH;
-          saveState();
-          if (document.getElementById('screen-you')?.classList.contains('active')) refreshYou();
         }
 
         return true;
@@ -3523,6 +3495,7 @@
 
     function closeExerciseForm() {
       document.getElementById('exercise-form-modal').classList.remove('open');
+      document.getElementById('exercise-form-modal').style.zIndex = '';
     }
 
     function renderEfMuscleLists(readOnly) {
@@ -3588,6 +3561,11 @@
       closeExerciseForm();
       renderExerciseManagerList();
       showToast('Exercise saved');
+      if (exPickerQuickAddActive) {
+        exPickerQuickAddActive = false;
+        const s = document.getElementById('ex-search');
+        if (s) { s.value = ''; renderExList(''); }
+      }
     }
 
     // Keyword-based muscle inference for exercises that don't carry an explicit
@@ -4057,7 +4035,6 @@
     }
 
 
-
     // ═══════════════════════════════════════════
     //  NAVIGATION
     // ═══════════════════════════════════════════
@@ -4100,9 +4077,6 @@
     }
 
     function goToWorkout() { navigate('workout', document.querySelectorAll('.nav-btn')[1]); startWorkout(); }
-
-
-
 
 
     // ═══════════════════════════════════════════
@@ -4458,6 +4432,14 @@
     let exPickerSelected = new Set();
     let exReplaceTargetBlockId = null; // set when picker is opened to swap an existing block's exercise
 
+    let exPickerQuickAddActive = false;
+    function quickAddExercise() {
+      exPickerQuickAddActive = true;
+      openExerciseForm();
+      document.getElementById('exercise-form-modal').style.zIndex = '250';
+      document.getElementById('ef-name').value = (document.getElementById('ex-search').value || '').trim();
+    }
+
     function openExPicker() {
       exReplaceTargetBlockId = null;
       document.getElementById('ex-picker').classList.add('open');
@@ -4472,8 +4454,8 @@
     }
 
     // Opens the same picker to swap the exercise on an existing block, keeping
-    // its sets/notes/rest data intact — combo toggle is hidden since replacing
-    // is always a single-exercise swap.
+    // its sets/notes/rest data intact. Combo toggle stays available: picking 2+
+    // exercises here converts this block into a Combined Exercise instead.
     function openExReplacePicker(blockId) {
       exReplaceTargetBlockId = blockId;
       document.getElementById('ex-picker').classList.add('open');
@@ -4481,7 +4463,8 @@
       exPickerMultiMode = false;
       exPickerSelected.clear();
       document.getElementById('ex-picker-footer').style.display = 'none';
-      document.getElementById('combo-toggle-btn').style.display = 'none';
+      document.getElementById('combo-toggle-btn').style.display = '';
+      document.getElementById('combo-toggle-btn').style.color = '';
       renderExList('');
       document.getElementById('ex-search').focus();
     }
@@ -4512,10 +4495,37 @@
     function continueCombo() {
       if (exPickerSelected.size < 2) { showToast('Select at least 2 exercises'); return; }
       const ids = Array.from(exPickerSelected);
+      const replaceBlockId = exReplaceTargetBlockId;
       closeExPicker();
-      createComboBlock(ids);
+      if (replaceBlockId) convertBlockToCombo(replaceBlockId, ids);
+      else createComboBlock(ids);
       exPickerMultiMode = false;
       exPickerSelected.clear();
+    }
+
+    // Converts an existing single-exercise block (via "change exercise") into a
+    // Combined Exercise block in the same spot, replacing its data.
+    function convertBlockToCombo(blockId, ids) {
+      const oldBlock = document.getElementById(blockId);
+      if (!oldBlock) { createComboBlock(ids); return; }
+      const comboId = 'combo-' + Date.now() + Math.random().toString(36).slice(2, 5);
+      const wrapper = document.createElement('div');
+      wrapper.className = 'combo-block stagger-in'; wrapper.id = comboId;
+      wrapper.innerHTML = `<div class="combo-header">
+      <div class="combo-header-top">
+        <span class="combo-header-title">🔗 Combined Exercise</span>
+        <div>
+          <button class="icon-btn" style="padding:2px 6px;" onclick="moveNodeUpDown('${comboId}',-1)" title="Move up" aria-label="Move exercise up">▲</button>
+          <button class="icon-btn" style="padding:2px 6px;" onclick="moveNodeUpDown('${comboId}',1)" title="Move down" aria-label="Move exercise down">▼</button>
+          <button class="ex-del-btn" onclick="removeComboBlock('${comboId}')">Remove All</button>
+        </div>
+      </div>
+      <span class="combo-header-sub">${ids.length} exercises · stacked as one set</span>
+    </div>`;
+      oldBlock.parentNode.insertBefore(wrapper, oldBlock);
+      oldBlock.remove();
+      ids.forEach((id, idx) => addExercise(id, wrapper, comboId, idx === 0));
+      showToast('Converted to Combined Exercise');
     }
 
     function renderExList(q) {
@@ -4523,6 +4533,13 @@
       const filtered = getAllExercises().filter(e =>
         e.name.toLowerCase().includes(q2) || (e.muscle || '').toLowerCase().includes(q2));
       const el = document.getElementById('ex-list');
+      if (!filtered.length) {
+        el.innerHTML = `<div style="padding:36px 24px;text-align:center;">
+      <div style="font-size:13px;color:var(--text-muted);margin-bottom:14px;">Didn't find any exercise? Add a new one and keep working!</div>
+      <button class="btn-primary" style="max-width:240px;margin:0 auto;" onclick="quickAddExercise()">+ Add New Exercise</button>
+    </div>`;
+        return;
+      }
       if (exPickerMultiMode) {
         el.innerHTML = filtered.map(ex => {
           const selected = exPickerSelected.has(ex.id);
