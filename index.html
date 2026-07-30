@@ -2411,18 +2411,36 @@
           <button class="time-filter" onclick="switchFilter(this,'month')" data-i18n="f_month">Month</button>
           <button class="time-filter" onclick="switchFilter(this,'3m')">3M</button>
           <button class="time-filter" onclick="switchFilter(this,'6m')">6M</button>
-          <button class="time-filter" onclick="switchFilter(this,'year')" data-i18n="f_year">Year</button>
-          <button class="time-filter" onclick="switchFilter(this,'all')" data-i18n="f_all">All</button>
+          <select id="year-filter-select" class="time-filter" onchange="handleYearSelect(this)">
+            <option value="" selected disabled>All / Year</option>
+          </select>
         </div>
 
         <div class="chart-container">
-          <div class="chart-label" id="chart-period-label">This week</div>
-          <div class="chart-value" id="chart-main-value">0min</div>
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
+            <div>
+              <div class="chart-label" id="chart-period-label">This week</div>
+              <div class="chart-value" id="chart-main-value">0min</div>
+            </div>
+            <button id="chart-more-details-btn" onclick="openChartDetailModal()" style="display:none;flex-shrink:0;background:var(--surface2);border:1px solid var(--border);color:var(--accent-blue);font-family:inherit;font-size:11px;font-weight:700;padding:6px 10px;border-radius:14px;cursor:pointer;white-space:nowrap;">More details →</button>
+          </div>
+          <div id="chart-month-nav" style="display:none;align-items:center;justify-content:space-between;margin:-4px 0 10px;">
+            <button class="week-nav-btn" onclick="shiftChartMonth(-1)" aria-label="Previous month">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+            </button>
+            <span id="chart-month-label" style="font-size:13px;font-weight:700;color:var(--text-muted);"></span>
+            <button class="week-nav-btn" id="chart-month-next-btn" onclick="shiftChartMonth(1)" aria-label="Next month">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+            </button>
+          </div>
           <div id="chart-legend-row" style="display:none;gap:14px;font-size:11px;color:var(--text-muted);margin:-6px 0 8px;">
             <span>★ <span style="color:var(--gold)">PR</span></span>
             <span>┄┄ Previous period</span>
           </div>
-          <canvas id="progress-chart" height="140"></canvas>
+          <select id="body-metric-select" onchange="renderChart()" style="display:none;width:100%;margin-bottom:8px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:8px;font-family:inherit;font-size:13px;outline:none;"></select>
+          <div style="position:relative;height:140px;">
+            <canvas id="progress-chart" height="140"></canvas>
+          </div>
           <div class="metric-tabs">
             <button class="metric-tab active" onclick="switchMetric(this,'duration')">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -2444,6 +2462,12 @@
                   d="M7.5 14.25v2.25m3-4.5v4.5m3-6.75v6.75m3-9v9M6 20.25h12A2.25 2.25 0 0 0 20.25 18V6A2.25 2.25 0 0 0 18 3.75H6A2.25 2.25 0 0 0 3.75 6v12A2.25 2.25 0 0 0 6 20.25Z" />
               </svg>
               Workouts
+            </button>
+            <button class="metric-tab" onclick="switchMetric(this,'body')">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0" />
+              </svg>
+              Body
             </button>
           </div>
         </div>
@@ -2900,6 +2924,45 @@
           </div>
           <div style="margin-top:10px;text-align:right;">
             <span style="font-size:12px;color:var(--accent-blue);cursor:pointer;" onclick="AICoach.viewMemory()">🧠 View Coach Memory</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart Full History Modal ("More details") — full unclipped chart for the
+         active metric+filter, for when there are more than 24 buckets to show. -->
+    <div class="modal-overlay" id="chart-detail-modal">
+      <div class="modal-sheet" style="max-height:88vh;">
+        <div class="modal-header">
+          <div style="font-size:16px;font-weight:800;flex:1;">Full History</div>
+          <button class="modal-close-btn" onclick="closeChartDetailModal()" aria-label="Close">✕</button>
+        </div>
+        <div style="padding:16px 20px 20px;">
+          <div class="chart-label" id="cdm-period-label"></div>
+          <div class="chart-value" id="cdm-value">0</div>
+          <select id="cdm-body-metric-select" onchange="renderChartDetailModal()" style="display:none;width:100%;margin-bottom:8px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:8px;font-family:inherit;font-size:13px;outline:none;"></select>
+          <div style="display:flex;">
+            <div style="height:140px;flex:0 0 34px;border-right:1px solid var(--border);">
+              <canvas id="cdm-chart-axis" height="140"></canvas>
+            </div>
+            <div id="cdm-scroll-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;flex:1;min-width:0;">
+              <div id="cdm-inner-width" style="position:relative;height:140px;">
+                <canvas id="cdm-chart" height="140"></canvas>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:center;">
+            <span style="display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:600;color:var(--text-dim);background:var(--surface2);padding:4px 10px;border-radius:20px;margin-top:8px;">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+              scroll for more history
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+            </span>
+          </div>
+          <div class="metric-tabs" style="margin-top:14px;">
+            <button class="metric-tab cdm-metric-tab" onclick="switchChartDetailMetric(this,'duration')">Duration</button>
+            <button class="metric-tab cdm-metric-tab" onclick="switchChartDetailMetric(this,'volume')">Volume</button>
+            <button class="metric-tab cdm-metric-tab" onclick="switchChartDetailMetric(this,'workouts')">Workouts</button>
+            <button class="metric-tab cdm-metric-tab" onclick="switchChartDetailMetric(this,'body')">Body</button>
           </div>
         </div>
       </div>
@@ -3672,6 +3735,8 @@
       weeklyGoal: 3,
       currentMetric: 'duration',
       currentFilter: 'week',
+      chartMonthOffset: 0, // Month filter paging: 0 = current month, -1 = last month, etc.
+      bodyMetricKey: null, // last-selected measurement field for the "Body" chart metric
       prevScreen: 'home',
       returnTo: 'home', // last main tab (home/progress/you) visited — used to know where to land after cancel/finish
       weeklyDetailOffset: 0, // 0 = this week, -1 = last week, etc.
@@ -3699,6 +3764,91 @@
     };
 
     let chartInstance = null;
+    let cdmChartInstance = null; // Chart Detail Modal ("More details") full-history chart
+
+    // Guards against a malformed workout (e.g. non-numeric duration) NaN-poisoning
+    // the whole scale — Math.max propagates NaN, which used to collapse axis ticks.
+    function computeNiceMax(values) {
+      const clean = (values || []).filter(v => Number.isFinite(v));
+      const max = Math.max(...clean, 0);
+      return max > 0 ? max : 10;
+    }
+
+    const AXIS_TICK_COUNT = 6;
+    // Main chart shows at most this many points before overlapping/illegible x-axis
+    // labels; beyond it, "More details" opens the full unclipped history (which
+    // scrolls) in a modal instead.
+    const CHART_MAX_POINTS = 7;
+
+    // Computes a "nice" axis range + step size (1/2/5 × a power of 10, floored at 1
+    // since every metric here displays as a rounded whole number) so ticks land on
+    // clean values. Dividing an arbitrary range into a fixed tick COUNT can produce
+    // fractional steps (e.g. max=2 over 6 ticks = steps of 0.4) that round to
+    // duplicate labels ("0,0,1,1,2,2") — this avoids that entirely.
+    function computeNiceAxisRange(rawMin, rawMax, targetTicks) {
+      if (!Number.isFinite(rawMin)) rawMin = 0;
+      if (!Number.isFinite(rawMax) || rawMax <= rawMin) rawMax = rawMin + 10;
+      const rawStep = (rawMax - rawMin) / Math.max(1, targetTicks - 1);
+      const magnitude = Math.pow(10, Math.floor(Math.log10(rawStep || 1)));
+      const norm = rawStep / magnitude;
+      const niceNorm = norm <= 1 ? 1 : norm <= 2 ? 2 : norm <= 5 ? 5 : 10;
+      const step = Math.max(1, niceNorm * magnitude);
+      return { min: Math.floor(rawMin / step) * step, max: Math.ceil(rawMax / step) * step, step };
+    }
+
+    function abbreviateAxisNumber(v) {
+      const n = Math.round(v);
+      if (Math.abs(n) >= 1000) {
+        const k = n / 1000;
+        return (Number.isInteger(k) ? k : k.toFixed(1)) + 'k';
+      }
+      return String(n);
+    }
+
+    // Draws a slim, non-scrolling canvas showing just the y-axis ticks, pinned to
+    // the left of a horizontally-scrollable chart canvas — used by both the main
+    // Overview chart and the "More details" modal so the value scale stays visible
+    // no matter how far the person scrolls through history.
+    let _axisProbeCtx = null;
+    function computeAxisWidth(yMin, yMax) {
+      if (!_axisProbeCtx) _axisProbeCtx = document.createElement('canvas').getContext('2d');
+      _axisProbeCtx.font = '9px Inter, sans-serif';
+      let widest = 0;
+      for (let i = 0; i <= 5; i++) {
+        const w = _axisProbeCtx.measureText(abbreviateAxisNumber(yMin + (yMax - yMin) * (i / 5))).width;
+        if (w > widest) widest = w;
+      }
+      return Math.max(30, Math.min(76, Math.ceil(widest) + 20));
+    }
+    const _axisInstances = {};
+    function renderAxisChart(canvasId, yMin, yMax, step) {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas) return;
+      const wrap = canvas.parentElement;
+      const width = computeAxisWidth(yMin, yMax);
+      const heightCss = 140;
+      const dpr = window.devicePixelRatio || 1;
+      canvas.style.setProperty('width', width + 'px', 'important');
+      canvas.style.setProperty('height', heightCss + 'px', 'important');
+      canvas.width = Math.round(width * dpr);
+      canvas.height = Math.round(heightCss * dpr);
+      if (wrap) wrap.style.flex = `0 0 ${width}px`;
+      const ctx = canvas.getContext('2d');
+      if (_axisInstances[canvasId]) _axisInstances[canvasId].destroy();
+      _axisInstances[canvasId] = new Chart(ctx, {
+        type: 'line',
+        data: { labels: [''], datasets: [{ data: [0], borderWidth: 0, pointRadius: 0 }] },
+        options: {
+          responsive: false, maintainAspectRatio: false, devicePixelRatio: 1,
+          layout: { padding: { left: 0, right: 2, top: 0, bottom: 0 } },
+          plugins: { legend: { display: false }, tooltip: { enabled: false } },
+          scales: {
+            x: { display: false },
+            y: { min: yMin, max: yMax, grid: { color: '#1e1e1e' }, ticks: { color: '#8a8a8a', font: { size: 10, weight: '500' }, stepSize: step, padding: 3, callback: abbreviateAxisNumber } },
+          }
+        }
+      });
+    }
     let detailChartInstance = null;
     // Which exercise/muscle the detail modal is currently showing, plus its own
     // time filter + metric — independent from the main Progress chart's state.
@@ -4484,6 +4634,7 @@
       renderExList(document.getElementById('ex-search').value);
       if (exPickerMultiMode) showToast('Select 2+ exercises, then Continue');
     }
+
 
     function toggleComboSelect(exId) {
       if (exPickerSelected.has(exId)) exPickerSelected.delete(exId);
@@ -5654,18 +5805,69 @@
     function switchFilter(btn, f) {
       document.querySelectorAll('.time-filter').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
+      const yearSel = document.getElementById('year-filter-select');
+      if (yearSel) yearSel.value = '';
       state.currentFilter = f;
+      state.chartMonthOffset = 0;
       renderChart();
+    }
+
+    // "All" and per-year views share one <select> instead of a separate button row.
+    function getAvailableYears() {
+      const years = new Set(state.workouts.map(w => new Date(w.date).getFullYear()));
+      return Array.from(years).sort((a, b) => b - a);
+    }
+    function renderYearFilters() {
+      const sel = document.getElementById('year-filter-select');
+      if (!sel) return;
+      const years = getAvailableYears();
+      const yearMatch = /^y(\d{4})$/.exec(state.currentFilter);
+      const cur = yearMatch ? yearMatch[1] : (state.currentFilter === 'all' ? 'all' : '');
+      sel.innerHTML = `<option value="" disabled ${cur === '' ? 'selected' : ''}>All / Year</option>` +
+        `<option value="all" ${cur === 'all' ? 'selected' : ''}>All</option>` +
+        years.map(y => `<option value="${y}" ${String(y) === cur ? 'selected' : ''}>${y}</option>`).join('');
+      sel.classList.toggle('active', cur !== '');
+    }
+    function handleYearSelect(sel) {
+      if (!sel.value) return;
+      document.querySelectorAll('.time-filter').forEach(b => b.classList.remove('active'));
+      sel.classList.add('active');
+      state.currentFilter = sel.value === 'all' ? 'all' : 'y' + sel.value;
+      state.chartMonthOffset = 0;
+      renderChart();
+    }
+    // Month filter paging: lets the person page backward/forward through specific
+    // past months instead of only ever seeing the current one.
+    function shiftChartMonth(delta) {
+      const next = (state.chartMonthOffset || 0) + delta;
+      if (next > 0) return;
+      state.chartMonthOffset = next;
+      renderChart();
+    }
+    function updateChartMonthNav() {
+      const nav = document.getElementById('chart-month-nav');
+      if (!nav) return;
+      if (state.currentFilter !== 'month') { nav.style.display = 'none'; return; }
+      nav.style.display = 'flex';
+      const now = new Date();
+      const base = new Date(now.getFullYear(), now.getMonth() + (state.chartMonthOffset || 0), 1);
+      document.getElementById('chart-month-label').textContent = base.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+      const nextBtn = document.getElementById('chart-month-next-btn');
+      if (nextBtn) nextBtn.disabled = (state.chartMonthOffset || 0) >= 0;
     }
 
     function getFilterCutoff() {
       const now = new Date();
       const cutoff = new Date();
-      if (state.currentFilter === 'week') {
+      const yearMatch = /^y(\d{4})$/.exec(state.currentFilter);
+      if (yearMatch) {
+        cutoff.setFullYear(parseInt(yearMatch[1]), 0, 1); cutoff.setHours(0, 0, 0, 0);
+      } else if (state.currentFilter === 'week') {
         cutoff.setDate(now.getDate() - now.getDay());
         cutoff.setHours(0, 0, 0, 0);
       } else if (state.currentFilter === 'month') {
-        cutoff.setDate(1); cutoff.setHours(0, 0, 0, 0);
+        const base = new Date(now.getFullYear(), now.getMonth() + (state.chartMonthOffset || 0), 1);
+        cutoff.setTime(base.getTime()); cutoff.setHours(0, 0, 0, 0);
       } else if (state.currentFilter === '3m') {
         cutoff.setMonth(now.getMonth() - 3);
       } else if (state.currentFilter === '6m') {
@@ -5680,9 +5882,27 @@
       return cutoff;
     }
 
+    // Upper bound for the current filter — real (non-open-ended) for a specific
+    // year or the selected month, so a past period doesn't bleed into "today".
+    function getFilterEnd() {
+      const yearMatch = /^y(\d{4})$/.exec(state.currentFilter);
+      if (yearMatch) {
+        const end = new Date(parseInt(yearMatch[1]) + 1, 0, 1); end.setHours(0, 0, 0, 0);
+        return end;
+      }
+      if (state.currentFilter === 'month') {
+        const now = new Date();
+        const end = new Date(now.getFullYear(), now.getMonth() + (state.chartMonthOffset || 0) + 1, 1);
+        end.setHours(0, 0, 0, 0);
+        return end;
+      }
+      return new Date(8640000000000000);
+    }
+
     function getFilteredWorkouts() {
       const cutoff = getFilterCutoff();
-      return state.workouts.filter(w => new Date(w.date) >= cutoff);
+      const end = getFilterEnd();
+      return state.workouts.filter(w => { const d = new Date(w.date); return d >= cutoff && d < end; });
     }
 
     // Buckets a set of workouts into local-date keys (daily or weekly), returning
@@ -5702,8 +5922,8 @@
         }
         const key = localKey(bucketDate);
         if (!buckets[key]) buckets[key] = { duration: 0, volume: 0, workouts: 0, date: bucketDate, ids: [], hasPR: false };
-        buckets[key].duration += w.duration;
-        buckets[key].volume += w.volume;
+        buckets[key].duration += (Number.isFinite(w.duration) ? w.duration : 0);
+        buckets[key].volume += (Number.isFinite(w.volume) ? w.volume : 0);
         buckets[key].workouts++;
         buckets[key].ids.push(w.id);
         if (w.exercises.some(ex => (ex.sets || []).some(s => s.prs && s.prs.length))) buckets[key].hasPR = true;
@@ -5719,33 +5939,32 @@
     }
 
     function renderChart() {
+      updateChartMonthNav();
+      const bodySelect = document.getElementById('body-metric-select');
+      if (bodySelect) bodySelect.style.display = state.currentMetric === 'body' ? 'block' : 'none';
+      if (state.currentMetric === 'body') { renderBodyMetricChart(); return; }
+
       const workouts = getFilteredWorkouts();
       const now = new Date();
       const useDays = state.currentFilter === 'week' || state.currentFilter === 'month';
 
       const { buckets, keys } = bucketWorkouts(workouts, useDays);
-      const labelKeys = keys.slice(-24);
+      const truncated = keys.length > CHART_MAX_POINTS;
+      const labelKeys = truncated ? keys.slice(-CHART_MAX_POINTS) : keys;
       const values = labelKeys.map(k => metricValue(buckets[k]));
       const prFlags = labelKeys.map(k => buckets[k].hasPR);
       const idsByPoint = labelKeys.map(k => buckets[k].ids);
 
-      const total = values.reduce((s, v) => s + v, 0);
+      const total = keys.map(k => metricValue(buckets[k])).reduce((s, v) => s + v, 0);
       const unit = state.currentMetric === 'duration' ? 'min' : state.currentMetric === 'volume' ? 'kg' : '';
 
-      const periodLabels = {
-        week: 'This week', month: 'This month',
-        '3m': 'Last 3 months', '6m': 'Last 6 months',
-        year: 'This year', all: 'All time'
-      };
-      document.getElementById('chart-period-label').textContent = periodLabels[state.currentFilter] || '';
+      const periodLabels = { week: 'This week', month: 'This month', '3m': 'Last 3 months', '6m': 'Last 6 months', year: 'This year', all: 'All time' };
+      const yearMatch = /^y(\d{4})$/.exec(state.currentFilter);
+      document.getElementById('chart-period-label').textContent = yearMatch ? yearMatch[1] : (periodLabels[state.currentFilter] || '');
       animateNumber(document.getElementById('chart-main-value'), total, unit);
 
-      // Ghost "previous period" line: same-length window immediately before the
-      // current one, re-bucketed the same way, aligned by position (not calendar
-      // date) so it lines up under the current period's x-axis. Skipped for "all
-      // time" since there's no meaningful "previous" window to compare against.
       let prevValues = null;
-      if (state.currentFilter !== 'all' && labelKeys.length) {
+      if (state.currentFilter !== 'all' && !yearMatch && labelKeys.length) {
         const cutoff = getFilterCutoff();
         const spanMs = now - cutoff;
         const prevCutoff = new Date(cutoff.getTime() - spanMs);
@@ -5758,14 +5977,17 @@
         }
       }
 
+      const moreBtn = document.getElementById('chart-more-details-btn');
+      if (moreBtn) moreBtn.style.display = truncated ? 'inline-block' : 'none';
+
+      const { min: yMin, max: yMax, step } = computeNiceAxisRange(0, Math.max(...values.concat(prevValues ? prevValues.filter(v => v !== null) : []), 0), AXIS_TICK_COUNT);
+
       const ctx = document.getElementById('progress-chart').getContext('2d');
       if (chartInstance) chartInstance.destroy();
       const datasets = [{
         data: values.length ? values : [0],
-        borderColor: '#3b82f6',
-        backgroundColor: 'rgba(59,130,246,0.08)',
-        fill: true,
-        tension: 0.35,
+        borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.08)',
+        fill: true, tension: 0.35,
         pointBackgroundColor: values.map((v, i) => prFlags[i] ? '#f59e0b' : '#3b82f6'),
         pointStyle: values.map((v, i) => prFlags[i] ? 'star' : 'circle'),
         pointRadius: values.map((v, i) => prFlags[i] ? 7 : 4),
@@ -5787,24 +6009,19 @@
           datasets,
         },
         options: {
-          responsive: true,
+          responsive: true, maintainAspectRatio: false,
           onClick: (evt, elements) => {
             if (!elements.length) return;
-            const idx = elements[0].index;
-            const ids = idsByPoint[idx];
+            const ids = idsByPoint[elements[0].index];
             if (ids && ids.length) openDetail(ids[ids.length - 1]);
           },
           plugins: {
             legend: { display: false },
-            tooltip: {
-              callbacks: {
-                label: c => (c.datasetIndex === 0 ? (prFlags[c.dataIndex] ? '🏅 PR · ' : '') + c.parsed.y + unit : 'Previous: ' + c.parsed.y + unit)
-              }
-            }
+            tooltip: { callbacks: { label: c => (c.datasetIndex === 0 ? (prFlags[c.dataIndex] ? '🏅 PR · ' : '') + c.parsed.y + unit : 'Previous: ' + c.parsed.y + unit) } }
           },
           scales: {
-            x: { grid: { color: '#1e1e1e' }, ticks: { color: '#555', font: { size: 10 }, maxTicksLimit: 8 } },
-            y: { grid: { color: '#1e1e1e' }, ticks: { color: '#555', font: { size: 10 } }, beginAtZero: true },
+            x: { grid: { color: '#1e1e1e' }, ticks: { color: '#555', font: { size: 9 }, maxTicksLimit: 8 } },
+            y: { min: yMin, max: yMax, grid: { color: '#1e1e1e' }, ticks: { color: '#555', font: { size: 10 }, stepSize: step, callback: abbreviateAxisNumber } },
           }
         }
       });
@@ -5813,6 +6030,212 @@
       if (legendRow) legendRow.style.display = prevValues ? 'flex' : 'none';
 
       renderFilterStats(workouts);
+    }
+
+    // ── Body measurements chart (metric === 'body') — reuses state.measurementHistory
+    function getAvailableMeasurementFields() {
+      const mh = state.measurementHistory || {};
+      return Array.from(MEASUREMENT_KEYS).filter(k => mh[k] && mh[k].length)
+        .map(k => ({ key: k, label: (PROFILE_FIELDS.find(f => f.k === k) || {}).l || k }));
+    }
+    function populateBodyMetricSelect() {
+      const sel = document.getElementById('body-metric-select');
+      if (!sel) return;
+      const fields = getAvailableMeasurementFields();
+      if (!fields.length) { sel.innerHTML = '<option value="">No measurements logged yet</option>'; return; }
+      const cur = (state.bodyMetricKey && fields.some(f => f.key === state.bodyMetricKey)) ? state.bodyMetricKey : fields[0].key;
+      state.bodyMetricKey = cur;
+      sel.innerHTML = fields.map(f => `<option value="${f.key}" ${f.key === cur ? 'selected' : ''}>${f.label}</option>`).join('');
+    }
+    function renderBodyMetricChart() {
+      populateBodyMetricSelect();
+      const sel = document.getElementById('body-metric-select');
+      const key = sel ? sel.value : state.bodyMetricKey;
+      state.bodyMetricKey = key;
+      const legendRow = document.getElementById('chart-legend-row');
+      if (legendRow) legendRow.style.display = 'none';
+
+      const hist = (key && state.measurementHistory && state.measurementHistory[key]) || [];
+      const cutoff = getFilterCutoff(), end = getFilterEnd();
+      const allFiltered = hist.filter(e => { const d = new Date(e.date); return d >= cutoff && d < end; })
+        .slice().sort((a, b) => new Date(a.date) - new Date(b.date));
+      const truncated = allFiltered.length > CHART_MAX_POINTS;
+      const filtered = truncated ? allFiltered.slice(-CHART_MAX_POINTS) : allFiltered;
+      const moreBtn = document.getElementById('chart-more-details-btn');
+      if (moreBtn) moreBtn.style.display = truncated ? 'inline-block' : 'none';
+      const label = (PROFILE_FIELDS.find(f => f.k === key) || {}).l || key || 'Measurement';
+
+      const yearMatch = /^y(\d{4})$/.exec(state.currentFilter);
+      const periodLabels = { week: 'This week', month: 'This month', '3m': 'Last 3 months', '6m': 'Last 6 months', year: 'This year', all: 'All time' };
+      document.getElementById('chart-period-label').textContent = (yearMatch ? yearMatch[1] : (periodLabels[state.currentFilter] || '')) + (key ? ' · ' + label : '');
+      document.getElementById('chart-main-value').textContent = filtered.length ? filtered[filtered.length - 1].value : 'No data';
+
+      const values = filtered.map(e => { const v = parseFloat(e.value); return isNaN(v) ? null : v; });
+      const numericValues = values.filter(v => v !== null);
+      const dataMin = numericValues.length ? Math.min(...numericValues) : 0;
+      const dataMax = numericValues.length ? Math.max(...numericValues) : 10;
+      const range = (dataMax - dataMin) || Math.max(1, dataMax * 0.1) || 1;
+      const { min: yMin, max: yMax, step } = computeNiceAxisRange(dataMin - range * 0.15, dataMax + range * 0.15, AXIS_TICK_COUNT);
+
+      const ctx = document.getElementById('progress-chart').getContext('2d');
+      if (chartInstance) chartInstance.destroy();
+      chartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: filtered.length ? filtered.map(e => new Date(e.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })) : ['No data'],
+          datasets: [{
+            data: values.length ? values : [0],
+            borderColor: '#f97316', backgroundColor: 'rgba(249,115,22,0.08)',
+            fill: true, tension: 0.35, spanGaps: true,
+            pointBackgroundColor: '#f97316', pointRadius: 4, pointHoverRadius: 6,
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => c.parsed.y } } },
+          scales: {
+            x: { grid: { color: '#1e1e1e' }, ticks: { color: '#555', font: { size: 9 }, maxTicksLimit: 8 } },
+            y: { min: yMin, max: yMax, grid: { color: '#1e1e1e' }, ticks: { color: '#555', font: { size: 10 }, stepSize: step, callback: abbreviateAxisNumber } },
+          }
+        }
+      });
+
+      const statsEl = document.getElementById('filter-stats');
+      if (statsEl) {
+        statsEl.innerHTML = filtered.length
+          ? `<div style="margin:0 16px 20px;color:var(--text-muted);font-size:13px;">${filtered.length} logged value${filtered.length === 1 ? '' : 's'} for ${label} in this period.</div>`
+          : `<div style="margin:0 16px 20px;color:var(--text-muted);font-size:13px;">No ${label} entries in this period. Log it from You tab → Profile &amp; Measurements.</div>`;
+      }
+    }
+
+    // ── Chart Detail Modal ("More details") — full unclipped history for the
+    // current time filter, letting the person pick Duration/Volume/Workouts/Body
+    // independently from the main Overview chart.
+    let cdmMetric = 'duration';
+    function openChartDetailModal() {
+      cdmMetric = state.currentMetric === 'body' ? 'body' : (state.currentMetric || 'duration');
+      document.querySelectorAll('.cdm-metric-tab').forEach(b => b.classList.toggle('active', b.textContent.trim().toLowerCase() === cdmMetric));
+      document.getElementById('chart-detail-modal').classList.add('open');
+      renderChartDetailModal();
+    }
+    function closeChartDetailModal() {
+      document.getElementById('chart-detail-modal').classList.remove('open');
+    }
+    function switchChartDetailMetric(btn, m) {
+      document.querySelectorAll('.cdm-metric-tab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      cdmMetric = m;
+      renderChartDetailModal();
+    }
+    function populateCdmBodyMetricSelect() {
+      const sel = document.getElementById('cdm-body-metric-select');
+      if (!sel) return;
+      const fields = getAvailableMeasurementFields();
+      if (!fields.length) { sel.innerHTML = '<option value="">No measurements logged yet</option>'; return; }
+      const cur = (state.bodyMetricKey && fields.some(f => f.key === state.bodyMetricKey)) ? state.bodyMetricKey : fields[0].key;
+      sel.innerHTML = fields.map(f => `<option value="${f.key}" ${f.key === cur ? 'selected' : ''}>${f.label}</option>`).join('');
+    }
+    function renderChartDetailModal() {
+      const bodySelect = document.getElementById('cdm-body-metric-select');
+      if (bodySelect) bodySelect.style.display = cdmMetric === 'body' ? 'block' : 'none';
+      const periodLabels = { week: 'This week', month: 'This month', '3m': 'Last 3 months', '6m': 'Last 6 months', year: 'This year', all: 'All time' };
+      const yearMatch = /^y(\d{4})$/.exec(state.currentFilter);
+      const periodText = yearMatch ? yearMatch[1] : (periodLabels[state.currentFilter] || '');
+
+      if (cdmMetric === 'body') {
+        populateCdmBodyMetricSelect();
+        const sel = document.getElementById('cdm-body-metric-select');
+        const key = sel ? sel.value : state.bodyMetricKey;
+        const hist = (key && state.measurementHistory && state.measurementHistory[key]) || [];
+        const cutoff = getFilterCutoff(), end = getFilterEnd();
+        const filtered = hist.filter(e => { const d = new Date(e.date); return d >= cutoff && d < end; }).slice().sort((a, b) => new Date(a.date) - new Date(b.date));
+        const label = (PROFILE_FIELDS.find(f => f.k === key) || {}).l || key || 'Measurement';
+        document.getElementById('cdm-period-label').textContent = periodText + (key ? ' · ' + label : '');
+        document.getElementById('cdm-value').textContent = filtered.length ? filtered[filtered.length - 1].value : 'No data';
+
+        const wrap = document.getElementById('cdm-scroll-wrap');
+        const inner = document.getElementById('cdm-inner-width');
+        const minWidth = (wrap && wrap.clientWidth) || 300;
+        if (inner) inner.style.width = Math.max(minWidth, filtered.length * 62) + 'px';
+
+        const values = filtered.map(e => { const v = parseFloat(e.value); return isNaN(v) ? null : v; });
+        const numericValues = values.filter(v => v !== null);
+        const dataMin = numericValues.length ? Math.min(...numericValues) : 0;
+        const dataMax = numericValues.length ? Math.max(...numericValues) : 10;
+        const range = (dataMax - dataMin) || Math.max(1, dataMax * 0.1) || 1;
+        const { min: yMin, max: yMax, step } = computeNiceAxisRange(dataMin - range * 0.15, dataMax + range * 0.15, AXIS_TICK_COUNT);
+        renderAxisChart('cdm-chart-axis', yMin, yMax, step);
+
+        const ctx = document.getElementById('cdm-chart').getContext('2d');
+        if (cdmChartInstance) cdmChartInstance.destroy();
+        cdmChartInstance = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: filtered.length ? filtered.map(e => new Date(e.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })) : ['No data'],
+            datasets: [{ data: values.length ? values : [0], borderColor: '#f97316', backgroundColor: 'rgba(249,115,22,0.08)', fill: true, tension: 0.35, spanGaps: true, pointBackgroundColor: '#f97316', pointRadius: 4, pointHoverRadius: 6 }]
+          },
+          options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => c.parsed.y } } },
+            scales: {
+              x: { grid: { color: '#1e1e1e' }, ticks: { color: '#555', font: { size: 9 }, autoSkip: false, maxRotation: 0, minRotation: 0 } },
+              y: { min: yMin, max: yMax, grid: { color: '#1e1e1e' }, ticks: { display: false, stepSize: step } },
+            }
+          }
+        });
+        if (wrap) requestAnimationFrame(() => { wrap.scrollLeft = wrap.scrollWidth; });
+        return;
+      }
+
+      const workouts = getFilteredWorkouts();
+      const useDays = state.currentFilter === 'week' || state.currentFilter === 'month';
+      const { buckets, keys } = bucketWorkouts(workouts, useDays);
+      const valueFor = k => cdmMetric === 'duration' ? buckets[k].duration : cdmMetric === 'volume' ? Math.round(buckets[k].volume) : buckets[k].workouts;
+      const values = keys.map(valueFor);
+      const prFlags = keys.map(k => buckets[k].hasPR);
+      const idsByPoint = keys.map(k => buckets[k].ids);
+      const total = values.reduce((s, v) => s + v, 0);
+      const unit = cdmMetric === 'duration' ? 'min' : cdmMetric === 'volume' ? 'kg' : '';
+      document.getElementById('cdm-period-label').textContent = periodText;
+      document.getElementById('cdm-value').textContent = total + unit;
+
+      const wrap = document.getElementById('cdm-scroll-wrap');
+      const inner = document.getElementById('cdm-inner-width');
+      const minWidth = (wrap && wrap.clientWidth) || 300;
+      if (inner) inner.style.width = Math.max(minWidth, keys.length * 62) + 'px';
+
+      const { min: yMin, max: yMax, step } = computeNiceAxisRange(0, Math.max(...values, 0), AXIS_TICK_COUNT);
+      renderAxisChart('cdm-chart-axis', yMin, yMax, step);
+
+      const ctx = document.getElementById('cdm-chart').getContext('2d');
+      if (cdmChartInstance) cdmChartInstance.destroy();
+      cdmChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: keys.length ? keys.map(k => buckets[k].date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })) : ['No data'],
+          datasets: [{
+            data: values.length ? values : [0], borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.08)',
+            fill: true, tension: 0.35,
+            pointBackgroundColor: values.map((v, i) => prFlags[i] ? '#f59e0b' : '#3b82f6'),
+            pointStyle: values.map((v, i) => prFlags[i] ? 'star' : 'circle'),
+            pointRadius: values.map((v, i) => prFlags[i] ? 6 : 3),
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          onClick: (evt, elements) => {
+            if (!elements.length) return;
+            const ids = idsByPoint[elements[0].index];
+            if (ids && ids.length) { closeChartDetailModal(); openDetail(ids[ids.length - 1]); }
+          },
+          plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => (prFlags[c.dataIndex] ? '🏅 PR · ' : '') + c.parsed.y + unit } } },
+          scales: {
+            x: { grid: { color: '#1e1e1e' }, ticks: { color: '#555', font: { size: 9 }, autoSkip: false, maxRotation: 0, minRotation: 0 } },
+            y: { min: yMin, max: yMax, grid: { color: '#1e1e1e' }, ticks: { display: false, stepSize: step } },
+          }
+        }
+      });
+      if (wrap) requestAnimationFrame(() => { wrap.scrollLeft = wrap.scrollWidth; });
     }
 
     function switchMetric(btn, m) {
@@ -5880,6 +6303,7 @@
     }
 
     function refreshProgress() {
+      renderYearFilters();
       renderChart();
       renderGoal();
       if (typeof AICoach !== 'undefined') AICoach.renderWidget();

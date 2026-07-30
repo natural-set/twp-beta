@@ -62,6 +62,18 @@ Per-set weight input for bodyweight-capable exercises is a single cycling chip i
 - If `state.profile.weight` is unset, a tappable `.bw-warn` link ("Set weight →") calls `goSetBodyweight()` — jumps to You tab and opens the weight field directly.
 - Feed card exercise cells (`renderFeedCard`) show each exercise's total kg lifted (dumbbell-emoji prefixed), not just set count.
 
+## SHIPPED: Overview chart — "More details" full-history modal + axis fixes
+- Main Overview chart is bounded to `CHART_MAX_POINTS = 7` buckets (non-scrolling, plain visible axis via Chart.js auto ticks + `computeNiceAxisRange`/`abbreviateAxisNumber`). Applies to Duration/Volume/Workouts and the Body metric.
+- **"More details" button** (`#chart-more-details-btn`) appears only when the filtered data exceeds 7 buckets; opens `#chart-detail-modal` showing the FULL unclipped history for the current filter.
+- Modal (`renderChartDetailModal`) is the only place with horizontal scroll: frozen left y-axis canvas (`renderAxisChart`, generic by canvas id) + scrollable plot canvas, auto-scrolls to latest on open. Has its own Duration/Volume/Workouts/**Body** metric tabs (`switchChartDetailMetric`), independent of the main chart's active metric — Body has its own measurement-field `<select>` (`cdm-body-metric-select`).
+- **Bug fixes along the way** (all covered by a Playwright + local Chart.js headless test harness — see below):
+  - Fixed-height wrapper (`position:relative;height:140px`) around every chart canvas — `maintainAspectRatio:false` + no explicit parent height caused a Chart.js resize feedback loop (canvas growing to an enormous blank area).
+  - `computeNiceAxisRange(rawMin, rawMax, targetTicks)` replaces fixed `ticks.count` — an arbitrary tick count over a range that doesn't divide evenly produces fractional tick values that round to **duplicate labels** ("0,0,1,1,2,2"); this computes a clean 1/2/5×10ⁿ step (floored at 1, since every metric displays as a whole number) instead.
+  - Header total now sums the **full** filtered dataset, not just the truncated/visible points — previously disagreed with the modal's total for the same filter.
+  - Bucket accumulation (`bucketWorkouts`) coerces `duration`/`volume` to a finite number — one malformed workout (e.g. `duration: undefined`) used to NaN-poison the whole bucket sum and collapse the axis.
+- Year filter merged into a single `<select>` (`#year-filter-select`, "All" + per-year via `y2025`-style filter codes) replacing separate Year/All buttons; `getFilterEnd()` added so a specific year/month has a real upper bound. Month filter got a prev/next pager (`shiftChartMonth`, `#chart-month-nav`, `state.chartMonthOffset`).
+- **Validation harness**: Playwright (pre-installed) + `chart.js` pulled via `npm install` (CDN domains aren't reachable in the sandbox) — swap the CDN `<script src>` for `node_modules/chart.js/dist/chart.umd.js` in a scratch copy, seed `state.workouts`/`state.measurementHistory` directly via `page.evaluate`, then read `chartInstance`/`cdmChartInstance`/`_axisInstances[...]`'s live `.scales.y.ticks` to check for duplicate labels before shipping. This caught the duplicate-tick bug that static review missed twice.
+
 ## SHIPPED: Progress page — UI/UX pass
 **Deeper Insights (Training Load / PPL / Muscle Warnings):**
 - Per-muscle target ranges (see Core data model / Shipped features above) replace the old flat 10-20 band; warning rows show `n/lo-hi sets`.
