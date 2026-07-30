@@ -3156,6 +3156,8 @@
                 }
               ],
               "restSeconds": 150,
+              "bwMode": "assisted",
+              "extWeight": 2,
               "prs": []
             },
             {
@@ -3167,6 +3169,8 @@
               "tempo": "",
               "variations": [],
               "restSeconds": 150,
+              "bwMode": "assisted",
+              "extWeight": 2,
               "prs": []
             },
             {
@@ -3178,6 +3182,8 @@
               "tempo": "",
               "variations": [],
               "restSeconds": 150,
+              "bwMode": "assisted",
+              "extWeight": 2,
               "prs": []
             },
             {
@@ -3189,6 +3195,8 @@
               "tempo": "",
               "variations": [],
               "restSeconds": 150,
+              "bwMode": "assisted",
+              "extWeight": 2,
               "prs": []
             },
             {
@@ -3200,6 +3208,8 @@
               "tempo": "",
               "variations": [],
               "restSeconds": 150,
+              "bwMode": "assisted",
+              "extWeight": 2,
               "prs": []
             },
             {
@@ -3216,6 +3226,8 @@
                 }
               ],
               "restSeconds": 150,
+              "bwMode": "assisted",
+              "extWeight": 2,
               "prs": []
             }
           ],
@@ -3251,6 +3263,8 @@
                 }
               ],
               "restSeconds": 150,
+              "bwMode": "assisted",
+              "extWeight": 2,
               "prs": []
             },
             {
@@ -3262,6 +3276,8 @@
               "tempo": "",
               "variations": [],
               "restSeconds": 150,
+              "bwMode": "assisted",
+              "extWeight": 2,
               "prs": []
             },
             {
@@ -3273,6 +3289,8 @@
               "tempo": "",
               "variations": [],
               "restSeconds": 150,
+              "bwMode": "assisted",
+              "extWeight": 2,
               "prs": []
             },
             {
@@ -3284,6 +3302,8 @@
               "tempo": "",
               "variations": [],
               "restSeconds": 150,
+              "bwMode": "assisted",
+              "extWeight": 2,
               "prs": []
             },
             {
@@ -3295,6 +3315,8 @@
               "tempo": "",
               "variations": [],
               "restSeconds": 150,
+              "bwMode": "assisted",
+              "extWeight": 2,
               "prs": []
             },
             {
@@ -3306,6 +3328,8 @@
               "tempo": "",
               "variations": [],
               "restSeconds": 150,
+              "bwMode": "assisted",
+              "extWeight": 2,
               "prs": []
             }
           ],
@@ -3339,11 +3363,7 @@
               "tempo": "",
               "variations": [],
               "restSeconds": 60,
-              "prs": [
-                "1RM",
-                "Volume",
-                "Reps"
-              ]
+              "prs": []
             },
             {
               "warmup": false,
@@ -3354,11 +3374,7 @@
               "tempo": "",
               "variations": [],
               "restSeconds": 60,
-              "prs": [
-                "1RM",
-                "Volume",
-                "Reps"
-              ]
+              "prs": []
             }
           ],
           "restSeconds": 60,
@@ -3390,11 +3406,7 @@
               "tempo": "",
               "variations": [],
               "restSeconds": null,
-              "prs": [
-                "1RM",
-                "Volume",
-                "Reps"
-              ]
+              "prs": []
             },
             {
               "warmup": false,
@@ -3405,11 +3417,7 @@
               "tempo": "",
               "variations": [],
               "restSeconds": null,
-              "prs": [
-                "1RM",
-                "Volume",
-                "Reps"
-              ]
+              "prs": []
             },
             {
               "warmup": false,
@@ -3420,11 +3428,7 @@
               "tempo": "",
               "variations": [],
               "restSeconds": null,
-              "prs": [
-                "1RM",
-                "Volume",
-                "Reps"
-              ]
+              "prs": []
             }
           ],
           "restSeconds": null,
@@ -3435,7 +3439,7 @@
       "duration": 69,
       "date": "2026-06-29T03:00:00.000Z",
       "bodyWeight": null,
-      "records": 5,
+      "records": 0,
       "sorenessRange": [
         6,
         7
@@ -13243,5 +13247,5 @@
       "isBodyweight": false
     }
   },
-  "timestamp": 1785449270271
+  "timestamp": 1785449615737
 }
