@@ -1,9 +1,661 @@
 {
   "workouts": [
     {
+      "id": 1785347046068,
+      "name": "Upper",
+      "note": "",
+      "exercises": [
+        {
+          "exId": "pullup",
+          "name": "Pull-Up",
+          "icon": "🔝",
+          "primary": [
+            "Lats",
+            "Traps",
+            "Biceps",
+            "Forearms"
+          ],
+          "secondary": [
+            "Rear Delts",
+            "Upper Back",
+            "Side Delts",
+            "Abs"
+          ],
+          "note": "",
+          "sets": [
+            {
+              "warmup": true,
+              "weight": 82,
+              "reps": 20,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [
+                {
+                  "type": "pyramids"
+                }
+              ],
+              "restSeconds": 120,
+              "bwMode": "bw",
+              "extWeight": 0,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 82,
+              "reps": 7,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [
+                {
+                  "type": "explosives"
+                }
+              ],
+              "restSeconds": 170,
+              "bwMode": "bw",
+              "extWeight": 0,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 82,
+              "reps": 7,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [
+                {
+                  "type": "explosives"
+                }
+              ],
+              "restSeconds": 170,
+              "bwMode": "bw",
+              "extWeight": 0,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 82,
+              "reps": 7,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 180,
+              "bwMode": "bw",
+              "extWeight": 0,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 82,
+              "reps": 7,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 180,
+              "bwMode": "bw",
+              "extWeight": 0,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 82,
+              "reps": 9,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [
+                {
+                  "type": "negatives",
+                  "value": "9"
+                }
+              ],
+              "restSeconds": 220,
+              "bwMode": "bw",
+              "extWeight": 0,
+              "prs": []
+            }
+          ],
+          "restSeconds": 164,
+          "linkGroup": ""
+        },
+        {
+          "exId": "dip",
+          "name": "Dips",
+          "icon": "📉",
+          "primary": [
+            "Chest",
+            "Triceps",
+            "Front Delts"
+          ],
+          "secondary": [
+            "Upper Back",
+            "Abs",
+            "Forearms"
+          ],
+          "note": "",
+          "sets": [
+            {
+              "warmup": true,
+              "weight": 82,
+              "reps": 20,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [
+                {
+                  "type": "pyramids"
+                }
+              ],
+              "restSeconds": 130,
+              "bwMode": "bw",
+              "extWeight": 0,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 82,
+              "reps": 8,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 160,
+              "bwMode": "bw",
+              "extWeight": 0,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 82,
+              "reps": 8,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 180,
+              "bwMode": "bw",
+              "extWeight": 0,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 82,
+              "reps": 8,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 180,
+              "bwMode": "bw",
+              "extWeight": 0,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 82,
+              "reps": 9,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 180,
+              "bwMode": "bw",
+              "extWeight": 0,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 82,
+              "reps": 10,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 180,
+              "bwMode": "bw",
+              "extWeight": 0,
+              "prs": []
+            }
+          ],
+          "restSeconds": 166,
+          "linkGroup": ""
+        },
+        {
+          "exId": "custom-kettlebell-halo-7cpj",
+          "name": "Kettlebell halo",
+          "icon": "😇",
+          "primary": [
+            "Rear Delts",
+            "Side Delts",
+            "Front Delts",
+            "Upper Back"
+          ],
+          "secondary": [
+            "Abs",
+            "Forearms",
+            "Biceps"
+          ],
+          "note": "",
+          "sets": [
+            {
+              "warmup": false,
+              "weight": 10,
+              "reps": 8,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 100,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 10,
+              "reps": 6,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 90,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 10,
+              "reps": 6,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 90,
+              "prs": []
+            }
+          ],
+          "restSeconds": 95,
+          "linkGroup": "combo-178534690185607z"
+        },
+        {
+          "exId": "custom-upper-row-1f98",
+          "name": "Upper row",
+          "icon": "🆙️",
+          "primary": [
+            "Side Delts",
+            "Traps",
+            "Biceps"
+          ],
+          "secondary": [
+            "Rear Delts",
+            "Upper Back"
+          ],
+          "note": "",
+          "sets": [
+            {
+              "warmup": false,
+              "weight": 10,
+              "reps": 8,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": null,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 10,
+              "reps": 6,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": null,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 10,
+              "reps": 6,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": null,
+              "prs": []
+            }
+          ],
+          "restSeconds": null,
+          "linkGroup": "combo-178534690185607z"
+        },
+        {
+          "exId": "ohp",
+          "name": "Overhead Press",
+          "icon": "🙌",
+          "primary": [
+            "Front Delts",
+            "Side Delts",
+            "Triceps"
+          ],
+          "secondary": [
+            "Traps",
+            "Lower Back",
+            "Abs",
+            "Chest"
+          ],
+          "note": "",
+          "sets": [
+            {
+              "warmup": false,
+              "weight": 10,
+              "reps": 8,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": null,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 10,
+              "reps": 6,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": null,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 10,
+              "reps": 6,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": null,
+              "prs": []
+            }
+          ],
+          "restSeconds": null,
+          "linkGroup": "combo-178534690185607z"
+        }
+      ],
+      "volume": 10440,
+      "duration": 72,
+      "date": "2026-07-29T15:43:00.000Z",
+      "bodyWeight": null,
+      "records": 0
+    },
+    {
+      "id": 1785250101001,
+      "name": "Lower",
+      "note": "Was on time 28min",
+      "exercises": [
+        {
+          "exId": "custom-goblet-squat-k6vv",
+          "name": "Goblet squat",
+          "icon": "⛳️",
+          "primary": [
+            "Glutes",
+            "Quadriceps"
+          ],
+          "secondary": [
+            "Abs",
+            "Hamstrings"
+          ],
+          "note": "",
+          "sets": [
+            {
+              "warmup": true,
+              "weight": 98,
+              "reps": 10,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 1,
+              "bwMode": "added",
+              "extWeight": 16,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 102,
+              "reps": 12,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 0,
+              "bwMode": "added",
+              "extWeight": 20,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 91,
+              "reps": 15,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 0,
+              "bwMode": "added",
+              "extWeight": 9,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 118,
+              "reps": 8,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 0,
+              "bwMode": "added",
+              "extWeight": 36,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 118,
+              "reps": 8,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 23,
+              "bwMode": "added",
+              "extWeight": 36,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 118,
+              "reps": 4,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 56,
+              "bwMode": "added",
+              "extWeight": 36,
+              "prs": []
+            }
+          ],
+          "restSeconds": 5,
+          "linkGroup": ""
+        },
+        {
+          "exId": "rdl",
+          "name": "Stiff",
+          "icon": "🏹",
+          "primary": [
+            "Hamstrings"
+          ],
+          "secondary": [
+            "Glutes",
+            "Lower Back"
+          ],
+          "note": "",
+          "sets": [
+            {
+              "warmup": true,
+              "weight": 20,
+              "reps": 15,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 2,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 36,
+              "reps": 12,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 9,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 36,
+              "reps": 15,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 165,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 36,
+              "reps": 12,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 163,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 36,
+              "reps": 12,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 152,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 36,
+              "reps": 12,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 243,
+              "prs": []
+            }
+          ],
+          "restSeconds": 98,
+          "linkGroup": ""
+        },
+        {
+          "exId": "calf",
+          "name": "Calf Raise",
+          "icon": "🦶",
+          "primary": [
+            "Calves"
+          ],
+          "secondary": [],
+          "note": "",
+          "sets": [
+            {
+              "warmup": false,
+              "weight": 92,
+              "reps": 20,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 299,
+              "bwMode": "added",
+              "extWeight": 10,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 102,
+              "reps": 16,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 185,
+              "bwMode": "added",
+              "extWeight": 20,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 107,
+              "reps": 12,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 358,
+              "bwMode": "added",
+              "extWeight": 25,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 102,
+              "reps": 12,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 291,
+              "bwMode": "added",
+              "extWeight": 20,
+              "prs": []
+            }
+          ],
+          "restSeconds": 281,
+          "linkGroup": "combo-17852489660276n6"
+        }
+      ],
+      "volume": 14477,
+      "duration": 61,
+      "date": "2026-07-28T14:48:00.000Z",
+      "bodyWeight": null,
+      "records": 0,
+      "sorenessRange": [
+        8,
+        8
+      ]
+    },
+    {
       "id": 1784896808192,
       "name": "Workout",
-      "note": "",
+      "note": "This workout i was over worked because of the work I'm at church",
       "exercises": [
         {
           "exId": "pullup",
@@ -45,20 +697,18 @@
           "linkGroup": ""
         },
         {
-          "exId": "pullup",
-          "name": "Pull-Up",
-          "icon": "🔝",
+          "exId": "custom-suspension-row-wbbz",
+          "name": "Suspension row",
+          "icon": "🚣‍♂",
           "primary": [
             "Lats",
-            "Traps",
-            "Biceps",
-            "Forearms"
+            "Traps"
           ],
           "secondary": [
+            "Biceps",
             "Rear Delts",
-            "Upper Back",
-            "Side Delts",
-            "Abs"
+            "Abs",
+            "Forearms"
           ],
           "note": "",
           "sets": [
@@ -86,9 +736,7 @@
               "restSeconds": 222,
               "bwMode": "bw",
               "extWeight": 0,
-              "prs": [
-                "Bodyweight"
-              ]
+              "prs": []
             },
             {
               "warmup": false,
@@ -101,9 +749,7 @@
               "restSeconds": 269,
               "bwMode": "bw",
               "extWeight": 0,
-              "prs": [
-                "Bodyweight"
-              ]
+              "prs": []
             },
             {
               "warmup": false,
@@ -120,12 +766,7 @@
               "restSeconds": 286,
               "bwMode": "bw",
               "extWeight": 0,
-              "prs": [
-                "1RM",
-                "Volume",
-                "Reps",
-                "Bodyweight"
-              ]
+              "prs": []
             },
             {
               "warmup": false,
@@ -138,12 +779,7 @@
               "restSeconds": 369,
               "bwMode": "bw",
               "extWeight": 0,
-              "prs": [
-                "1RM",
-                "Volume",
-                "Reps",
-                "Bodyweight"
-              ]
+              "prs": []
             }
           ],
           "restSeconds": 243,
@@ -186,11 +822,7 @@
                 }
               ],
               "restSeconds": 206,
-              "prs": [
-                "1RM",
-                "Volume",
-                "Reps"
-              ]
+              "prs": []
             },
             {
               "warmup": false,
@@ -201,11 +833,7 @@
               "tempo": "",
               "variations": [],
               "restSeconds": 162,
-              "prs": [
-                "1RM",
-                "Volume",
-                "Reps"
-              ]
+              "prs": []
             },
             {
               "warmup": false,
@@ -216,11 +844,7 @@
               "tempo": "",
               "variations": [],
               "restSeconds": 169,
-              "prs": [
-                "1RM",
-                "Volume",
-                "Reps"
-              ]
+              "prs": []
             },
             {
               "warmup": false,
@@ -231,11 +855,7 @@
               "tempo": "",
               "variations": [],
               "restSeconds": 331,
-              "prs": [
-                "1RM",
-                "Volume",
-                "Reps"
-              ]
+              "prs": []
             }
           ],
           "restSeconds": 180,
@@ -316,12 +936,8 @@
               "rpe": 0,
               "tempo": "",
               "variations": [],
-              "restSeconds": 0,
-              "prs": [
-                "1RM",
-                "Volume",
-                "Reps"
-              ]
+              "restSeconds": null,
+              "prs": []
             },
             {
               "warmup": false,
@@ -331,12 +947,8 @@
               "rpe": 0,
               "tempo": "",
               "variations": [],
-              "restSeconds": 0,
-              "prs": [
-                "1RM",
-                "Volume",
-                "Reps"
-              ]
+              "restSeconds": null,
+              "prs": []
             },
             {
               "warmup": false,
@@ -346,15 +958,11 @@
               "rpe": 0,
               "tempo": "",
               "variations": [],
-              "restSeconds": 0,
-              "prs": [
-                "1RM",
-                "Volume",
-                "Reps"
-              ]
+              "restSeconds": null,
+              "prs": []
             }
           ],
-          "restSeconds": 0,
+          "restSeconds": null,
           "linkGroup": "combo-17848961830109w6"
         },
         {
@@ -382,7 +990,7 @@
               "rpe": 0,
               "tempo": "",
               "variations": [],
-              "restSeconds": 0,
+              "restSeconds": null,
               "prs": []
             },
             {
@@ -393,7 +1001,7 @@
               "rpe": 0,
               "tempo": "",
               "variations": [],
-              "restSeconds": 0,
+              "restSeconds": null,
               "prs": []
             },
             {
@@ -404,19 +1012,24 @@
               "rpe": 0,
               "tempo": "",
               "variations": [],
-              "restSeconds": 0,
+              "restSeconds": null,
               "prs": []
             }
           ],
-          "restSeconds": 0,
+          "restSeconds": null,
           "linkGroup": "combo-17848961830109w6"
         }
       ],
       "volume": 8208,
       "duration": 61,
-      "date": "2026-07-24T12:40:08.184Z",
+      "date": "2026-07-24T12:40:00.000Z",
       "bodyWeight": null,
-      "records": 11
+      "records": 0,
+      "sorenessRange": [
+        7,
+        8
+      ],
+      "manualIntensity": 8
     },
     {
       "id": 1784725415587,
@@ -12334,7 +12947,9 @@
     }
   ],
   "userName": "Athlete",
-  "profile": {},
+  "profile": {
+    "weight": "82"
+  },
   "customTags": [],
   "customExercises": [
     {
@@ -12405,15 +13020,16 @@
       "id": "custom-upper-row-1f98",
       "name": "Upper row",
       "icon": "🆙️",
-      "muscle": "Side Delts, Traps, Biceps",
+      "muscle": "Side Delts, Traps, Rear Delts",
       "primary": [
         "Side Delts",
         "Traps",
-        "Biceps"
+        "Rear Delts"
       ],
       "secondary": [
-        "Rear Delts",
-        "Upper Back"
+        "Upper Back",
+        "Biceps",
+        "Forearms"
       ],
       "isBodyweight": false
     },
@@ -12611,7 +13227,21 @@
         "Hamstrings"
       ],
       "isBodyweight": false
+    },
+    "bench": {
+      "name": "Bench Press",
+      "icon": "🏋️",
+      "muscle": "Chest",
+      "primary": [
+        "Chest"
+      ],
+      "secondary": [
+        "Triceps",
+        "Front Delts",
+        "Side Delts"
+      ],
+      "isBodyweight": false
     }
   },
-  "timestamp": 1784988218401
+  "timestamp": 1785449270271
 }
