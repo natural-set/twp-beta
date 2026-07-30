@@ -3478,8 +3478,8 @@
           ? `${usage.count}x used · last ${new Date(usage.lastDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
           : 'Never logged';
         const actions = isCustom
-          ? `<button class="ex-del-btn" style="flex-shrink:0" onclick="event.stopPropagation(); deleteCustomExercise('${ex.id}')" title="Delete" aria-label="Delete">🗑️</button>`
-          : `${isOverridden ? `<button class="ex-del-btn" style="flex-shrink:0" onclick="event.stopPropagation(); resetExerciseOverride('${ex.id}')" title="Reset to default" aria-label="Reset">↺</button>` : ''}`;
+          ? `<button class="ex-del-btn" style="flex-shrink:0" onclick="event.stopPropagation(); deleteCustomExercise('${ex.id}')" title="Delete" aria-label="Delete ${ex.name}">🗑️</button>`
+          : `${isOverridden ? `<button class="ex-del-btn" style="flex-shrink:0" onclick="event.stopPropagation(); resetExerciseOverride('${ex.id}')" title="Reset to default" aria-label="Reset ${ex.name} to default">↺</button>` : ''}`;
         return `<div class="muscle-item" style="${isHidden ? 'opacity:.4;' : ''}">
       <div class="muscle-item-icon" style="cursor:pointer" onclick="openExerciseForm('${ex.id}')">${ex.icon}</div>
       <div style="flex:1;cursor:pointer" onclick="openExerciseForm('${ex.id}')">
@@ -8991,6 +8991,106 @@ Only unlock a concept if the data actually supports it (plateaus, volume swings,
         );
       },
     };
+
+    // ═══════════════════════════════════════════
+    //  MOBILE UX: back button, keyboard, haptics, a11y, offline, install
+    // ═══════════════════════════════════════════
+    // Android back button: close topmost open modal, else go to Home tab, instead of exiting the app.
+    history.replaceState({ root: true }, '');
+    window.addEventListener('popstate', () => {
+      const openModals = document.querySelectorAll('.modal-overlay.open');
+      if (openModals.length) { openModals[openModals.length - 1].classList.remove('open'); return; }
+      if (!document.getElementById('screen-home').classList.contains('active')) navigateToTab('home');
+    });
+    const _origNavigate = navigate;
+    navigate = function (screenName, btn) { _origNavigate(screenName, btn); history.pushState({ screen: screenName }, ''); };
+
+    function trapFocus(modalEl) {
+      const f = modalEl.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+      if (!f.length) return;
+      const first = f[0], last = f[f.length - 1];
+      modalEl.addEventListener('keydown', function (e) {
+        if (e.key !== 'Tab') return;
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      });
+      setTimeout(() => first.focus(), 60);
+    }
+    // Push a history entry whenever a modal opens (so back closes it) + trap focus inside it.
+    new MutationObserver(muts => muts.forEach(m => {
+      if (m.attributeName !== 'class' || !m.target.classList.contains('modal-overlay')) return;
+      const wasOpen = (m.oldValue || '').split(' ').includes('open');
+      if (m.target.classList.contains('open') && !wasOpen) { history.pushState({ modal: true }, ''); trapFocus(m.target); }
+    })).observe(document.body, { attributes: true, attributeFilter: ['class'], attributeOldValue: true, subtree: true });
+
+    // Keyboard: scroll focused input into view so the on-screen keyboard doesn't cover it.
+    document.addEventListener('focusin', (e) => {
+      if (e.target.matches('input, textarea, select')) {
+        setTimeout(() => e.target.scrollIntoView({ block: 'center', behavior: 'smooth' }), 300);
+      }
+    });
+
+    // Haptics: extend beyond the rest timer to PR hits, set add/toggle, and destructive confirms.
+    function vibrateSafe(pattern) { if (navigator.vibrate) navigator.vibrate(pattern); }
+    const _origAddSet = addSet;
+    addSet = function (blockId, isWarmup) { vibrateSafe(10); return _origAddSet(blockId, isWarmup); };
+    const _origToggleSetType = toggleSetType;
+    toggleSetType = function (badgeEl) { vibrateSafe(10); return _origToggleSetType(badgeEl); };
+    const _origCloseConfirmModal = closeConfirmModal;
+    closeConfirmModal = function (confirmed) { if (confirmed) vibrateSafe(30); return _origCloseConfirmModal(confirmed); };
+    const _origFinishWorkout = finishWorkout;
+    finishWorkout = function () {
+      const hadPRsBefore = state.workouts.length;
+      _origFinishWorkout();
+      const latest = state.workouts[0];
+      if (latest && latest.records > 0) vibrateSafe([15, 60, 15, 60, 30]);
+    };
+
+    // Offline indicator banner.
+    function ensureOfflineBanner() {
+      let b = document.getElementById('offline-banner');
+      if (!b) {
+        b = document.createElement('div');
+        b.id = 'offline-banner';
+        b.setAttribute('role', 'status');
+        b.textContent = '⚠️ Offline — changes saved locally, will sync when back online';
+        b.style.cssText = 'position:fixed;top:0;left:50%;transform:translateX(-50%);max-width:430px;width:100%;background:var(--red);color:#fff;text-align:center;font-size:12px;font-weight:700;padding:8px;z-index:400;display:none;';
+        document.body.appendChild(b);
+      }
+      return b;
+    }
+    window.addEventListener('offline', () => { ensureOfflineBanner().style.display = 'block'; });
+    window.addEventListener('online', () => { ensureOfflineBanner().style.display = 'none'; pushSync(); });
+    if (!navigator.onLine) ensureOfflineBanner().style.display = 'block';
+    const _origPushSync = pushSync;
+    pushSync = async function (manual) {
+      const ok = await _origPushSync(manual);
+      if (!ok && !navigator.onLine) ensureOfflineBanner().style.display = 'block';
+      return ok;
+    };
+
+    // Install prompt banner (Add to Home Screen).
+    let _deferredInstallPrompt = null;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      _deferredInstallPrompt = e;
+      if (document.getElementById('install-banner')) return;
+      const b = document.createElement('div');
+      b.id = 'install-banner';
+      b.style.cssText = 'position:fixed;bottom:calc(var(--nav-h) + 10px);left:50%;transform:translateX(-50%);max-width:400px;width:calc(100% - 32px);background:var(--surface3);border:1px solid var(--border);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px;z-index:350;box-shadow:0 8px 20px rgba(0,0,0,.4);';
+      b.innerHTML = `<span style="flex:1;font-size:13px;">Install TWP for quick access</span>
+        <button id="install-banner-btn" style="background:var(--accent);color:#fff;border:none;padding:8px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">Install</button>
+        <button id="install-banner-close" aria-label="Dismiss install prompt" style="background:none;border:none;color:var(--text-muted);font-size:16px;cursor:pointer;padding:2px 4px;">✕</button>`;
+      document.body.appendChild(b);
+      document.getElementById('install-banner-btn').onclick = async () => {
+        if (!_deferredInstallPrompt) return;
+        _deferredInstallPrompt.prompt();
+        await _deferredInstallPrompt.userChoice;
+        _deferredInstallPrompt = null;
+        b.remove();
+      };
+      document.getElementById('install-banner-close').onclick = () => b.remove();
+    });
 
     // ── Init ──
     loadState();
