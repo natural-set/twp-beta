@@ -1,6 +1,283 @@
 {
   "workouts": [
     {
+      "id": 1785514234772,
+      "name": "Workout",
+      "note": "",
+      "exercises": [
+        {
+          "exId": "custom-goblet-squat-k6vv",
+          "name": "Goblet squat",
+          "icon": "⛳️",
+          "primary": [
+            "Glutes",
+            "Quadriceps"
+          ],
+          "secondary": [
+            "Abs",
+            "Hamstrings"
+          ],
+          "note": "",
+          "sets": [
+            {
+              "warmup": true,
+              "weight": 98,
+              "reps": 12,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 15,
+              "bwMode": "added",
+              "extWeight": 16,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 106,
+              "reps": 12,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 67,
+              "bwMode": "added",
+              "extWeight": 24,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 118,
+              "reps": 8,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 140,
+              "bwMode": "added",
+              "extWeight": 36,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 118,
+              "reps": 12,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 82,
+              "bwMode": "added",
+              "extWeight": 36,
+              "prs": [
+                "1RM",
+                "Volume"
+              ]
+            },
+            {
+              "warmup": false,
+              "weight": 118,
+              "reps": 12,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 76,
+              "bwMode": "added",
+              "extWeight": 36,
+              "prs": [
+                "1RM",
+                "Volume"
+              ]
+            },
+            {
+              "warmup": false,
+              "weight": 118,
+              "reps": 12,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 167,
+              "bwMode": "added",
+              "extWeight": 36,
+              "prs": [
+                "1RM",
+                "Volume"
+              ]
+            }
+          ],
+          "restSeconds": 76,
+          "linkGroup": ""
+        },
+        {
+          "exId": "custom-single-leg-left-step-up-s2vx",
+          "name": "Single leg-left step up",
+          "icon": "🦵",
+          "primary": [
+            "Quadriceps",
+            "Glutes"
+          ],
+          "secondary": [
+            "Calves",
+            "Abs",
+            "Hamstrings"
+          ],
+          "note": "",
+          "sets": [
+            {
+              "warmup": true,
+              "weight": 82,
+              "reps": 15,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 157,
+              "bwMode": "bw",
+              "extWeight": 0,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 90,
+              "reps": 15,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 83,
+              "bwMode": "added",
+              "extWeight": 8,
+              "prs": [
+                "1RM",
+                "Volume",
+                "Reps",
+                "Bodyweight"
+              ]
+            },
+            {
+              "warmup": false,
+              "weight": 90,
+              "reps": 20,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 196,
+              "bwMode": "added",
+              "extWeight": 8,
+              "prs": [
+                "1RM",
+                "Volume",
+                "Reps",
+                "Bodyweight"
+              ]
+            },
+            {
+              "warmup": false,
+              "weight": 92,
+              "reps": 20,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 1,
+              "bwMode": "added",
+              "extWeight": 10,
+              "prs": [
+                "1RM",
+                "Volume",
+                "Reps",
+                "Bodyweight"
+              ]
+            },
+            {
+              "warmup": false,
+              "weight": 100,
+              "reps": 12,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 95,
+              "bwMode": "added",
+              "extWeight": 18,
+              "prs": [
+                "1RM",
+                "Volume",
+                "Reps",
+                "Bodyweight"
+              ]
+            }
+          ],
+          "restSeconds": 109,
+          "linkGroup": ""
+        },
+        {
+          "exId": "calf",
+          "name": "Calf Raise",
+          "icon": "🦶",
+          "primary": [
+            "Calves"
+          ],
+          "secondary": [],
+          "note": "",
+          "sets": [
+            {
+              "warmup": false,
+              "weight": 92,
+              "reps": 16,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 74,
+              "bwMode": "added",
+              "extWeight": 10,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 102,
+              "reps": 14,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 78,
+              "bwMode": "added",
+              "extWeight": 20,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 102,
+              "reps": 20,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 1,
+              "bwMode": "added",
+              "extWeight": 20,
+              "prs": [
+                "1RM",
+                "Volume"
+              ]
+            }
+          ],
+          "restSeconds": 76,
+          "linkGroup": ""
+        }
+      ],
+      "volume": 20000,
+      "duration": 40,
+      "date": "2026-07-31T16:10:34.761Z",
+      "bodyWeight": null,
+      "records": 8
+    },
+    {
       "id": 1785347046068,
       "name": "Upper",
       "note": "",
@@ -13356,6 +13633,22 @@
         "Forearms"
       ],
       "isBodyweight": true
+    },
+    {
+      "id": "custom-single-leg-left-step-up-s2vx",
+      "name": "Single leg-left step up",
+      "icon": "🦵",
+      "muscle": "Quadriceps, Glutes",
+      "primary": [
+        "Quadriceps",
+        "Glutes"
+      ],
+      "secondary": [
+        "Calves",
+        "Abs",
+        "Hamstrings"
+      ],
+      "isBodyweight": true
     }
   ],
   "hiddenExerciseIds": [],
@@ -13474,5 +13767,5 @@
       "isBodyweight": false
     }
   },
-  "timestamp": 1785509816590
+  "timestamp": 1785514235598
 }
