@@ -646,16 +646,12 @@
       "duration": 61,
       "date": "2026-07-28T14:48:00.000Z",
       "bodyWeight": null,
-      "records": 0,
-      "sorenessRange": [
-        8,
-        8
-      ]
+      "records": 0
     },
     {
       "id": 1784896808192,
       "name": "Workout",
-      "note": "This workout i was over worked because of the work I'm at church",
+      "note": "",
       "exercises": [
         {
           "exId": "pullup",
@@ -697,18 +693,20 @@
           "linkGroup": ""
         },
         {
-          "exId": "custom-suspension-row-wbbz",
-          "name": "Suspension row",
-          "icon": "🚣‍♂",
+          "exId": "pullup",
+          "name": "Pull-Up",
+          "icon": "🔝",
           "primary": [
             "Lats",
-            "Traps"
+            "Traps",
+            "Biceps",
+            "Forearms"
           ],
           "secondary": [
-            "Biceps",
             "Rear Delts",
-            "Abs",
-            "Forearms"
+            "Upper Back",
+            "Side Delts",
+            "Abs"
           ],
           "note": "",
           "sets": [
@@ -736,7 +734,9 @@
               "restSeconds": 222,
               "bwMode": "bw",
               "extWeight": 0,
-              "prs": []
+              "prs": [
+                "Bodyweight"
+              ]
             },
             {
               "warmup": false,
@@ -749,7 +749,9 @@
               "restSeconds": 269,
               "bwMode": "bw",
               "extWeight": 0,
-              "prs": []
+              "prs": [
+                "Bodyweight"
+              ]
             },
             {
               "warmup": false,
@@ -766,7 +768,12 @@
               "restSeconds": 286,
               "bwMode": "bw",
               "extWeight": 0,
-              "prs": []
+              "prs": [
+                "1RM",
+                "Volume",
+                "Reps",
+                "Bodyweight"
+              ]
             },
             {
               "warmup": false,
@@ -779,7 +786,12 @@
               "restSeconds": 369,
               "bwMode": "bw",
               "extWeight": 0,
-              "prs": []
+              "prs": [
+                "1RM",
+                "Volume",
+                "Reps",
+                "Bodyweight"
+              ]
             }
           ],
           "restSeconds": 243,
@@ -822,7 +834,11 @@
                 }
               ],
               "restSeconds": 206,
-              "prs": []
+              "prs": [
+                "1RM",
+                "Volume",
+                "Reps"
+              ]
             },
             {
               "warmup": false,
@@ -833,7 +849,11 @@
               "tempo": "",
               "variations": [],
               "restSeconds": 162,
-              "prs": []
+              "prs": [
+                "1RM",
+                "Volume",
+                "Reps"
+              ]
             },
             {
               "warmup": false,
@@ -844,7 +864,11 @@
               "tempo": "",
               "variations": [],
               "restSeconds": 169,
-              "prs": []
+              "prs": [
+                "1RM",
+                "Volume",
+                "Reps"
+              ]
             },
             {
               "warmup": false,
@@ -855,7 +879,11 @@
               "tempo": "",
               "variations": [],
               "restSeconds": 331,
-              "prs": []
+              "prs": [
+                "1RM",
+                "Volume",
+                "Reps"
+              ]
             }
           ],
           "restSeconds": 180,
@@ -936,8 +964,12 @@
               "rpe": 0,
               "tempo": "",
               "variations": [],
-              "restSeconds": null,
-              "prs": []
+              "restSeconds": 0,
+              "prs": [
+                "1RM",
+                "Volume",
+                "Reps"
+              ]
             },
             {
               "warmup": false,
@@ -947,8 +979,12 @@
               "rpe": 0,
               "tempo": "",
               "variations": [],
-              "restSeconds": null,
-              "prs": []
+              "restSeconds": 0,
+              "prs": [
+                "1RM",
+                "Volume",
+                "Reps"
+              ]
             },
             {
               "warmup": false,
@@ -958,11 +994,15 @@
               "rpe": 0,
               "tempo": "",
               "variations": [],
-              "restSeconds": null,
-              "prs": []
+              "restSeconds": 0,
+              "prs": [
+                "1RM",
+                "Volume",
+                "Reps"
+              ]
             }
           ],
-          "restSeconds": null,
+          "restSeconds": 0,
           "linkGroup": "combo-17848961830109w6"
         },
         {
@@ -990,7 +1030,7 @@
               "rpe": 0,
               "tempo": "",
               "variations": [],
-              "restSeconds": null,
+              "restSeconds": 0,
               "prs": []
             },
             {
@@ -1001,7 +1041,7 @@
               "rpe": 0,
               "tempo": "",
               "variations": [],
-              "restSeconds": null,
+              "restSeconds": 0,
               "prs": []
             },
             {
@@ -1012,24 +1052,19 @@
               "rpe": 0,
               "tempo": "",
               "variations": [],
-              "restSeconds": null,
+              "restSeconds": 0,
               "prs": []
             }
           ],
-          "restSeconds": null,
+          "restSeconds": 0,
           "linkGroup": "combo-17848961830109w6"
         }
       ],
       "volume": 8208,
       "duration": 61,
-      "date": "2026-07-24T12:40:00.000Z",
+      "date": "2026-07-24T12:40:08.184Z",
       "bodyWeight": null,
-      "records": 0,
-      "sorenessRange": [
-        7,
-        8
-      ],
-      "manualIntensity": 8
+      "records": 11
     },
     {
       "id": 1784725415587,
@@ -1728,7 +1763,11 @@
       "duration": 70,
       "date": "2026-07-20T15:13:00.000Z",
       "bodyWeight": null,
-      "records": 0
+      "records": 0,
+      "sorenessRange": [
+        7,
+        7
+      ]
     },
     {
       "id": 1784295367005,
@@ -2530,7 +2569,7 @@
       "imported": true
     },
     {
-      "id": 1783728431635,
+      "id": 1783342906693,
       "name": "Pull-Up & Dips",
       "note": "",
       "exercises": [
@@ -2682,7 +2721,7 @@
             }
           ],
           "restSeconds": 60,
-          "linkGroup": "import-link-kfxw6va"
+          "linkGroup": "import-link-cda8ukl"
         },
         {
           "exId": "custom-kettlebell-halo",
@@ -2706,7 +2745,7 @@
             }
           ],
           "restSeconds": 60,
-          "linkGroup": "import-link-kfxw6va"
+          "linkGroup": "import-link-cda8ukl"
         }
       ],
       "volume": 6900,
@@ -2721,7 +2760,7 @@
       "imported": true
     },
     {
-      "id": 1783728431634,
+      "id": 1783342906692,
       "name": "Stiff & Goblet Squat",
       "note": "",
       "exercises": [
@@ -2795,7 +2834,7 @@
             }
           ],
           "restSeconds": null,
-          "linkGroup": "import-link-a4cuzvi"
+          "linkGroup": "import-link-72gwxd0"
         },
         {
           "exId": "custom-side-walks",
@@ -2831,7 +2870,7 @@
             }
           ],
           "restSeconds": null,
-          "linkGroup": "import-link-a4cuzvi"
+          "linkGroup": "import-link-72gwxd0"
         },
         {
           "exId": "custom-abductors",
@@ -2918,209 +2957,6 @@
       "imported": true
     },
     {
-      "id": 1783265437316,
-      "name": "Pull-Up & Dips",
-      "note": "",
-      "exercises": [
-        {
-          "exId": "custom-pull-up",
-          "name": "Pull-Up",
-          "icon": "🔝",
-          "primary": [],
-          "secondary": [],
-          "note": "Rest: ~3min",
-          "sets": [
-            {
-              "warmup": true,
-              "weight": 80,
-              "reps": 1,
-              "rir": 0
-            },
-            {
-              "warmup": true,
-              "weight": 80,
-              "reps": 4,
-              "rir": 0
-            },
-            {
-              "warmup": true,
-              "weight": 80,
-              "reps": 4,
-              "rir": 0
-            },
-            {
-              "warmup": true,
-              "weight": 80,
-              "reps": 1,
-              "rir": 0
-            },
-            {
-              "warmup": false,
-              "weight": 80,
-              "reps": 5,
-              "rir": 0
-            },
-            {
-              "warmup": false,
-              "weight": 80,
-              "reps": 5,
-              "rir": 0
-            },
-            {
-              "warmup": false,
-              "weight": 80,
-              "reps": 7,
-              "rir": 0
-            },
-            {
-              "warmup": false,
-              "weight": 80,
-              "reps": 8,
-              "rir": 0
-            },
-            {
-              "warmup": false,
-              "weight": 80,
-              "reps": 10,
-              "rir": 0
-            }
-          ],
-          "restSeconds": 150,
-          "linkGroup": ""
-        },
-        {
-          "exId": "custom-dips",
-          "name": "Dips",
-          "icon": "📉",
-          "primary": [],
-          "secondary": [],
-          "note": "Rest: ~3min",
-          "sets": [
-            {
-              "warmup": true,
-              "weight": 80,
-              "reps": 1,
-              "rir": 0
-            },
-            {
-              "warmup": true,
-              "weight": 80,
-              "reps": 4,
-              "rir": 0
-            },
-            {
-              "warmup": true,
-              "weight": 80,
-              "reps": 4,
-              "rir": 0
-            },
-            {
-              "warmup": true,
-              "weight": 80,
-              "reps": 1,
-              "rir": 0
-            },
-            {
-              "warmup": false,
-              "weight": 80,
-              "reps": 8,
-              "rir": 0
-            },
-            {
-              "warmup": false,
-              "weight": 80,
-              "reps": 9,
-              "rir": 0
-            },
-            {
-              "warmup": false,
-              "weight": 80,
-              "reps": 9,
-              "rir": 0
-            },
-            {
-              "warmup": false,
-              "weight": 80,
-              "reps": 7,
-              "rir": 0
-            },
-            {
-              "warmup": false,
-              "weight": 80,
-              "reps": 8,
-              "rir": 0
-            }
-          ],
-          "restSeconds": 150,
-          "linkGroup": ""
-        },
-        {
-          "exId": "custom-persian-swing",
-          "name": "Persian Swing",
-          "icon": "🏋️",
-          "primary": [],
-          "secondary": [],
-          "note": "Rest: ~1min (part of bi-set)",
-          "sets": [
-            {
-              "warmup": false,
-              "weight": 5,
-              "reps": 11,
-              "rir": 0
-            },
-            {
-              "warmup": false,
-              "weight": 5,
-              "reps": 12,
-              "rir": 0
-            }
-          ],
-          "restSeconds": 60,
-          "linkGroup": "import-link-wk6mpov"
-        },
-        {
-          "exId": "custom-kettlebell-halo",
-          "name": "Kettlebell Halo",
-          "icon": "🏋️",
-          "primary": [],
-          "secondary": [],
-          "note": "Rest: ~1min (part of bi-set)",
-          "sets": [
-            {
-              "warmup": false,
-              "weight": 16,
-              "reps": 8,
-              "rir": 0
-            },
-            {
-              "warmup": false,
-              "weight": 16,
-              "reps": 10,
-              "rir": 0
-            },
-            {
-              "warmup": false,
-              "weight": 16,
-              "reps": 8,
-              "rir": 0
-            }
-          ],
-          "restSeconds": 60,
-          "linkGroup": "import-link-wk6mpov"
-        }
-      ],
-      "volume": 8211,
-      "duration": 69,
-      "date": "2026-06-29T03:00:00.000Z",
-      "records": 0,
-      "sorenessRange": [
-        6,
-        7
-      ],
-      "bodyWeight": null,
-      "imported": true
-    },
-    {
       "id": 1783728431633,
       "name": "Pull-Up & Dips",
       "note": "",
@@ -3156,8 +2992,6 @@
                 }
               ],
               "restSeconds": 150,
-              "bwMode": "assisted",
-              "extWeight": 2,
               "prs": []
             },
             {
@@ -3169,8 +3003,6 @@
               "tempo": "",
               "variations": [],
               "restSeconds": 150,
-              "bwMode": "assisted",
-              "extWeight": 2,
               "prs": []
             },
             {
@@ -3182,8 +3014,6 @@
               "tempo": "",
               "variations": [],
               "restSeconds": 150,
-              "bwMode": "assisted",
-              "extWeight": 2,
               "prs": []
             },
             {
@@ -3195,8 +3025,6 @@
               "tempo": "",
               "variations": [],
               "restSeconds": 150,
-              "bwMode": "assisted",
-              "extWeight": 2,
               "prs": []
             },
             {
@@ -3208,8 +3036,6 @@
               "tempo": "",
               "variations": [],
               "restSeconds": 150,
-              "bwMode": "assisted",
-              "extWeight": 2,
               "prs": []
             },
             {
@@ -3226,8 +3052,6 @@
                 }
               ],
               "restSeconds": 150,
-              "bwMode": "assisted",
-              "extWeight": 2,
               "prs": []
             }
           ],
@@ -3263,8 +3087,6 @@
                 }
               ],
               "restSeconds": 150,
-              "bwMode": "assisted",
-              "extWeight": 2,
               "prs": []
             },
             {
@@ -3276,8 +3098,6 @@
               "tempo": "",
               "variations": [],
               "restSeconds": 150,
-              "bwMode": "assisted",
-              "extWeight": 2,
               "prs": []
             },
             {
@@ -3289,8 +3109,6 @@
               "tempo": "",
               "variations": [],
               "restSeconds": 150,
-              "bwMode": "assisted",
-              "extWeight": 2,
               "prs": []
             },
             {
@@ -3302,8 +3120,6 @@
               "tempo": "",
               "variations": [],
               "restSeconds": 150,
-              "bwMode": "assisted",
-              "extWeight": 2,
               "prs": []
             },
             {
@@ -3315,8 +3131,6 @@
               "tempo": "",
               "variations": [],
               "restSeconds": 150,
-              "bwMode": "assisted",
-              "extWeight": 2,
               "prs": []
             },
             {
@@ -3328,8 +3142,6 @@
               "tempo": "",
               "variations": [],
               "restSeconds": 150,
-              "bwMode": "assisted",
-              "extWeight": 2,
               "prs": []
             }
           ],
@@ -3363,7 +3175,11 @@
               "tempo": "",
               "variations": [],
               "restSeconds": 60,
-              "prs": []
+              "prs": [
+                "1RM",
+                "Volume",
+                "Reps"
+              ]
             },
             {
               "warmup": false,
@@ -3374,7 +3190,11 @@
               "tempo": "",
               "variations": [],
               "restSeconds": 60,
-              "prs": []
+              "prs": [
+                "1RM",
+                "Volume",
+                "Reps"
+              ]
             }
           ],
           "restSeconds": 60,
@@ -3406,7 +3226,11 @@
               "tempo": "",
               "variations": [],
               "restSeconds": null,
-              "prs": []
+              "prs": [
+                "1RM",
+                "Volume",
+                "Reps"
+              ]
             },
             {
               "warmup": false,
@@ -3417,7 +3241,11 @@
               "tempo": "",
               "variations": [],
               "restSeconds": null,
-              "prs": []
+              "prs": [
+                "1RM",
+                "Volume",
+                "Reps"
+              ]
             },
             {
               "warmup": false,
@@ -3428,7 +3256,11 @@
               "tempo": "",
               "variations": [],
               "restSeconds": null,
-              "prs": []
+              "prs": [
+                "1RM",
+                "Volume",
+                "Reps"
+              ]
             }
           ],
           "restSeconds": null,
@@ -3439,7 +3271,7 @@
       "duration": 69,
       "date": "2026-06-29T03:00:00.000Z",
       "bodyWeight": null,
-      "records": 0,
+      "records": 5,
       "sorenessRange": [
         6,
         7
@@ -3447,7 +3279,210 @@
       "imported": true
     },
     {
-      "id": 1783728431632,
+      "id": 1783342906691,
+      "name": "Pull-Up & Dips",
+      "note": "",
+      "exercises": [
+        {
+          "exId": "custom-pull-up",
+          "name": "Pull-Up",
+          "icon": "🔝",
+          "primary": [],
+          "secondary": [],
+          "note": "Rest: ~3min",
+          "sets": [
+            {
+              "warmup": true,
+              "weight": 80,
+              "reps": 1,
+              "rir": 0
+            },
+            {
+              "warmup": true,
+              "weight": 80,
+              "reps": 4,
+              "rir": 0
+            },
+            {
+              "warmup": true,
+              "weight": 80,
+              "reps": 4,
+              "rir": 0
+            },
+            {
+              "warmup": true,
+              "weight": 80,
+              "reps": 1,
+              "rir": 0
+            },
+            {
+              "warmup": false,
+              "weight": 80,
+              "reps": 5,
+              "rir": 0
+            },
+            {
+              "warmup": false,
+              "weight": 80,
+              "reps": 5,
+              "rir": 0
+            },
+            {
+              "warmup": false,
+              "weight": 80,
+              "reps": 7,
+              "rir": 0
+            },
+            {
+              "warmup": false,
+              "weight": 80,
+              "reps": 8,
+              "rir": 0
+            },
+            {
+              "warmup": false,
+              "weight": 80,
+              "reps": 10,
+              "rir": 0
+            }
+          ],
+          "restSeconds": 150,
+          "linkGroup": ""
+        },
+        {
+          "exId": "custom-dips",
+          "name": "Dips",
+          "icon": "📉",
+          "primary": [],
+          "secondary": [],
+          "note": "Rest: ~3min",
+          "sets": [
+            {
+              "warmup": true,
+              "weight": 80,
+              "reps": 1,
+              "rir": 0
+            },
+            {
+              "warmup": true,
+              "weight": 80,
+              "reps": 4,
+              "rir": 0
+            },
+            {
+              "warmup": true,
+              "weight": 80,
+              "reps": 4,
+              "rir": 0
+            },
+            {
+              "warmup": true,
+              "weight": 80,
+              "reps": 1,
+              "rir": 0
+            },
+            {
+              "warmup": false,
+              "weight": 80,
+              "reps": 8,
+              "rir": 0
+            },
+            {
+              "warmup": false,
+              "weight": 80,
+              "reps": 9,
+              "rir": 0
+            },
+            {
+              "warmup": false,
+              "weight": 80,
+              "reps": 9,
+              "rir": 0
+            },
+            {
+              "warmup": false,
+              "weight": 80,
+              "reps": 7,
+              "rir": 0
+            },
+            {
+              "warmup": false,
+              "weight": 80,
+              "reps": 8,
+              "rir": 0
+            }
+          ],
+          "restSeconds": 150,
+          "linkGroup": ""
+        },
+        {
+          "exId": "custom-persian-swing",
+          "name": "Persian Swing",
+          "icon": "🏋️",
+          "primary": [],
+          "secondary": [],
+          "note": "Rest: ~1min (part of bi-set)",
+          "sets": [
+            {
+              "warmup": false,
+              "weight": 5,
+              "reps": 11,
+              "rir": 0
+            },
+            {
+              "warmup": false,
+              "weight": 5,
+              "reps": 12,
+              "rir": 0
+            }
+          ],
+          "restSeconds": 60,
+          "linkGroup": "import-link-w2r5ly6"
+        },
+        {
+          "exId": "custom-kettlebell-halo",
+          "name": "Kettlebell Halo",
+          "icon": "🏋️",
+          "primary": [],
+          "secondary": [],
+          "note": "Rest: ~1min (part of bi-set)",
+          "sets": [
+            {
+              "warmup": false,
+              "weight": 16,
+              "reps": 8,
+              "rir": 0
+            },
+            {
+              "warmup": false,
+              "weight": 16,
+              "reps": 10,
+              "rir": 0
+            },
+            {
+              "warmup": false,
+              "weight": 16,
+              "reps": 8,
+              "rir": 0
+            }
+          ],
+          "restSeconds": 60,
+          "linkGroup": "import-link-w2r5ly6"
+        }
+      ],
+      "volume": 8211,
+      "duration": 69,
+      "date": "2026-06-29T03:00:00.000Z",
+      "records": 0,
+      "sorenessRange": [
+        6,
+        7
+      ],
+      "bodyWeight": null,
+      "imported": true
+    },
+    {
+      "id": 1783342906690,
       "name": "Pull-Up & Dips",
       "note": "",
       "exercises": [
@@ -3611,7 +3646,7 @@
             }
           ],
           "restSeconds": 60,
-          "linkGroup": "import-link-2dcpku9"
+          "linkGroup": "import-link-rj9y8g1"
         },
         {
           "exId": "custom-kettlebell-halo",
@@ -3641,7 +3676,7 @@
             }
           ],
           "restSeconds": 60,
-          "linkGroup": "import-link-2dcpku9"
+          "linkGroup": "import-link-rj9y8g1"
         }
       ],
       "volume": 7420,
@@ -3656,7 +3691,7 @@
       "imported": true
     },
     {
-      "id": 1783728431631,
+      "id": 1783342906689,
       "name": "Romanian Deadlift & Side Walks",
       "note": "",
       "exercises": [
@@ -3730,7 +3765,7 @@
             }
           ],
           "restSeconds": null,
-          "linkGroup": "import-link-9a6kam9"
+          "linkGroup": "import-link-9ctromv"
         },
         {
           "exId": "custom-goblet-squat",
@@ -3766,7 +3801,7 @@
             }
           ],
           "restSeconds": null,
-          "linkGroup": "import-link-9a6kam9"
+          "linkGroup": "import-link-9ctromv"
         },
         {
           "exId": "custom-abductors",
@@ -3853,7 +3888,7 @@
       "imported": true
     },
     {
-      "id": 1783728431630,
+      "id": 1783342906688,
       "name": "Pull-Up & Dips",
       "note": "",
       "exercises": [
@@ -4005,7 +4040,7 @@
             }
           ],
           "restSeconds": 60,
-          "linkGroup": "import-link-7ifx40x"
+          "linkGroup": "import-link-0hq5w9r"
         },
         {
           "exId": "custom-kettlebell-halo",
@@ -4035,7 +4070,7 @@
             }
           ],
           "restSeconds": 60,
-          "linkGroup": "import-link-7ifx40x"
+          "linkGroup": "import-link-0hq5w9r"
         },
         {
           "exId": "custom-upright-row",
@@ -4065,7 +4100,7 @@
             }
           ],
           "restSeconds": 60,
-          "linkGroup": "import-link-ghmsks2"
+          "linkGroup": "import-link-ou2161l"
         },
         {
           "exId": "custom-head-press",
@@ -4095,7 +4130,7 @@
             }
           ],
           "restSeconds": 60,
-          "linkGroup": "import-link-ghmsks2"
+          "linkGroup": "import-link-ou2161l"
         }
       ],
       "volume": 7720,
@@ -4110,7 +4145,7 @@
       "imported": true
     },
     {
-      "id": 1783728431629,
+      "id": 1783342906687,
       "name": "Pull-Up & Dips",
       "note": "",
       "exercises": [
@@ -4268,7 +4303,7 @@
             }
           ],
           "restSeconds": null,
-          "linkGroup": "import-link-6ipkr87"
+          "linkGroup": "import-link-uu9c0em"
         },
         {
           "exId": "custom-kettlebell-halo",
@@ -4298,7 +4333,7 @@
             }
           ],
           "restSeconds": null,
-          "linkGroup": "import-link-6ipkr87"
+          "linkGroup": "import-link-uu9c0em"
         },
         {
           "exId": "custom-upright-row",
@@ -4328,7 +4363,7 @@
             }
           ],
           "restSeconds": null,
-          "linkGroup": "import-link-98r0ai3"
+          "linkGroup": "import-link-tmhj6g3"
         },
         {
           "exId": "custom-head-press",
@@ -4358,7 +4393,7 @@
             }
           ],
           "restSeconds": null,
-          "linkGroup": "import-link-98r0ai3"
+          "linkGroup": "import-link-tmhj6g3"
         }
       ],
       "volume": 13200,
@@ -4373,7 +4408,7 @@
       "imported": true
     },
     {
-      "id": 1783728431628,
+      "id": 1783342906686,
       "name": "Romanian Deadlift & Goblet Squat",
       "note": "",
       "exercises": [
@@ -4483,7 +4518,7 @@
             }
           ],
           "restSeconds": null,
-          "linkGroup": "import-link-q5a39ee"
+          "linkGroup": "import-link-gv5z5w7"
         },
         {
           "exId": "custom-peterson-step-up",
@@ -4513,7 +4548,7 @@
             }
           ],
           "restSeconds": null,
-          "linkGroup": "import-link-q5a39ee"
+          "linkGroup": "import-link-gv5z5w7"
         }
       ],
       "volume": 6328,
@@ -4528,7 +4563,7 @@
       "imported": true
     },
     {
-      "id": 1783728431627,
+      "id": 1783342906685,
       "name": "Pull-Up & Dips",
       "note": "",
       "exercises": [
@@ -4680,7 +4715,7 @@
             }
           ],
           "restSeconds": null,
-          "linkGroup": "import-link-wzfa0ah"
+          "linkGroup": "import-link-gefzc6v"
         },
         {
           "exId": "custom-kettlebell-halo",
@@ -4710,7 +4745,7 @@
             }
           ],
           "restSeconds": null,
-          "linkGroup": "import-link-wzfa0ah"
+          "linkGroup": "import-link-gefzc6v"
         },
         {
           "exId": "custom-kettlebell-crossbody",
@@ -4740,7 +4775,7 @@
             }
           ],
           "restSeconds": null,
-          "linkGroup": "import-link-70bfscj"
+          "linkGroup": "import-link-61k53e6"
         },
         {
           "exId": "custom-incline-push-up",
@@ -4770,7 +4805,7 @@
             }
           ],
           "restSeconds": null,
-          "linkGroup": "import-link-70bfscj"
+          "linkGroup": "import-link-61k53e6"
         }
       ],
       "volume": 10460,
@@ -4785,7 +4820,7 @@
       "imported": true
     },
     {
-      "id": 1783728431626,
+      "id": 1783342906684,
       "name": "Romanian Deadlift & Goblet Squat",
       "note": "",
       "exercises": [
@@ -4922,7 +4957,7 @@
       "imported": true
     },
     {
-      "id": 1783728431625,
+      "id": 1783342906683,
       "name": "Pull-Up & Horizontal Push",
       "note": "",
       "exercises": [
@@ -5080,7 +5115,7 @@
             }
           ],
           "restSeconds": null,
-          "linkGroup": "import-link-i3knait"
+          "linkGroup": "import-link-08qu1xn"
         },
         {
           "exId": "custom-kettlebell-halo",
@@ -5116,7 +5151,7 @@
             }
           ],
           "restSeconds": null,
-          "linkGroup": "import-link-i3knait"
+          "linkGroup": "import-link-08qu1xn"
         },
         {
           "exId": "custom-kettlebell-crossbody",
@@ -5167,7 +5202,7 @@
       "imported": true
     },
     {
-      "id": 1783728431624,
+      "id": 1783342906682,
       "name": "Unilateral Leg Extensor",
       "note": "2026 Entry:; First return after surgery",
       "exercises": [
@@ -5217,7 +5252,7 @@
       "imported": true
     },
     {
-      "id": 1783728431623,
+      "id": 1783342906681,
       "name": "Unilateral Leg Extensor",
       "note": "",
       "exercises": [
@@ -5261,7 +5296,7 @@
       "imported": true
     },
     {
-      "id": 1783728431622,
+      "id": 1783342906680,
       "name": "Pull-Up & Dips",
       "note": "Recovery training after surgery:",
       "exercises": [
@@ -5347,7 +5382,7 @@
       "imported": true
     },
     {
-      "id": 1783728431621,
+      "id": 1783342906679,
       "name": "Squat & Romanian Deadlift",
       "note": "",
       "exercises": [
@@ -5469,7 +5504,7 @@
       "imported": true
     },
     {
-      "id": 1783728431620,
+      "id": 1783342906678,
       "name": "Pull-Up & Dips",
       "note": "",
       "exercises": [
@@ -5657,7 +5692,7 @@
       "imported": true
     },
     {
-      "id": 1783728431619,
+      "id": 1783342906677,
       "name": "Pull-Up & Dips",
       "note": "Forearms; Shoulders",
       "exercises": [
@@ -5731,7 +5766,7 @@
       "imported": true
     },
     {
-      "id": 1783728431618,
+      "id": 1783342906676,
       "name": "Pull-Up & Dips",
       "note": "",
       "exercises": [
@@ -5823,7 +5858,7 @@
       "imported": true
     },
     {
-      "id": 1783728431617,
+      "id": 1783342906675,
       "name": "Dips & Pull-Up",
       "note": "",
       "exercises": [
@@ -5927,7 +5962,7 @@
       "imported": true
     },
     {
-      "id": 1783728431616,
+      "id": 1783342906674,
       "name": "Pull-Up",
       "note": "",
       "exercises": [
@@ -5977,7 +6012,7 @@
       "imported": true
     },
     {
-      "id": 1783728431615,
+      "id": 1783342906673,
       "name": "Dips & Pull Machine",
       "note": "",
       "exercises": [
@@ -6075,7 +6110,7 @@
       "imported": true
     },
     {
-      "id": 1783728431614,
+      "id": 1783342906672,
       "name": "Squat & Romanian Deadlift",
       "note": "",
       "exercises": [
@@ -6143,7 +6178,7 @@
       "imported": true
     },
     {
-      "id": 1783728431613,
+      "id": 1783342906671,
       "name": "Pull-Up & Dips",
       "note": "",
       "exercises": [
@@ -6259,7 +6294,7 @@
       "imported": true
     },
     {
-      "id": 1783728431612,
+      "id": 1783342906670,
       "name": "Pull-Up & Dips",
       "note": "",
       "exercises": [
@@ -6387,7 +6422,7 @@
       "imported": true
     },
     {
-      "id": 1783728431611,
+      "id": 1783342906669,
       "name": "Pull-Up & Dips",
       "note": "",
       "exercises": [
@@ -6485,7 +6520,7 @@
       "imported": true
     },
     {
-      "id": 1783728431610,
+      "id": 1783342906668,
       "name": "Squat & Romanian Deadlift",
       "note": "",
       "exercises": [
@@ -6613,7 +6648,7 @@
       "imported": true
     },
     {
-      "id": 1783728431609,
+      "id": 1783342906667,
       "name": "Pull-Up & Dips",
       "note": "",
       "exercises": [
@@ -6711,7 +6746,7 @@
       "imported": true
     },
     {
-      "id": 1783728431608,
+      "id": 1783342906666,
       "name": "Squat & Romanian Deadlift",
       "note": "",
       "exercises": [
@@ -6809,7 +6844,7 @@
       "imported": true
     },
     {
-      "id": 1783728431607,
+      "id": 1783342906665,
       "name": "Pull-Up & Dips",
       "note": "",
       "exercises": [
@@ -6907,7 +6942,7 @@
       "imported": true
     },
     {
-      "id": 1783728431606,
+      "id": 1783342906664,
       "name": "Squat & Romanian Deadlift",
       "note": "Calf Raise ---",
       "exercises": [
@@ -7005,7 +7040,7 @@
       "imported": true
     },
     {
-      "id": 1783728431605,
+      "id": 1783342906663,
       "name": "Pull-Up & Dips",
       "note": "",
       "exercises": [
@@ -7163,7 +7198,7 @@
       "imported": true
     },
     {
-      "id": 1783728431604,
+      "id": 1783342906662,
       "name": "Squat",
       "note": "",
       "exercises": [
@@ -7213,7 +7248,7 @@
       "imported": true
     },
     {
-      "id": 1783728431603,
+      "id": 1783342906661,
       "name": "Pull-Up & Dips",
       "note": "",
       "exercises": [
@@ -7371,7 +7406,7 @@
       "imported": true
     },
     {
-      "id": 1783728431602,
+      "id": 1783342906660,
       "name": "Squat & Romanian Deadlift",
       "note": "",
       "exercises": [
@@ -7493,7 +7528,7 @@
       "imported": true
     },
     {
-      "id": 1783728431601,
+      "id": 1783342906659,
       "name": "Squat & Romanian Deadlift",
       "note": "",
       "exercises": [
@@ -7591,7 +7626,7 @@
       "imported": true
     },
     {
-      "id": 1783728431600,
+      "id": 1783342906658,
       "name": "Pull-Up & Dips",
       "note": "",
       "exercises": [
@@ -7701,7 +7736,7 @@
       "imported": true
     },
     {
-      "id": 1783728431599,
+      "id": 1783342906656,
       "name": "Squat & Romanian Deadlift",
       "note": "Return after 2negativesd injury",
       "exercises": [
@@ -7829,7 +7864,7 @@
       "imported": true
     },
     {
-      "id": 1783728431598,
+      "id": 1783342906655,
       "name": "Pull-Up",
       "note": "Exertion headache",
       "exercises": [
@@ -7873,7 +7908,7 @@
       "imported": true
     },
     {
-      "id": 1783728431597,
+      "id": 1783342906654,
       "name": "Pull-Up & Dips",
       "note": "Shoulders; Forearms",
       "exercises": [
@@ -7965,7 +8000,7 @@
       "imported": true
     },
     {
-      "id": 1783728431596,
+      "id": 1783342906653,
       "name": "Romanian Deadlift & Calf Raise",
       "note": "Squat",
       "exercises": [
@@ -8057,7 +8092,7 @@
       "imported": true
     },
     {
-      "id": 1783728431595,
+      "id": 1783342906652,
       "name": "Pull-Up & Dips",
       "note": "",
       "exercises": [
@@ -8215,7 +8250,7 @@
       "imported": true
     },
     {
-      "id": 1783728431594,
+      "id": 1783342906651,
       "name": "Pull-Up & Dips",
       "note": "",
       "exercises": [
@@ -8373,7 +8408,7 @@
       "imported": true
     },
     {
-      "id": 1783728431593,
+      "id": 1783342906650,
       "name": "Romanian Deadlift & Squat",
       "note": "",
       "exercises": [
@@ -8465,7 +8500,7 @@
       "imported": true
     },
     {
-      "id": 1783728431592,
+      "id": 1783342906649,
       "name": "Pull-Up & Dips",
       "note": "",
       "exercises": [
@@ -8623,7 +8658,7 @@
       "imported": true
     },
     {
-      "id": 1783728431591,
+      "id": 1783342906648,
       "name": "Romanian Deadlift & Squat",
       "note": "",
       "exercises": [
@@ -8733,7 +8768,7 @@
       "imported": true
     },
     {
-      "id": 1783728431590,
+      "id": 1783342906647,
       "name": "Pull-Up & Dips",
       "note": "",
       "exercises": [
@@ -8890,7 +8925,7 @@
       "imported": true
     },
     {
-      "id": 1783728431589,
+      "id": 1783342906646,
       "name": "Pull-Up & Lateral Raise",
       "note": "",
       "exercises": [
@@ -9036,7 +9071,7 @@
       "imported": true
     },
     {
-      "id": 1783728431588,
+      "id": 1783342906645,
       "name": "Pull-Up & Lateral Raise",
       "note": "",
       "exercises": [
@@ -9175,7 +9210,7 @@
       "imported": true
     },
     {
-      "id": 1783728431587,
+      "id": 1783342906644,
       "name": "Dips & Forearms",
       "note": "",
       "exercises": [
@@ -9237,7 +9272,7 @@
       "imported": true
     },
     {
-      "id": 1783728431586,
+      "id": 1783342906643,
       "name": "Pull-Up & Lateral Raise",
       "note": "",
       "exercises": [
@@ -9299,7 +9334,7 @@
       "imported": true
     },
     {
-      "id": 1783728431585,
+      "id": 1783342906642,
       "name": "Sissy Squat & Squat",
       "note": "23 days after knee injury",
       "exercises": [
@@ -9349,7 +9384,7 @@
       "imported": true
     },
     {
-      "id": 1783728431584,
+      "id": 1783342906641,
       "name": "Pull-Up & Calf Raise",
       "note": "",
       "exercises": [
@@ -9494,7 +9529,7 @@
       "imported": true
     },
     {
-      "id": 1783728431583,
+      "id": 1783342906640,
       "name": "Romanian Deadlift & Shoulders",
       "note": "",
       "exercises": [
@@ -9586,7 +9621,7 @@
       "imported": true
     },
     {
-      "id": 1783728431582,
+      "id": 1783342906639,
       "name": "Dips & Calf Raise",
       "note": "",
       "exercises": [
@@ -9677,7 +9712,7 @@
       "imported": true
     },
     {
-      "id": 1783728431581,
+      "id": 1783342906638,
       "name": "Squat & Shoulders",
       "note": "",
       "exercises": [
@@ -9750,7 +9785,7 @@
       "imported": true
     },
     {
-      "id": 1783728431580,
+      "id": 1783342906637,
       "name": "Dips & Pull-Up",
       "note": "",
       "exercises": [
@@ -9836,7 +9871,7 @@
       "imported": true
     },
     {
-      "id": 1783728431579,
+      "id": 1783342906636,
       "name": "Run & Run",
       "note": "",
       "exercises": [
@@ -9872,7 +9907,7 @@
       "imported": true
     },
     {
-      "id": 1783728431578,
+      "id": 1783342906635,
       "name": "Dips & Calf Raise",
       "note": "",
       "exercises": [
@@ -10000,7 +10035,7 @@
       "imported": true
     },
     {
-      "id": 1783728431577,
+      "id": 1783342906634,
       "name": "Squat & Forearms",
       "note": "",
       "exercises": [
@@ -10127,7 +10162,7 @@
       "imported": true
     },
     {
-      "id": 1783728431576,
+      "id": 1783342906633,
       "name": "Pull-Up & Calf Raise",
       "note": "",
       "exercises": [
@@ -10272,7 +10307,7 @@
       "imported": true
     },
     {
-      "id": 1783728431575,
+      "id": 1783342906632,
       "name": "Run",
       "note": "",
       "exercises": [
@@ -10297,7 +10332,7 @@
       "imported": true
     },
     {
-      "id": 1783728431574,
+      "id": 1783342906631,
       "name": "Pull-Up & Calf Raise",
       "note": "",
       "exercises": [
@@ -10425,7 +10460,7 @@
       "imported": true
     },
     {
-      "id": 1783728431573,
+      "id": 1783342906630,
       "name": "Squat & Run",
       "note": "",
       "exercises": [
@@ -10480,7 +10515,7 @@
       "imported": true
     },
     {
-      "id": 1783728431572,
+      "id": 1783342906629,
       "name": "Pull-Up & Calf Raise",
       "note": "Dips",
       "exercises": [
@@ -10548,7 +10583,7 @@
       "imported": true
     },
     {
-      "id": 1783728431571,
+      "id": 1783342906628,
       "name": "Romanian Deadlift & Shoulders",
       "note": "",
       "exercises": [
@@ -10628,7 +10663,7 @@
       "imported": true
     },
     {
-      "id": 1783728431570,
+      "id": 1783342906627,
       "name": "Pull-Up & Dips",
       "note": "",
       "exercises": [
@@ -10756,7 +10791,7 @@
       "imported": true
     },
     {
-      "id": 1783728431569,
+      "id": 1783342906626,
       "name": "Romanian Deadlift & Shoulders",
       "note": "",
       "exercises": [
@@ -10902,7 +10937,7 @@
       "imported": true
     },
     {
-      "id": 1783728431568,
+      "id": 1783342906625,
       "name": "Pull-Up & Dips",
       "note": "",
       "exercises": [
@@ -11006,7 +11041,7 @@
       "imported": true
     },
     {
-      "id": 1783728431567,
+      "id": 1783342906624,
       "name": "Squat & Romanian Deadlift",
       "note": "",
       "exercises": [
@@ -11080,7 +11115,7 @@
       "imported": true
     },
     {
-      "id": 1783728431566,
+      "id": 1783342906623,
       "name": "Pull-Up & Dips",
       "note": "",
       "exercises": [
@@ -11220,7 +11255,7 @@
       "imported": true
     },
     {
-      "id": 1783728431565,
+      "id": 1783342906622,
       "name": "Romanian Deadlift & Shoulders",
       "note": "",
       "exercises": [
@@ -11342,7 +11377,7 @@
       "imported": true
     },
     {
-      "id": 1783728431564,
+      "id": 1783342906621,
       "name": "Pull-Up & Dips",
       "note": "",
       "exercises": [
@@ -11476,7 +11511,7 @@
       "imported": true
     },
     {
-      "id": 1783728431563,
+      "id": 1783342906620,
       "name": "Pull-Up & Dips",
       "note": "",
       "exercises": [
@@ -11616,7 +11651,7 @@
       "imported": true
     },
     {
-      "id": 1783728431562,
+      "id": 1783342906619,
       "name": "Pull-Up & Dips",
       "note": "",
       "exercises": [
@@ -11744,7 +11779,7 @@
       "imported": true
     },
     {
-      "id": 1783728431561,
+      "id": 1783342906618,
       "name": "Squat & Romanian Deadlift",
       "note": "",
       "exercises": [
@@ -11860,7 +11895,7 @@
       "imported": true
     },
     {
-      "id": 1783728431560,
+      "id": 1783342906617,
       "name": "Pull-Up & Dips",
       "note": "",
       "exercises": [
@@ -11994,7 +12029,7 @@
       "imported": true
     },
     {
-      "id": 1783728431558,
+      "id": 1783342906616,
       "name": "Squat & Romanian Deadlift",
       "note": "",
       "exercises": [
@@ -12080,7 +12115,7 @@
       "imported": true
     },
     {
-      "id": 1783728431557,
+      "id": 1783342906615,
       "name": "Pull-Up & Dips",
       "note": "",
       "exercises": [
@@ -12220,7 +12255,7 @@
       "imported": true
     },
     {
-      "id": 1783728431556,
+      "id": 1783342906614,
       "name": "Romanian Deadlift & Squat",
       "note": "",
       "exercises": [
@@ -12507,7 +12542,7 @@
       "imported": true
     },
     {
-      "id": 1783728431555,
+      "id": 1783342906613,
       "name": "Pull-Up & Dips",
       "note": "",
       "exercises": [
@@ -12632,6 +12667,199 @@
       "records": 0,
       "sorenessRange": null,
       "bodyWeight": null,
+      "imported": true
+    },
+    {
+      "id": 1783728431554,
+      "name": "Pull-Up & Dips",
+      "note": "",
+      "exercises": [
+        {
+          "exId": "pullup",
+          "name": "Pull-Up",
+          "icon": "🔝",
+          "primary": [
+            "Lats",
+            "Traps",
+            "Biceps",
+            "Forearms"
+          ],
+          "secondary": [
+            "Rear Delts",
+            "Upper Back",
+            "Side Delts",
+            "Abs"
+          ],
+          "note": "",
+          "sets": [
+            {
+              "warmup": false,
+              "weight": 80,
+              "reps": 10,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": null,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 80,
+              "reps": 10,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": null,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 80,
+              "reps": 9,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": null,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 80,
+              "reps": 10,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": null,
+              "prs": []
+            }
+          ],
+          "restSeconds": null,
+          "linkGroup": ""
+        },
+        {
+          "exId": "dip",
+          "name": "Dips",
+          "icon": "📉",
+          "primary": [
+            "Chest",
+            "Triceps",
+            "Front Delts"
+          ],
+          "secondary": [
+            "Upper Back",
+            "Abs",
+            "Forearms"
+          ],
+          "note": "",
+          "sets": [
+            {
+              "warmup": false,
+              "weight": 80,
+              "reps": 10,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": null,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 80,
+              "reps": 10,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": null,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 80,
+              "reps": 10,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": null,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 80,
+              "reps": 4,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": null,
+              "prs": []
+            }
+          ],
+          "restSeconds": null,
+          "linkGroup": ""
+        },
+        {
+          "exId": "custom-lateral-raises-3n8m",
+          "name": "Lateral raises",
+          "icon": "🧅",
+          "primary": [
+            "Side Delts"
+          ],
+          "secondary": [
+            "Upper Back"
+          ],
+          "note": "",
+          "sets": [
+            {
+              "warmup": false,
+              "weight": 10,
+              "reps": 30,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": null,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 10,
+              "reps": 20,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": null,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 10,
+              "reps": 25,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": null,
+              "prs": []
+            }
+          ],
+          "restSeconds": null,
+          "linkGroup": ""
+        }
+      ],
+      "volume": 6590,
+      "duration": 70,
+      "date": "2025-01-08T03:00:00.000Z",
+      "bodyWeight": null,
+      "records": 0,
+      "sorenessRange": null,
       "imported": true
     },
     {
@@ -12834,7 +13062,7 @@
       "imported": true
     },
     {
-      "id": 1783728431554,
+      "id": 1783342906612,
       "name": "Pull-Up & Dips",
       "note": "",
       "exercises": [
@@ -13024,16 +13252,15 @@
       "id": "custom-upper-row-1f98",
       "name": "Upper row",
       "icon": "🆙️",
-      "muscle": "Side Delts, Traps, Rear Delts",
+      "muscle": "Side Delts, Traps, Biceps",
       "primary": [
         "Side Delts",
         "Traps",
-        "Rear Delts"
+        "Biceps"
       ],
       "secondary": [
-        "Upper Back",
-        "Biceps",
-        "Forearms"
+        "Rear Delts",
+        "Upper Back"
       ],
       "isBodyweight": false
     },
@@ -13247,5 +13474,5 @@
       "isBodyweight": false
     }
   },
-  "timestamp": 1785449615737
+  "timestamp": 1785509816590
 }
