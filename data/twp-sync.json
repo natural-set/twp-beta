@@ -13209,7 +13209,14 @@
     "height": "182",
     "injuries": "LCA",
     "surgeries": "LCA surgery",
-    "goalWeight": "85"
+    "goalWeight": "85",
+    "chest": "99",
+    "waist": "90",
+    "shoulders": "125",
+    "lArm": "31",
+    "lForearm": "28",
+    "rArm": "32",
+    "rForearm": "29"
   },
   "customTags": [],
   "customExercises": [
@@ -13520,5 +13527,5 @@
       "isBodyweight": false
     }
   },
-  "timestamp": 1785588621641
+  "timestamp": 1785592110149
 }
