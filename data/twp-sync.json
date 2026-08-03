@@ -1,6 +1,226 @@
 {
   "workouts": [
     {
+      "id": 1785770738272,
+      "name": "Upper lw",
+      "note": "Today I was weaker",
+      "exercises": [
+        {
+          "exId": "pullup",
+          "name": "Pull-Up",
+          "icon": "🔝",
+          "primary": [
+            "Lats",
+            "Traps",
+            "Biceps",
+            "Forearms"
+          ],
+          "secondary": [
+            "Rear Delts",
+            "Upper Back",
+            "Side Delts",
+            "Abs"
+          ],
+          "note": "",
+          "sets": [
+            {
+              "warmup": true,
+              "weight": 82,
+              "reps": 20,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [
+                {
+                  "type": "pyramids"
+                }
+              ],
+              "restSeconds": 2,
+              "bwMode": "bw",
+              "extWeight": 0,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 82,
+              "reps": 7,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [
+                {
+                  "type": "explosives"
+                }
+              ],
+              "restSeconds": 0,
+              "bwMode": "bw",
+              "extWeight": 0,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 82,
+              "reps": 7,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [
+                {
+                  "type": "explosives"
+                }
+              ],
+              "restSeconds": 2,
+              "bwMode": "bw",
+              "extWeight": 0,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 82,
+              "reps": 7,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 0,
+              "bwMode": "bw",
+              "extWeight": 0,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 82,
+              "reps": 8,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 0,
+              "bwMode": "bw",
+              "extWeight": 0,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 82,
+              "reps": 10,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [
+                {
+                  "type": "negatives",
+                  "value": "8"
+                }
+              ],
+              "restSeconds": 24,
+              "bwMode": "bw",
+              "extWeight": 0,
+              "prs": [
+                "Bodyweight"
+              ]
+            }
+          ],
+          "restSeconds": 1,
+          "linkGroup": ""
+        },
+        {
+          "exId": "dip",
+          "name": "Dips",
+          "icon": "📉",
+          "primary": [
+            "Chest",
+            "Triceps",
+            "Front Delts"
+          ],
+          "secondary": [
+            "Upper Back",
+            "Abs",
+            "Forearms"
+          ],
+          "note": "",
+          "sets": [
+            {
+              "warmup": true,
+              "weight": 82,
+              "reps": 20,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [
+                {
+                  "type": "pyramids"
+                }
+              ],
+              "restSeconds": 7,
+              "bwMode": "bw",
+              "extWeight": 0,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 82,
+              "reps": 8,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 0,
+              "bwMode": "bw",
+              "extWeight": 0,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 82,
+              "reps": 8,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 3,
+              "bwMode": "bw",
+              "extWeight": 0,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 82,
+              "reps": 9,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 2,
+              "bwMode": "bw",
+              "extWeight": 0,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 82,
+              "reps": 10,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 42,
+              "bwMode": "bw",
+              "extWeight": 0,
+              "prs": []
+            }
+          ],
+          "restSeconds": 3,
+          "linkGroup": ""
+        }
+      ],
+      "volume": 9348,
+      "duration": 50,
+      "date": "2026-08-03T15:25:38.266Z",
+      "bodyWeight": null,
+      "records": 1
+    },
+    {
       "id": 1785514234772,
       "name": "Lower",
       "note": "",
@@ -13204,7 +13424,24 @@
     }
   ],
   "userName": "Athlete",
-  "profile": {},
+  "profile": {
+    "weight": "82",
+    "height": "182",
+    "injuries": "LCA",
+    "surgeries": "LCA surgery",
+    "goalWeight": "85",
+    "chest": "99",
+    "waist": "90",
+    "shoulders": "125",
+    "lArm": "31",
+    "lForearm": "28",
+    "rArm": "32",
+    "rForearm": "29",
+    "lThigh": "55",
+    "rThigh": "59",
+    "lCalf": "36",
+    "rCalf": "38"
+  },
   "customTags": [],
   "customExercises": [
     {
@@ -13514,5 +13751,5 @@
       "isBodyweight": false
     }
   },
-  "timestamp": 1785767208975
+  "timestamp": 1785770739279
 }
