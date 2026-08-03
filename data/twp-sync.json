@@ -35,7 +35,7 @@
                   "type": "pyramids"
                 }
               ],
-              "restSeconds": 2,
+              "restSeconds": 120,
               "bwMode": "bw",
               "extWeight": 0,
               "prs": []
@@ -52,7 +52,7 @@
                   "type": "explosives"
                 }
               ],
-              "restSeconds": 0,
+              "restSeconds": 150,
               "bwMode": "bw",
               "extWeight": 0,
               "prs": []
@@ -69,7 +69,7 @@
                   "type": "explosives"
                 }
               ],
-              "restSeconds": 2,
+              "restSeconds": 150,
               "bwMode": "bw",
               "extWeight": 0,
               "prs": []
@@ -82,7 +82,7 @@
               "rpe": 0,
               "tempo": "",
               "variations": [],
-              "restSeconds": 0,
+              "restSeconds": 150,
               "bwMode": "bw",
               "extWeight": 0,
               "prs": []
@@ -95,7 +95,7 @@
               "rpe": 0,
               "tempo": "",
               "variations": [],
-              "restSeconds": 0,
+              "restSeconds": 160,
               "bwMode": "bw",
               "extWeight": 0,
               "prs": []
@@ -113,15 +113,13 @@
                   "value": "8"
                 }
               ],
-              "restSeconds": 24,
+              "restSeconds": 180,
               "bwMode": "bw",
               "extWeight": 0,
-              "prs": [
-                "Bodyweight"
-              ]
+              "prs": []
             }
           ],
-          "restSeconds": 1,
+          "restSeconds": 146,
           "linkGroup": ""
         },
         {
@@ -152,7 +150,7 @@
                   "type": "pyramids"
                 }
               ],
-              "restSeconds": 7,
+              "restSeconds": 120,
               "bwMode": "bw",
               "extWeight": 0,
               "prs": []
@@ -165,7 +163,7 @@
               "rpe": 0,
               "tempo": "",
               "variations": [],
-              "restSeconds": 0,
+              "restSeconds": 150,
               "bwMode": "bw",
               "extWeight": 0,
               "prs": []
@@ -178,7 +176,7 @@
               "rpe": 0,
               "tempo": "",
               "variations": [],
-              "restSeconds": 3,
+              "restSeconds": 150,
               "bwMode": "bw",
               "extWeight": 0,
               "prs": []
@@ -191,7 +189,7 @@
               "rpe": 0,
               "tempo": "",
               "variations": [],
-              "restSeconds": 2,
+              "restSeconds": 158,
               "bwMode": "bw",
               "extWeight": 0,
               "prs": []
@@ -204,21 +202,21 @@
               "rpe": 0,
               "tempo": "",
               "variations": [],
-              "restSeconds": 42,
+              "restSeconds": 150,
               "bwMode": "bw",
               "extWeight": 0,
               "prs": []
             }
           ],
-          "restSeconds": 3,
+          "restSeconds": 145,
           "linkGroup": ""
         }
       ],
       "volume": 9348,
       "duration": 50,
-      "date": "2026-08-03T15:25:38.266Z",
+      "date": "2026-08-03T15:25:00.000Z",
       "bodyWeight": null,
-      "records": 1
+      "records": 0
     },
     {
       "id": 1785514234772,
@@ -13751,5 +13749,5 @@
       "isBodyweight": false
     }
   },
-  "timestamp": 1785770739279
+  "timestamp": 1785770791396
 }
