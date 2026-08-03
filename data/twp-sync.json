@@ -13204,20 +13204,7 @@
     }
   ],
   "userName": "Athlete",
-  "profile": {
-    "weight": "82",
-    "height": "182",
-    "injuries": "LCA",
-    "surgeries": "LCA surgery",
-    "goalWeight": "85",
-    "chest": "99",
-    "waist": "90",
-    "shoulders": "125",
-    "lArm": "31",
-    "lForearm": "28",
-    "rArm": "32",
-    "rForearm": "29"
-  },
+  "profile": {},
   "customTags": [],
   "customExercises": [
     {
@@ -13527,5 +13514,5 @@
       "isBodyweight": false
     }
   },
-  "timestamp": 1785592110149
+  "timestamp": 1785767208975
 }
