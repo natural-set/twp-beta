@@ -2373,6 +2373,10 @@
             <input type="checkbox" id="ef-is-bodyweight" style="width:18px;height:18px;">
             <label for="ef-is-bodyweight" style="font-size:12px;color:var(--text-muted);">⚖️ Bodyweight exercise (can add/remove weight)</label>
           </div>
+          <div style="margin-bottom:14px;display:flex;align-items:center;gap:8px;">
+            <input type="checkbox" id="ef-is-unilateral" style="width:18px;height:18px;">
+            <label for="ef-is-unilateral" style="font-size:12px;color:var(--text-muted);">🦵 Unilateral (log Both/Left/Right per set)</label>
+          </div>
           <div style="margin-bottom:14px;">
             <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:6px;">Name</label>
             <input id="ef-name" type="text" placeholder="e.g. Cable Fly"
@@ -3393,6 +3397,13 @@
       { name: 'Hamstrings', icon: '🏹', color: 'primary', target: [10, 16] },
       { name: 'Glutes', icon: '🍑', color: 'secondary', target: [10, 18] },
       { name: 'Calves', icon: '🦶', color: 'secondary', target: [10, 16] },
+      { name: 'Adductors', icon: '🦵', color: 'secondary', target: [6, 12] },
+      { name: 'Hip Flexors', icon: '🦵', color: 'secondary', target: [4, 10] },
+      { name: 'Serratus', icon: '💪', color: 'secondary', target: [4, 10] },
+      { name: 'Rotator Cuff', icon: '🛡️', color: 'secondary', target: [4, 10] },
+      { name: 'Neck', icon: '🧍', color: 'secondary', target: [4, 10] },
+      { name: 'Tibialis', icon: '🦶', color: 'secondary', target: [4, 10] },
+      { name: 'Abductors', icon: '🍑', color: 'secondary', target: [6, 12] },
     ];
 
     // Built-ins + user-added exercises, minus anything hidden. Every picker in
@@ -3545,6 +3556,7 @@
       document.getElementById('ef-rest-preset').value = (exId && state.exerciseRestPresets && state.exerciseRestPresets[exId]) || '';
       document.getElementById('ef-weight-step').value = (exId && state.exerciseWeightSteps && state.exerciseWeightSteps[exId]) || '';
       document.getElementById('ef-is-bodyweight').checked = existing ? !!existing.isBodyweight : false;
+      document.getElementById('ef-is-unilateral').checked = existing ? !!existing.isUnilateral : false;
 
       efMuscleSelection = {
         primary: new Set(existing ? existing.primary || [] : []),
@@ -3592,20 +3604,21 @@
       const restPresetRaw = document.getElementById('ef-rest-preset').value;
       const restPreset = restPresetRaw !== '' ? parseInt(restPresetRaw) : null;
       const isBodyweight = document.getElementById('ef-is-bodyweight').checked;
+      const isUnilateral = document.getElementById('ef-is-unilateral').checked;
 
       let finalId = id;
       if (id) {
         const isBuiltin = EXERCISES_DB.some(e => e.id === id);
         if (isBuiltin) {
           state.exerciseOverrides = state.exerciseOverrides || {};
-          state.exerciseOverrides[id] = { name, icon, muscle: primary.join(', '), primary, secondary, isBodyweight };
+          state.exerciseOverrides[id] = { name, icon, muscle: primary.join(', '), primary, secondary, isBodyweight, isUnilateral };
         } else {
           const ex = state.customExercises.find(e => e.id === id);
-          if (ex) { ex.icon = icon; ex.name = name; ex.primary = primary; ex.secondary = secondary; ex.muscle = primary.join(', '); ex.isBodyweight = isBodyweight; }
+          if (ex) { ex.icon = icon; ex.name = name; ex.primary = primary; ex.secondary = secondary; ex.muscle = primary.join(', '); ex.isBodyweight = isBodyweight; ex.isUnilateral = isUnilateral; }
         }
       } else {
         const newId = 'custom-' + name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') + '-' + Date.now().toString(36).slice(-4);
-        state.customExercises.push({ id: newId, name, icon, muscle: primary.join(', '), primary, secondary, isBodyweight });
+        state.customExercises.push({ id: newId, name, icon, muscle: primary.join(', '), primary, secondary, isBodyweight, isUnilateral });
         finalId = newId;
       }
 
@@ -4318,6 +4331,7 @@
             variations,
             restSeconds: (restSeconds !== null && !isNaN(restSeconds)) ? restSeconds : null,
             bwMode, extWeight,
+            side: row.dataset.side || undefined,
           };
         });
         // Only a set that was followed by another set has a real "rest after it" —
@@ -4454,6 +4468,7 @@
       return { bestReps, bestSystemWeight };
     }
 
+
     // Whether an exercise supports the bodyweight +/- weight chip: explicit flag
     // (set via Exercise Manager) wins, otherwise fall back to name-keyword match —
     // so custom/imported exercises (pushup, ring row, etc.) still get it.
@@ -4461,6 +4476,36 @@
       const def = exId ? getAllExercises().find(e => e.id === exId) : null;
       if (def && typeof def.isBodyweight === 'boolean') return def.isBodyweight;
       return isBodyweightExercise(name);
+    }
+
+    const UNILATERAL_KEYWORDS = ['single leg', 'single-leg', 'single arm', 'single-arm', 'unilateral', 'lunge', 'step-up', 'step up', 'stepup', 'bulgarian split', 'pistol', 'one leg', 'one arm'];
+    function exerciseSupportsUnilateral(exId, name) {
+      const def = exId ? getAllExercises().find(e => e.id === exId) : null;
+      if (def && typeof def.isUnilateral === 'boolean') return def.isUnilateral;
+      const n = (name || '').toLowerCase();
+      return UNILATERAL_KEYWORDS.some(k => n.includes(k));
+    }
+    function sideChipLabel(side) { return side === 'left' ? 'L' : side === 'right' ? 'R' : 'Both'; }
+    function cycleSetSide(btn) {
+      const row = btn.closest('tr');
+      const order = ['both', 'left', 'right'];
+      const next = order[(order.indexOf(row.dataset.side || 'both') + 1) % order.length];
+      row.dataset.side = next;
+      btn.textContent = sideChipLabel(next);
+    }
+    // Renders a set's weight for display: bodyweight sets show "82kg · +20kg" (added)
+    // or "82kg · -20kg" (assisted) instead of just the total system weight, so the
+    // bodyweight and the extra load are both visible at a glance.
+    function formatSetWeight(s) {
+      if (s.bwMode === 'added' && s.extWeight) {
+        const bw = Math.round((s.weight - s.extWeight) * 100) / 100;
+        return `${bw}kg + ${s.extWeight}kg`;
+      }
+      if (s.bwMode === 'assisted' && s.extWeight) {
+        const bw = Math.round((s.weight + s.extWeight) * 100) / 100;
+        return `${bw}kg - ${s.extWeight}kg`;
+      }
+      return `${s.weight}kg`;
     }
 
     function bwChipLabel(mode) {
@@ -4790,9 +4835,11 @@
       const container = containerOverride || document.getElementById('exercises-container');
       const isCombo = !!linkGroupPrefill;
       const blockId = 'ex-' + Date.now() + Math.random().toString(36).slice(2, 6);
+      const isUni = exerciseSupportsUnilateral(exId, def.name);
       const div = document.createElement('div');
       div.className = 'ex-block stagger-in'; div.id = blockId; div.dataset.exId = exId;
       div.dataset.trackRest = trackRest ? 'true' : 'false';
+      div.dataset.uni = isUni ? 'true' : 'false';
       div.innerHTML = `
     <div class="ex-block-header">
       <div class="ex-thumb">${def.icon}</div>
@@ -4816,6 +4863,7 @@
         <th style="width:34px">Set</th>
         <th>Weight</th>
         <th>Reps</th>
+        ${isUni ? '<th style="width:44px">Side</th>' : ''}
         <th>Variations</th>
         <th style="width:44px">RIR</th>
         <th style="width:44px">RPE</th>
@@ -4962,6 +5010,8 @@
       tr.dataset.variations = '[]';
       tr.dataset.restSeconds = '0';
       tr.dataset.restRunning = 'false';
+      const isUniBlock = blockEl && blockEl.dataset.uni === 'true';
+      if (isUniBlock) tr.dataset.side = 'both';
       const badgeClass = isWarmup ? 'warmup' : 'numbered';
       const exDefForBW = blockEl ? getAllExercises().find(e => e.id === blockEl.dataset.exId) : null;
       const isBW = exerciseSupportsBW(blockEl?.dataset.exId, exDefForBW?.name);
@@ -4983,6 +5033,7 @@
     <td><span class="set-badge ${badgeClass}" style="cursor:pointer" onclick="toggleSetType(this)" title="Click to toggle Warmup/Normal">${label}</span></td>
     <td>${weightCellHTML}</td>
     <td><input class="set-input r-input" type="number" min="0" placeholder="${lastSet ? lastSet.reps : 'reps'}" title="${lastSet ? 'Last: ' + lastSet.weight + 'kg x ' + lastSet.reps : ''}"></td>
+    ${isUniBlock ? `<td><button type="button" class="bw-chip" onclick="cycleSetSide(this)" title="Tap to cycle: Both / Left / Right">Both</button></td>` : ''}
     <td><button type="button" class="variations-btn" onclick="openVariationsPicker(this)">+ Tag</button></td>
 
     <td><input class="rir-input" type="number" min="0" max="10" placeholder="0"></td>
@@ -5584,9 +5635,10 @@
           const tempoDisplay = s.tempo ? ` · Tempo ${s.tempo}` : '';
           const varSummary = variationsSummary(s.variations, s.reps);
           const varDisplay = varSummary ? ` · <span style="color:var(--accent-blue)">${varSummary}</span>` : '';
+          const sideDisplay = s.side && s.side !== 'both' ? ` · ${s.side === 'left' ? 'L' : 'R'}` : '';
           return `<div class="detail-set-row ${s.prs && s.prs.length ? 'pr-row' : ''}">
         ${badge}
-        <span style="flex:1">${s.weight}kg × <strong>${s.reps}</strong> reps${rirDisplay}${rpeDisplay}${tempoDisplay}${varDisplay}</span>
+        <span style="flex:1">${formatSetWeight(s)} × <strong>${s.reps}</strong> reps${sideDisplay}${rirDisplay}${rpeDisplay}${tempoDisplay}${varDisplay}</span>
         <div class="pr-badges">${prs}</div>
       </div>`;
         }).join('');
@@ -6908,6 +6960,7 @@
       <path d="M40 63 Q50 60 60 63 Q67 79 64 95 Q56 105 50 107 Q44 105 36 95 Q33 79 40 63 Z" ${skin}/>
       <path d="M40 25 L46 24 L43 32 L37 31 Z" ${muscleAttrs('Traps', stats)}/>
       <path d="M60 25 L54 24 L57 32 L63 31 Z" ${muscleAttrs('Traps', stats)}/>
+      <ellipse cx="50" cy="20" rx="3.5" ry="4" ${muscleAttrs('Neck', stats)}/>
       <ellipse cx="25" cy="31" rx="7.5" ry="9.5" ${muscleAttrs('Front Delts', stats)}/>
       <ellipse cx="75" cy="31" rx="7.5" ry="9.5" ${muscleAttrs('Front Delts', stats)}/>
       <path d="M21 23 Q17 31 21 39" ${cut}/>
@@ -6926,6 +6979,8 @@
       <path d="M88 59 Q90 74 87 88 L81 87 Q83 74 81 60 Z" ${muscleAttrs('Forearms', stats)}/>
       <path d="M15 62 L15 85" ${cut}/>
       <path d="M85 62 L85 85" ${cut}/>
+      <path d="M31 44 L36 47 L35 53 L30 50 Z" ${muscleAttrs('Serratus', stats)}/>
+      <path d="M69 44 L64 47 L65 53 L70 50 Z" ${muscleAttrs('Serratus', stats)}/>
       <rect x="37" y="48" width="5" height="34" rx="2" ${muscleAttrs('Obliques', stats)}/>
       <rect x="58" y="48" width="5" height="34" rx="2" ${muscleAttrs('Obliques', stats)}/>
       <path d="M39 52 L41 59 M39 64 L41 71 M39 75 L41 81" ${cut}/>
@@ -6935,14 +6990,22 @@
       <line x1="45" y1="57" x2="55" y2="57" stroke="#00000055" stroke-width="1"/>
       <line x1="45" y1="66" x2="55" y2="66" stroke="#00000055" stroke-width="1"/>
       <line x1="45" y1="75" x2="55" y2="75" stroke="#00000055" stroke-width="1"/>
+      <ellipse cx="40" cy="104" rx="4" ry="3" ${muscleAttrs('Hip Flexors', stats)}/>
+      <ellipse cx="60" cy="104" rx="4" ry="3" ${muscleAttrs('Hip Flexors', stats)}/>
+      <ellipse cx="31" cy="109" rx="3.5" ry="6" ${muscleAttrs('Abductors', stats)}/>
+      <ellipse cx="69" cy="109" rx="3.5" ry="6" ${muscleAttrs('Abductors', stats)}/>
       <path d="M33 107 Q28 130 30 151 Q32 159 38 159 Q45 158 44 149 Q47 128 44 107 Q38 103 33 107 Z" ${muscleAttrs('Quadriceps', stats)}/>
       <path d="M67 107 Q72 130 70 151 Q68 159 62 159 Q55 158 56 149 Q53 128 56 107 Q62 103 67 107 Z" ${muscleAttrs('Quadriceps', stats)}/>
+      <rect x="41" y="112" width="6" height="30" rx="2" ${muscleAttrs('Adductors', stats)}/>
+      <rect x="53" y="112" width="6" height="30" rx="2" ${muscleAttrs('Adductors', stats)}/>
       <path d="M38 109 Q35 130 37 152" ${cut}/>
       <path d="M62 109 Q65 130 63 152" ${cut}/>
       <path d="M34 146 Q32 153 36 158" ${cut}/>
       <path d="M66 146 Q68 153 64 158" ${cut}/>
       <ellipse cx="38" cy="159" rx="3.5" ry="3" ${skin}/>
       <ellipse cx="62" cy="159" rx="3.5" ry="3" ${skin}/>
+      <path d="M36 163 L34 189 L37 190 L39 164 Z" ${muscleAttrs('Tibialis', stats)}/>
+      <path d="M64 163 L66 189 L63 190 L61 164 Z" ${muscleAttrs('Tibialis', stats)}/>
       <path d="M35 161 Q31 175 33 189 Q34 197 38 198 Q42 197 43 189 Q45 175 41 161 Q38 158 35 161 Z" ${muscleAttrs('Calves', stats)}/>
       <path d="M65 161 Q69 175 67 189 Q66 197 62 198 Q58 197 57 189 Q55 175 59 161 Q62 158 65 161 Z" ${muscleAttrs('Calves', stats)}/>
       <path d="M38 164 L38 191" ${cut}/>
@@ -6962,6 +7025,8 @@
       <path d="M50 23 L61 30 L53 50 L50 54 L47 50 L39 30 Z" ${muscleAttrs('Traps', stats)}/>
       <path d="M50 27 L50 51" ${cut}/>
       <path d="M42 31 L58 31" ${cut}/>
+      <ellipse cx="30" cy="26" rx="2.5" ry="2.5" ${muscleAttrs('Rotator Cuff', stats)}/>
+      <ellipse cx="70" cy="26" rx="2.5" ry="2.5" ${muscleAttrs('Rotator Cuff', stats)}/>
       <ellipse cx="25" cy="31" rx="7.5" ry="9.5" ${muscleAttrs('Rear Delts', stats)}/>
       <ellipse cx="75" cy="31" rx="7.5" ry="9.5" ${muscleAttrs('Rear Delts', stats)}/>
       <path d="M21 24 Q17 31 21 38" ${cut}/>
@@ -6983,6 +7048,8 @@
       <path d="M88 59 Q90 74 87 88 L81 87 Q83 74 81 60 Z" ${muscleAttrs('Forearms', stats)}/>
       <path d="M15 62 L15 85" ${cut}/>
       <path d="M85 62 L85 85" ${cut}/>
+      <ellipse cx="32" cy="100" rx="3.5" ry="6" ${muscleAttrs('Abductors', stats)}/>
+      <ellipse cx="68" cy="100" rx="3.5" ry="6" ${muscleAttrs('Abductors', stats)}/>
       <path d="M36 93 Q50 99 64 93 L64 111 Q50 117 36 111 Z" ${muscleAttrs('Glutes', stats)}/>
       <path d="M50 94 L50 114" ${cut}/>
       <path d="M38 95 Q50 101 62 95" ${cut}/>
@@ -7388,9 +7455,11 @@
       const def = getAllExercises().find(e => e.id === ex.exId) || { name: ex.name, icon: ex.icon, muscle: 'Custom' };
       const isCombo = !!ex.linkGroup;
 
+      const isUni = exerciseSupportsUnilateral(ex.exId, def.name);
       const div = document.createElement('div');
       div.className = 'ex-block'; div.id = blockId; div.dataset.exId = ex.exId;
       div.dataset.trackRest = trackRest ? 'true' : 'false';
+      div.dataset.uni = isUni ? 'true' : 'false';
       div.innerHTML = `
       <div class="ex-block-header">
         <div class="ex-thumb">${def.icon}</div>
@@ -7410,7 +7479,7 @@
       ${isCombo ? `<input class="ex-link-input" type="hidden" value="${ex.linkGroup}">` : ''}
       <div style="overflow-x:auto;">
       <table class="sets-table">
-        <thead><tr><th style="width:34px">Set</th><th>Weight</th><th>Reps</th><th>Variations</th><th style="width:44px">RIR</th><th style="width:44px">RPE</th><th style="width:56px">Tempo</th><th style="width:54px">Rest</th><th style="width:28px"></th></tr></thead>
+        <thead><tr><th style="width:34px">Set</th><th>Weight</th><th>Reps</th>${isUni ? '<th style="width:44px">Side</th>' : ''}<th>Variations</th><th style="width:44px">RIR</th><th style="width:44px">RPE</th><th style="width:56px">Tempo</th><th style="width:54px">Rest</th><th style="width:28px"></th></tr></thead>
         <tbody id="sets-${blockId}"></tbody>
       </table>
       </div>
@@ -7464,10 +7533,12 @@
         tr.className = 'set-row' + (isWarmup ? ' warmup' : '');
         tr.dataset.warmup = isWarmup;
         tr.dataset.variations = JSON.stringify(variations);
+        if (isUni) tr.dataset.side = set.side || 'both';
         tr.innerHTML = `
         <td><span class="set-badge ${badgeClass}" style="cursor:pointer" onclick="toggleSetType(this)" title="Click to toggle Warmup/Normal">${label}</span></td>
         <td>${weightCellHTML}</td>
         <td><input class="set-input r-input" type="number" min="0" value="${set.reps}"></td>
+        ${isUni ? `<td><button type="button" class="bw-chip" onclick="cycleSetSide(this)" title="Tap to cycle: Both / Left / Right">${sideChipLabel(set.side || 'both')}</button></td>` : ''}
         <td><button type="button" class="variations-btn" onclick="openVariationsPicker(this)">+ Tag</button></td>
         <td><input class="rir-input" type="number" min="0" max="10" value="${set.rir || ''}"></td>
         <td><input class="rpe-input" type="number" min="1" max="10" step="0.5" value="${set.rpe || ''}" placeholder="-"></td>
