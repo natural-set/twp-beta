@@ -681,7 +681,7 @@
       100% { transform: scale(1); }
     }
 
-    .warn-pill, .plateau-tag, .pr-badge, .badge-chip, .medal, .today-pill {
+    .warn-pill, .plateau-tag, .pr-badge, .badge-chip, .medal, .today-pill, .notif-badge-dot, .notif-unread-dot {
       animation: popIn 200ms ease-out;
     }
 
@@ -729,7 +729,8 @@
     }
 
     .modal-overlay.open .modal-sheet,
-    .modal-overlay.open .import-modal-sheet {
+    .modal-overlay.open .import-modal-sheet,
+    #coach-chat-panel {
       animation: sheetSlideUp 220ms ease;
     }
 
@@ -2149,17 +2150,12 @@
           <h1 data-i18n="header_home">Home</h1>
         </div>
         <div class="header-icons">
-          <button class="icon-btn" aria-label="Notifications">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round"
-                d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
-            </svg>
-          </button>
-          <button class="icon-btn" aria-label="Alerts">
+          <button class="icon-btn" aria-label="Alerts" onclick="openNotificationsModal()" style="position:relative;">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round"
                 d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
             </svg>
+            <span id="notif-badge-dot" class="notif-badge-dot" style="display:none;position:absolute;top:2px;right:2px;width:8px;height:8px;border-radius:50%;background:var(--accent);"></span>
           </button>
           <button class="icon-btn" title="Manage exercises" aria-label="Manage exercises" onclick="openExerciseManager()">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
@@ -2951,6 +2947,17 @@
             <button class="btn-secondary" style="flex:none;padding:8px 14px;" onclick="addMeasurementHistoryEntry()">Add</button>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- Notifications -->
+    <div class="modal-overlay" id="notifications-modal">
+      <div class="modal-sheet" style="max-height:75vh;">
+        <div class="modal-header">
+          <div style="font-size:16px;font-weight:800;flex:1;">🔔 Notifications</div>
+          <button class="modal-close-btn" onclick="document.getElementById('notifications-modal').classList.remove('open')" aria-label="Close">✕</button>
+        </div>
+        <div id="notifications-list" style="padding:8px 0 16px;"></div>
       </div>
     </div>
 
@@ -3821,6 +3828,7 @@
       language: 'en', // 'en' | 'pt'
       activeRestRow: null, // the one <tr> whose rest clock is currently ticking, across all exercises
       periodization: null, // { goalDate, athleteLevel, model, mesocycles: [...], generatedAt }
+      notifications: [], // { id, type, title, body, date, read, actionLabel, actionPrompt }
       agent: {
         memory: "New athlete profile initialized. Monitoring baseline volume, exercise preferences, and RPE accuracy.",
         unlockedConcepts: [],        // e.g. ['Progressive Overload', 'RIR Calibration']
@@ -3977,6 +3985,7 @@
         state.lastBwDelta = parsed.lastBwDelta || {};
         state.language = parsed.language || (navigator.language && navigator.language.toLowerCase().startsWith('pt') ? 'pt' : 'en');
         state.periodization = parsed.periodization || null;
+        state.notifications = parsed.notifications || [];
         // Defensive merge so existing users (saved state predates the AI Coach)
         // don't lose the field entirely, but also don't get a blank object if a
         // partial one was already persisted.
@@ -4006,7 +4015,91 @@
         language: state.language,
         periodization: state.periodization,
         agent: state.agent,
+        notifications: state.notifications,
       }));
+    }
+
+    // ── Notifications ──
+    function addNotification(n) {
+      if (!state.notifications) state.notifications = [];
+      state.notifications.unshift({
+        id: Date.now() + Math.random().toString(36).slice(2, 6),
+        type: n.type || 'info',
+        title: n.title || '',
+        body: n.body || '',
+        date: new Date().toISOString(),
+        read: false,
+        actionLabel: n.actionLabel || null,
+        actionPrompt: n.actionPrompt || null,
+      });
+      state.notifications = state.notifications.slice(0, 30);
+      saveState();
+      updateNotifBadge();
+    }
+
+    function updateNotifBadge() {
+      const unread = (state.notifications || []).filter(n => !n.read).length;
+      const dot = document.getElementById('notif-badge-dot');
+      if (dot) {
+        const wasHidden = dot.style.display !== 'block';
+        dot.style.display = unread > 0 ? 'block' : 'none';
+        if (unread > 0 && wasHidden) {
+          // Retrigger the popIn keyframe (class already present) same way fadeInEl does.
+          dot.style.animation = 'none';
+          void dot.offsetWidth;
+          dot.style.animation = '';
+        }
+      }
+      updateCoachNavBadge();
+    }
+
+    // Single source of truth for the Coach bottom-nav dot: on if there's an
+    // unseen proactive tip OR an unread coach-tip notification, off otherwise.
+    // Both callers (tip flow + notification flow) funnel through this so the
+    // dot can't get stuck on or clear prematurely.
+    function updateCoachNavBadge() {
+      const navBadge = document.getElementById('coach-nav-badge');
+      if (!navBadge) return;
+      const hasUnseenTip = !!(state.agent && state.agent.pendingTip && !state.agent.pendingTipSeen);
+      const hasUnreadCoachTip = (state.notifications || []).some(n => !n.read && n.type === 'coach-tip');
+      navBadge.style.display = (hasUnseenTip || hasUnreadCoachTip) ? 'block' : 'none';
+    }
+
+    function openNotificationsModal() {
+      renderNotificationsList();
+      document.getElementById('notifications-modal').classList.add('open');
+    }
+
+    function renderNotificationsList() {
+      const el = document.getElementById('notifications-list');
+      const list = state.notifications || [];
+      if (!list.length) { el.innerHTML = emptyState('🔔', "No notifications yet — your coach will check in here when there's something worth flagging."); return; }
+      el.innerHTML = list.map(n => `
+    <div class="settings-item notif-row" style="align-items:flex-start;cursor:pointer;${n.read ? 'opacity:.6;' : ''}" onclick="handleNotificationTap('${n.id}')">
+      <div style="flex:1;">
+        <div style="font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px;">${n.read ? '' : '<span class="notif-unread-dot" style="width:6px;height:6px;border-radius:50%;background:var(--accent);display:inline-block;"></span>'}${n.title}</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:3px;">${n.body}</div>
+        <div style="font-size:11px;color:var(--text-dim);margin-top:4px;">${new Date(n.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}${n.actionLabel ? ' · ' + n.actionLabel + ' →' : ''}</div>
+      </div>
+    </div>`).join('');
+      applyCardStagger(el);
+    }
+
+    function handleNotificationTap(id) {
+      const n = (state.notifications || []).find(x => x.id === id);
+      if (!n) return;
+      n.read = true;
+      saveState();
+      updateNotifBadge();
+      renderNotificationsList();
+      if (n.actionPrompt) {
+        document.getElementById('notifications-modal').classList.remove('open');
+        navigateToTab('coach');
+        setTimeout(() => {
+          const input = document.getElementById('coach-user-input');
+          if (input) { input.value = n.actionPrompt; AICoach.handleUserMessage(); }
+        }, 100);
+      }
     }
 
     const PROFILE_FIELDS = [
@@ -4014,6 +4107,7 @@
       { k: 'sport', l: 'Sport', group: 'personal' }, { k: 'activityLevel', l: 'Activity Level', group: 'personal' },
       { k: 'trainingStyle', l: 'Training Style', group: 'personal' }, { k: 'injuries', l: 'Injuries', group: 'personal' },
       { k: 'surgeries', l: 'Surgeries', group: 'personal' }, { k: 'prExercise', l: "PR's Exercise", group: 'personal' },
+      { k: 'trainingGoal', l: 'Training Goal', group: 'personal' }, { k: 'availableEquipment', l: 'Available Equipment', group: 'personal' },
       { k: 'notes', l: 'Notes', group: 'personal' },
       { k: 'weight', l: 'Current Weight', group: 'body' }, { k: 'goalWeight', l: 'Goal Weight', group: 'body' },
       { k: 'bodyFat', l: 'Body Fat %', group: 'body' },
@@ -6115,7 +6209,7 @@
     // no animation library. Re-triggers by removing+reflowing+re-adding a class.
     function applyCardStagger(container) {
       if (!container) return;
-      const items = container.querySelectorAll('.snapshot-card, .cta-card, .chart-container, .goal-card, .insight-card, .muscle-item, .day-card, .week-compare-card, .feed-card, .import-card, .detail-stat, .you-stat, .badge-chip, .wc-item');
+      const items = container.querySelectorAll('.snapshot-card, .cta-card, .chart-container, .goal-card, .insight-card, .muscle-item, .day-card, .week-compare-card, .feed-card, .import-card, .detail-stat, .you-stat, .badge-chip, .wc-item, .notif-row');
       items.forEach((el, i) => {
         el.classList.remove('stagger-in');
         el.style.animationDelay = Math.min(i, 8) * 35 + 'ms';
@@ -9149,7 +9243,42 @@ Soreness: 6-7</div>
     // ═══════════════════════════════════════════
     //  AI COACH  (adaptive strength-coach agent, claude-sonnet-4-6)
     // ═══════════════════════════════════════════
+    // Escapes user-entered text before inserting into chat bubbles.
+    function escapeHtml(s) {
+      return String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+
+    // Tiny Markdown -> HTML for coach replies: **bold**, "- " bullet lists, blank-line paragraphs.
+    // No external library; deliberately minimal (coach replies are short, structured text).
+    function mdToHtml(text) {
+      if (!text) return '';
+      const esc = escapeHtml(text);
+      const blocks = esc.split(/\n\s*\n/);
+      return blocks.map(block => {
+        const lines = block.split('\n').filter(l => l.trim());
+        if (!lines.length) return '';
+        if (lines.every(l => /^\s*-\s+/.test(l))) {
+          return '<ul style="margin:4px 0;padding-left:18px;">' + lines.map(l => `<li>${l.replace(/^\s*-\s+/, '').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')}</li>`).join('') + '</ul>';
+        }
+        return `<p style="margin:0 0 6px;">${block.replace(/\n/g, '<br>').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')}</p>`;
+      }).join('');
+    }
+
+    // View-only preference (not persisted) for the Coach screen's chat panel size.
+    let coachChatMaximized = false;
+
     const AICoach = {
+      toggleChatSize() {
+        if (!coachChatMaximized) {
+          coachChatMaximized = true;
+          this.renderCoachScreen();
+          history.pushState({ coachChatMax: true }, '');
+        } else {
+          // Let the back-button handler be the single place that flips the flag
+          // and re-renders, so hardware back and this button stay in sync.
+          history.back();
+        }
+      },
       /**
        * Synthesizes the last few sessions + plateau/muscle-balance signals TWP
        * already computes into a compact, high-signal payload — sending the raw
@@ -9164,11 +9293,16 @@ Soreness: 6-7</div>
           exercises: (w.exercises || []).map(e => {
             const workSets = (e.sets || []).filter(s => !s.warmup);
             const rpes = workSets.filter(s => s.rpe > 0).map(s => s.rpe);
+            const rirs = workSets.filter(s => s.rir > 0).map(s => s.rir);
             return {
               name: e.name,
+              primaryMuscles: e.primary || [],
+              secondaryMuscles: e.secondary || [],
+              isUnilateral: typeof exerciseSupportsUnilateral === 'function' ? exerciseSupportsUnilateral(e.exId, e.name) : false,
               sets: workSets.length,
               topWeight: workSets.length ? Math.max(...workSets.map(s => s.weight || 0)) : 0,
               avgRpe: rpes.length ? Math.round((rpes.reduce((a, b) => a + b, 0) / rpes.length) * 10) / 10 : null,
+              avgRir: rirs.length ? Math.round((rirs.reduce((a, b) => a + b, 0) / rirs.length) * 10) / 10 : null,
             };
           }),
         }));
@@ -9194,7 +9328,8 @@ Soreness: 6-7</div>
         return {
           profile: {
             weight: (state.profile && state.profile.weight) || 'Not set',
-            goal: (state.profile && state.profile.goal) || 'Hypertrophy & Strength',
+            trainingGoal: (state.profile && state.profile.trainingGoal) || 'Not set (assume general Hypertrophy & Strength)',
+            availableEquipment: (state.profile && state.profile.availableEquipment) || 'Not set (assume standard gym access)',
           },
           periodization: state.periodization ? {
             model: state.periodization.model,
@@ -9245,16 +9380,20 @@ Soreness: 6-7</div>
         if (!workoutId || state.agent.lastAnalyzedWorkoutId === workoutId) return;
 
         const context = this.compileContext();
-        const systemPrompt = `You are an elite, adaptive strength & conditioning AI Coach embedded inside the TWP (Training With Purpose) app.
+        const systemPrompt = `You are an elite, adaptive strength & conditioning AI Coach embedded inside the TWP (Training With Purpose) app. You talk like an experienced, warm coach and friend — never like a report generator. Avoid robotic phrasing like "Based on the data provided".
+
+DOMAIN KNOWLEDGE: reason concretely about joint actions/range of motion per exercise, common compensation patterns, and how volume/intensity/frequency/tempo/RIR-RPE targets differ across training goals (hypertrophy, strength, power, longevity/health-span, general fitness). Use the athlete's trainingGoal to calibrate advice. When suggesting an exercise, prioritize by: (1) muscles under their target range, (2) plateaued lifts, (3) what's actually in availableEquipment, (4) fit with trainingGoal.
+
 Study the athlete's recent training data, evolve your memory of their patterns, and decide whether they're ready for a new concept.
 
 Respond ONLY with a valid JSON object, no markdown fences, no extra text:
 {
   "updatedMemory": "string, cumulative, <100 words, evolves the previous memory rather than replacing its useful context",
   "newConceptUnlock": { "title": "string or null", "explanation": "string or null, 2-3 sentences, practical and specific to what's in TWP" },
-  "proactiveTip": "string, 1 sharp actionable sentence based on stalled exercises or muscle balance"
+  "proactiveTip": "string, 1-2 short sentences, lightweight markdown OK (**bold** key numbers/exercise names)",
+  "notificationOffer": { "title": "string or null", "body": "string or null, 1 sentence" }
 }
-Only unlock a concept if the data actually supports it (plateaus, volume swings, RPE/RIR patterns, muscle imbalance). Never repeat a concept already in alreadyUnlockedConcepts.`;
+Only unlock a concept if the data actually supports it (plateaus, volume swings, RPE/RIR patterns, muscle imbalance). Never repeat a concept already in alreadyUnlockedConcepts. Only fill notificationOffer if there's a genuinely meaningful pattern worth surfacing (real stagnation, a clear volume trend, or a neglected muscle group) — otherwise set it to null; this should not fire every workout.`;
 
         const raw = await this.fetchCoachResponse(systemPrompt, JSON.stringify(context));
         if (!raw) return;
@@ -9274,11 +9413,28 @@ Only unlock a concept if the data actually supports it (plateaus, volume swings,
             }
           }
 
+          // Rate-limited coach-authored notification: at most once every 3.5 days,
+          // so pattern call-outs feel meaningful rather than spammy.
+          if (result.notificationOffer && result.notificationOffer.title) {
+            const last = state.agent.lastNotificationAt ? new Date(state.agent.lastNotificationAt) : null;
+            const daysSince = last ? (Date.now() - last.getTime()) / 86400000 : Infinity;
+            if (daysSince >= 3.5) {
+              addNotification({
+                type: 'coach-tip',
+                title: result.notificationOffer.title,
+                body: result.notificationOffer.body || '',
+                actionLabel: 'Ask Coach',
+                actionPrompt: result.notificationOffer.body || result.notificationOffer.title,
+              });
+              state.agent.lastNotificationAt = new Date().toISOString();
+            }
+          }
+
           state.agent.lastAnalyzedWorkoutId = workoutId;
           state.agent.pendingTipSeen = false;
           saveState();
           if (document.getElementById('screen-coach').classList.contains('active')) this.renderCoachScreen();
-          else { const b = document.getElementById('coach-nav-badge'); if (b) b.style.display = 'block'; }
+          else updateCoachNavBadge();
         } catch (err) {
           console.error('AICoach: failed to parse response', err, raw);
         }
@@ -9295,30 +9451,61 @@ Only unlock a concept if the data actually supports it (plateaus, volume swings,
         const container = document.getElementById('coach-screen-content');
         if (!container) return;
         if (state.agent) state.agent.pendingTipSeen = true;
-        const badge = document.getElementById('coach-nav-badge');
-        if (badge) badge.style.display = 'none';
+        updateCoachNavBadge();
         const tip = state.agent.pendingTip || 'Log your next session so I can calibrate your recovery and volume curves.';
         const concepts = (state.agent.unlockedConcepts || []).map(c => typeof c === 'string' ? { title: c, explanation: '' } : c);
 
-        container.innerHTML = `
+        const MAX_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>`;
+        const MIN_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/></svg>`;
+
+        const chatHeader = `
+      <div style="display:flex;align-items:center;justify-content:space-between;${coachChatMaximized ? 'padding:16px 16px 8px;flex-shrink:0;' : 'padding:0 16px;margin-top:12px;'}">
+        <div class="section-title" style="padding:0;">Chat with Coach</div>
+        <button onclick="AICoach.toggleChatSize()" title="${coachChatMaximized ? 'Minimize' : 'Maximize'}" aria-label="${coachChatMaximized ? 'Minimize chat' : 'Maximize chat'}" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;cursor:pointer;padding:6px;display:flex;align-items:center;">${coachChatMaximized ? MIN_ICON : MAX_ICON}</button>
+      </div>`;
+        const chatInputRow = `
+      <div style="display:flex;gap:8px;${coachChatMaximized ? 'padding:10px 16px 16px;flex-shrink:0;' : 'margin:0 16px 20px;'}">
+        <input type="text" id="coach-user-input" class="modal-search" placeholder="Ask about plateaus, deloads, RPE…" style="flex:1;" onkeydown="if(event.key==='Enter')AICoach.handleUserMessage()">
+        <button class="btn-primary-flex" style="flex:none;padding:10px 18px;" onclick="AICoach.handleUserMessage()">Send</button>
+      </div>`;
+
+        if (coachChatMaximized) {
+          // Fullscreen chat panel: fixed over the whole app viewport, leaving only
+          // the bottom nav visible below it. Rest of the Coach screen (tip card,
+          // concepts) is untouched underneath and reappears on minimize.
+          container.innerHTML = `
       <div class="snapshot-card" style="border-left:3px solid var(--accent-blue);">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:8px;">
           <div style="display:flex;align-items:center;gap:6px;font-weight:700;font-size:13px;"><span>🤖</span><span>YOUR AI COACH</span></div>
           <span style="background:var(--surface2);color:var(--text-muted);font-size:11px;padding:3px 8px;border-radius:10px;">🎓 ${concepts.length} unlocked</span>
         </div>
-        <div style="font-size:14px;color:var(--text);line-height:1.5;font-style:italic;background:var(--surface2);padding:12px 14px;border-radius:8px;">"${tip}"</div>
+        <div style="font-size:14px;color:var(--text);line-height:1.5;font-style:italic;background:var(--surface2);padding:12px 14px;border-radius:8px;">${mdToHtml(tip)}</div>
         <div style="text-align:right;margin-top:8px;"><span style="cursor:pointer;color:var(--accent-blue);font-size:12px;" onclick="AICoach.viewMemory()">🧠 View memory</span></div>
       </div>
       ${concepts.length ? `<div class="badge-row" style="padding:0 16px 4px;flex-wrap:wrap;">${concepts.map((c, i) => `<span class="variations-btn has-tags" style="cursor:pointer;" onclick="AICoach.viewConcept(${i})">🎓 ${c.title}</span>`).join('')}</div>` : ''}
-      <div class="section-title" style="padding-top:12px;">Ask your coach</div>
-      <div id="coach-chat-history" style="margin:0 16px 12px;min-height:200px;max-height:44vh;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding:12px;background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);"></div>
-      <div style="display:flex;gap:8px;margin:0 16px 20px;">
-        <input type="text" id="coach-user-input" class="modal-search" placeholder="Ask about plateaus, deloads, RPE…" style="flex:1;" onkeydown="if(event.key==='Enter')AICoach.handleUserMessage()">
-        <button class="btn-primary-flex" style="flex:none;padding:10px 18px;" onclick="AICoach.handleUserMessage()">Send</button>
+      <div id="coach-chat-panel" style="position:fixed;top:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;height:calc(100vh - var(--nav-h));background:var(--bg);z-index:150;display:flex;flex-direction:column;">
+        ${chatHeader}
+        <div id="coach-chat-history" style="flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:10px;margin:8px 16px;padding:12px;background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);"></div>
+        ${chatInputRow}
       </div>`;
+        } else {
+          container.innerHTML = `
+      <div class="snapshot-card" style="border-left:3px solid var(--accent-blue);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:8px;">
+          <div style="display:flex;align-items:center;gap:6px;font-weight:700;font-size:13px;"><span>🤖</span><span>YOUR AI COACH</span></div>
+          <span style="background:var(--surface2);color:var(--text-muted);font-size:11px;padding:3px 8px;border-radius:10px;">🎓 ${concepts.length} unlocked</span>
+        </div>
+        <div style="font-size:14px;color:var(--text);line-height:1.5;font-style:italic;background:var(--surface2);padding:12px 14px;border-radius:8px;">${mdToHtml(tip)}</div>
+        <div style="text-align:right;margin-top:8px;"><span style="cursor:pointer;color:var(--accent-blue);font-size:12px;" onclick="AICoach.viewMemory()">🧠 View memory</span></div>
+      </div>
+      ${concepts.length ? `<div class="badge-row" style="padding:0 16px 4px;flex-wrap:wrap;">${concepts.map((c, i) => `<span class="variations-btn has-tags" style="cursor:pointer;" onclick="AICoach.viewConcept(${i})">🎓 ${c.title}</span>`).join('')}</div>` : ''}
+      ${chatHeader}
+      <div id="coach-chat-history" style="margin:8px 16px 12px;min-height:200px;max-height:44vh;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding:12px;background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);"></div>
+      ${chatInputRow}`;
+        }
 
         const historyEl = document.getElementById('coach-chat-history');
-        historyEl.innerHTML = `<div style="align-self:flex-start;background:var(--surface2);padding:8px 12px;border-radius:8px;max-width:85%;font-size:13px;">👋 I've looked over your recent sessions. What would you like to tweak about your training?</div>` +
+        historyEl.innerHTML = `<div class="row-fade-in" style="align-self:flex-start;background:var(--surface2);padding:8px 12px;border-radius:8px;max-width:85%;font-size:13px;">👋 I've looked over your recent sessions. What would you like to tweak about your training?</div>` +
           (state.agent.interactionHistory || []).map(m => this._bubble(m.role, m.text)).join('');
         historyEl.scrollTop = historyEl.scrollHeight;
         applyCardStagger(container);
@@ -9332,7 +9519,7 @@ Only unlock a concept if the data actually supports it (plateaus, volume swings,
 
       _bubble(role, text) {
         const isUser = role === 'user';
-        return `<div style="align-self:${isUser ? 'flex-end' : 'flex-start'};background:${isUser ? 'var(--accent-blue)' : 'var(--surface2)'};color:${isUser ? '#fff' : 'var(--text)'};padding:8px 12px;border-radius:8px;max-width:85%;font-size:13px;">${text}</div>`;
+        return `<div class="row-fade-in" style="align-self:${isUser ? 'flex-end' : 'flex-start'};background:${isUser ? 'var(--accent-blue)' : 'var(--surface2)'};color:${isUser ? '#fff' : 'var(--text)'};padding:8px 12px;border-radius:8px;max-width:85%;font-size:13px;line-height:1.5;">${isUser ? escapeHtml(text) : mdToHtml(text)}</div>`;
       },
 
       async handleUserMessage() {
@@ -9350,7 +9537,13 @@ Only unlock a concept if the data actually supports it (plateaus, volume swings,
         historyEl.insertAdjacentHTML('beforeend', `<div id="${loadingId}" style="align-self:flex-start;background:var(--surface2);padding:8px 12px;border-radius:8px;font-size:13px;font-style:italic;color:var(--text-muted);">Coach is thinking…</div>`);
         historyEl.scrollTop = historyEl.scrollHeight;
 
-        const systemPrompt = `You are the TWP AI Coach. Reply in under 4 sentences — concise, practical, motivating — grounded in the athlete's context and memory provided.`;
+        const systemPrompt = `You are the TWP AI Coach — warm, encouraging, talks like an experienced coach/friend, not a report generator. Never say things like "Based on the data provided".
+
+The athlete may write with typos, shorthand, or broken grammar — interpret their intended meaning silently and never mock or point out mistakes. If a question is genuinely ambiguous, ask ONE short natural clarifying question instead of guessing wrong.
+
+DOMAIN KNOWLEDGE: reason concretely about joint actions/ROM, compensation patterns, and how volume/intensity/frequency/tempo/RIR-RPE differ by goal (hypertrophy, strength, power, longevity, general fitness) — calibrate to the athlete's trainingGoal. When suggesting exercises, prioritize muscles under target range, then plateaued lifts, then what's in availableEquipment, then fit with trainingGoal.
+
+Reply in under ~120 words. Use lightweight markdown: short 2-3 sentence paragraphs, "- " bullets for multi-point advice, **bold** for key numbers/exercise names.`;
         const userPayload = `Context: ${JSON.stringify(this.compileContext())}\n\nAthlete's question: ${userText}`;
         const reply = await this.fetchCoachResponse(systemPrompt, userPayload)
           || "I'm having trouble connecting right now — let's just focus on your next set!";
@@ -9376,15 +9569,32 @@ Only unlock a concept if the data actually supports it (plateaus, volume swings,
     // ═══════════════════════════════════════════
     //  MOBILE UX: back button, keyboard, haptics, a11y, offline, install
     // ═══════════════════════════════════════════
-    // Android back button: close topmost open modal, else go to Home tab, instead of exiting the app.
+    // Android back button: minimize the fullscreen coach chat if it's open, else
+    // close topmost open modal, else go to Home tab, instead of exiting the app.
+    function minimizeCoachChatIfOpen() {
+      if (typeof coachChatMaximized !== 'undefined' && coachChatMaximized) {
+        coachChatMaximized = false;
+        if (typeof AICoach !== 'undefined') AICoach.renderCoachScreen();
+        return true;
+      }
+      return false;
+    }
     history.replaceState({ root: true }, '');
     window.addEventListener('popstate', () => {
+      if (minimizeCoachChatIfOpen()) return;
       const openModals = document.querySelectorAll('.modal-overlay.open');
       if (openModals.length) { openModals[openModals.length - 1].classList.remove('open'); return; }
       if (!document.getElementById('screen-home').classList.contains('active')) navigateToTab('home');
     });
     const _origNavigate = navigate;
-    navigate = function (screenName, btn) { _origNavigate(screenName, btn); history.pushState({ screen: screenName }, ''); };
+    navigate = function (screenName, btn) {
+      // Leaving Coach while the chat is fullscreen: reset silently (screen is
+      // about to be hidden anyway) so a later revisit doesn't pop back into
+      // fullscreen unexpectedly.
+      if (screenName !== 'coach' && typeof coachChatMaximized !== 'undefined' && coachChatMaximized) coachChatMaximized = false;
+      _origNavigate(screenName, btn);
+      history.pushState({ screen: screenName }, '');
+    };
 
     function trapFocus(modalEl) {
       const f = modalEl.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
@@ -9477,9 +9687,7 @@ Only unlock a concept if the data actually supports it (plateaus, volume swings,
     loadState();
     applyTranslations();
     refreshHome();
-    if (state.agent && state.agent.pendingTip && !state.agent.pendingTipSeen) {
-      const b = document.getElementById('coach-nav-badge'); if (b) b.style.display = 'block';
-    }
+    updateNotifBadge();
   </script>
 </body>
 
