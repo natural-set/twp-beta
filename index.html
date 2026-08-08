@@ -2483,8 +2483,6 @@
           <span>→</span>
         </button>
 
-        <div id="ai-coach-widget-container"></div>
-
         <div id="weekly-summary-card"></div>
 
         <div class="section-title" data-i18n="suggested_goal">Suggested Goal</div>
@@ -2589,6 +2587,49 @@
           <button class="ex-del-btn" style="margin:0 16px 16px;" onclick="resetPeriodizationPlan()">Reset Plan</button>
         </div>
       </div>
+    </div>
+
+    <!-- ══════════════════ COACH ══════════════════ -->
+    <div id="screen-coach" class="screen">
+      <div class="page-header">
+        <h1>Coach</h1>
+        <button class="icon-btn" title="Compare workouts" aria-label="Compare workouts" onclick="openComparePicker()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"/><line x1="13" x2="19" y1="19" y2="13"/><line x1="16" x2="20" y1="16" y2="20"/><line x1="19" x2="21" y1="21" y2="19"/><polyline points="14.5 6.5 18 3 21 3 21 6 17.5 9.5"/><line x1="5" x2="9" y1="14" y2="18"/><line x1="7" x2="4" y1="17" y2="20"/><line x1="3" x2="5" y1="19" y2="21"/></svg>
+        </button>
+      </div>
+      <div id="coach-screen-content"></div>
+    </div>
+
+    <!-- Compare Picker Modal -->
+    <div class="modal-overlay" id="compare-picker-modal">
+      <div class="modal-sheet" style="max-height:85vh;">
+        <div class="modal-header">
+          <div style="font-size:16px;font-weight:800;flex:1;">Compare Workouts</div>
+          <button class="modal-close-btn" onclick="closeComparePicker()" aria-label="Close">✕</button>
+        </div>
+        <div style="padding:14px 20px 0;display:flex;gap:8px;">
+          <button class="btn-secondary" id="cmp-slot-a-btn" style="flex:1;font-size:12px;padding:10px;" onclick="cmpPickSlot('a')">Pick Workout A</button>
+          <button class="btn-secondary" id="cmp-slot-b-btn" style="flex:1;font-size:12px;padding:10px;" onclick="cmpPickSlot('b')">Pick Workout B</button>
+        </div>
+        <input id="cmp-search" class="modal-search" placeholder="Search any workout by name or date…" oninput="renderComparePickerList()" style="width:calc(100% - 40px);margin:14px 20px 8px;box-sizing:border-box;">
+        <div id="cmp-picker-list" style="padding-bottom:70px;"></div>
+        <div style="position:sticky;bottom:0;padding:12px 20px;background:var(--surface);border-top:1px solid var(--border);box-shadow:0 -8px 16px -8px rgba(0,0,0,.5);">
+          <button class="btn-primary" id="cmp-go-btn" disabled onclick="goToCompare()">Compare →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════ COMPARE ══════════════════ -->
+    <div id="screen-compare" class="screen">
+      <div class="page-header" style="padding-bottom: 0;">
+        <button class="back-btn" onclick="navigateToTab(state.returnTo || 'progress')">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+          </svg>
+          <span>Back</span>
+        </button>
+      </div>
+      <div id="compare-content"></div>
     </div>
 
     <!-- ══════════════════ YOU ══════════════════ -->
@@ -2701,6 +2742,14 @@
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
         </svg>
         <span data-i18n="nav_workout">Workout</span>
+      </button>
+      <button class="nav-btn" onclick="navigate('coach',this)" style="position:relative;">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <rect x="5" y="9" width="14" height="10" rx="2"/><circle cx="9" cy="14" r="1.2" fill="currentColor" stroke="none"/><circle cx="15" cy="14" r="1.2" fill="currentColor" stroke="none"/>
+          <path stroke-linecap="round" d="M12 9V5m0 0a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3ZM3 13h2m14 0h2"/>
+        </svg>
+        <span id="coach-nav-badge" style="display:none;position:absolute;top:6px;right:22%;width:7px;height:7px;border-radius:50%;background:var(--accent);"></span>
+        <span data-i18n="nav_coach">Coach</span>
       </button>
       <button class="nav-btn" onclick="navigate('progress',this)">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -3218,7 +3267,7 @@
     // UI shell around them.
     const TRANSLATIONS = {
       en: {
-        nav_home: 'Home', nav_workout: 'Workout', nav_progress: 'Progress', nav_you: 'You',
+        nav_home: 'Home', nav_workout: 'Workout', nav_coach: 'Coach', nav_progress: 'Progress', nav_you: 'You',
         header_home: 'Home', header_workout: 'Workout', header_progress: 'Progress', header_you: 'You',
         cta_title: 'Ready to start lifting?',
         cta_desc: 'Start your workout and add your exercises. Your stats will be ready when you finish.',
@@ -3243,7 +3292,7 @@
         this_week: 'This Week', muscle_coverage: 'Your muscle coverage',
       },
       pt: {
-        nav_home: 'Início', nav_workout: 'Treino', nav_progress: 'Progresso', nav_you: 'Você',
+        nav_home: 'Início', nav_workout: 'Treino', nav_coach: 'Coach', nav_progress: 'Progresso', nav_you: 'Você',
         header_home: 'Início', header_workout: 'Treino', header_progress: 'Progresso', header_you: 'Você',
         cta_title: 'Pronto para treinar?',
         cta_desc: 'Inicie seu treino e adicione seus exercícios. Suas estatísticas ficarão prontas ao finalizar.',
@@ -3777,7 +3826,8 @@
         unlockedConcepts: [],        // e.g. ['Progressive Overload', 'RIR Calibration']
         interactionHistory: [],     // { role: 'user'|'assistant', text, timestamp }
         lastAnalyzedWorkoutId: null,// prevents duplicate analysis calls for the same session
-        pendingTip: null,           // latest proactive tip shown in the Overview widget
+        pendingTip: null,           // latest proactive tip shown in the Coach screen
+        pendingTipSeen: true,       // false = unread tip, shows nav dot
       },
     };
 
@@ -4272,21 +4322,22 @@
       document.getElementById('screen-' + screenName).classList.add('active');
       if (btn) btn.classList.add('active');
       if (screenName === 'home') refreshHome();
+      if (screenName === 'coach') refreshCoachScreen();
       if (screenName === 'progress') refreshProgress();
       if (screenName === 'you') refreshYou();
-      if (screenName !== 'detail' && screenName !== 'weekly-detail') state.prevScreen = screenName;
+      if (screenName !== 'detail' && screenName !== 'weekly-detail' && screenName !== 'compare') state.prevScreen = screenName;
       // Remember the last main tab (home/progress/you) the person was actually browsing,
       // so we know where "back"/"cancel" should land even after a detour through
       // Workout (create/edit) or Detail screens.
-      if (screenName === 'home' || screenName === 'progress' || screenName === 'you') {
+      if (screenName === 'home' || screenName === 'coach' || screenName === 'progress' || screenName === 'you') {
         state.returnTo = screenName;
       }
     }
 
-    // Navigate to one of the 4 main tabs by name, keeping the bottom nav in sync.
+    // Navigate to one of the 5 main tabs by name, keeping the bottom nav in sync.
     function navigateToTab(name) {
       const navBtns = document.querySelectorAll('.nav-btn');
-      const btnMap = { home: navBtns[0], workout: navBtns[1], progress: navBtns[2], you: navBtns[3] };
+      const btnMap = { home: navBtns[0], workout: navBtns[1], coach: navBtns[2], progress: navBtns[3], you: navBtns[4] };
       navigate(name, btnMap[name] || navBtns[0]);
     }
 
@@ -4294,7 +4345,7 @@
     // Detail after finishing a workout, so the nav reflects where "back" will go).
     function setActiveNav(name) {
       const navBtns = document.querySelectorAll('.nav-btn');
-      const btnMap = { home: navBtns[0], workout: navBtns[1], progress: navBtns[2], you: navBtns[3] };
+      const btnMap = { home: navBtns[0], workout: navBtns[1], coach: navBtns[2], progress: navBtns[3], you: navBtns[4] };
       navBtns.forEach(b => b.classList.remove('active'));
       if (btnMap[name]) btnMap[name].classList.add('active');
     }
@@ -4305,6 +4356,10 @@
     }
 
     function goToWorkout() { navigate('workout', document.querySelectorAll('.nav-btn')[1]); startWorkout(); }
+
+    function refreshCoachScreen() {
+      if (typeof AICoach !== 'undefined') AICoach.renderCoachScreen();
+    }
 
 
     // ═══════════════════════════════════════════
@@ -5763,7 +5818,10 @@
           ${w.note ? `<div class="workout-note">${w.note}</div>` : ''}
           <div class="date">${dateStr}</div>
         </div>
-        <button onclick="editWorkout(${w.id})" style="background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; transition: opacity .15s;" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">Edit</button>
+        <div style="display:flex;gap:8px;flex-shrink:0;">
+          <button onclick="openComparePicker(${w.id})" title="Compare with another workout" style="background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 6px 10px; border-radius: 20px; cursor: pointer; display:flex; align-items:center;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"/><line x1="13" x2="19" y1="19" y2="13"/><line x1="16" x2="20" y1="16" y2="20"/><line x1="19" x2="21" y1="21" y2="19"/><polyline points="14.5 6.5 18 3 21 3 21 6 17.5 9.5"/><line x1="5" x2="9" y1="14" y2="18"/><line x1="7" x2="4" y1="17" y2="20"/><line x1="3" x2="5" y1="19" y2="21"/></svg></button>
+          <button onclick="editWorkout(${w.id})" style="background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; transition: opacity .15s;" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">Edit</button>
+        </div>
       </div>
     </div>
     <div class="detail-stats">
@@ -5789,9 +5847,185 @@
       // Show detail screen without changing prevScreen
       document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
       document.getElementById('screen-detail').classList.add('active');
-      const labelMap = { home: 'Home', progress: 'Progress', you: 'You', workout: 'Workout', 'weekly-detail': 'Weekly Details' };
+      const labelMap = { home: 'Home', progress: 'Progress', you: 'You', workout: 'Workout', coach: 'Coach', 'weekly-detail': 'Weekly Details' };
       document.getElementById('back-btn-label').textContent = labelMap[state.prevScreen] || 'Back';
       applyCardStagger(document.getElementById('detail-content'));
+    }
+
+    // ═══════════════════════════════════════════
+    //  WORKOUT COMPARISON
+    // ═══════════════════════════════════════════
+    let cmpSlotA = null, cmpSlotB = null, cmpActiveSlot = 'a';
+
+    function openComparePicker(prefillId) {
+      cmpSlotA = prefillId ? state.workouts.find(w => w.id === prefillId) || null : null;
+      cmpSlotB = null;
+      cmpActiveSlot = cmpSlotA ? 'b' : 'a';
+      document.getElementById('cmp-search').value = '';
+      updateCmpSlotButtons();
+      renderComparePickerList();
+      document.getElementById('compare-picker-modal').classList.add('open');
+    }
+    function closeComparePicker() { document.getElementById('compare-picker-modal').classList.remove('open'); }
+
+    function cmpPickSlot(slot) { cmpActiveSlot = slot; updateCmpSlotButtons(); renderComparePickerList(); }
+
+    function updateCmpSlotButtons() {
+      const aBtn = document.getElementById('cmp-slot-a-btn'), bBtn = document.getElementById('cmp-slot-b-btn');
+      aBtn.textContent = cmpSlotA ? '✓ ' + cmpSlotA.name : 'Pick Workout A';
+      bBtn.textContent = cmpSlotB ? '✓ ' + cmpSlotB.name : 'Pick Workout B';
+      aBtn.style.borderColor = cmpActiveSlot === 'a' ? 'var(--accent-blue)' : 'var(--border)';
+      bBtn.style.borderColor = cmpActiveSlot === 'b' ? 'var(--accent-blue)' : 'var(--border)';
+      document.getElementById('cmp-go-btn').disabled = !(cmpSlotA && cmpSlotB && cmpSlotA.id !== cmpSlotB.id);
+    }
+
+    // Lets the person pick literally any logged workout as either slot — searchable
+    // by name or date, no restriction to recent/similar workouts.
+    function renderComparePickerList() {
+      const q = (document.getElementById('cmp-search').value || '').trim().toLowerCase();
+      const el = document.getElementById('cmp-picker-list');
+      if (!state.workouts.length) { el.innerHTML = emptyState('📋', 'No workouts logged yet.'); return; }
+      const filtered = state.workouts.filter(w => {
+        const dateStr = new Date(w.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        return w.name.toLowerCase().includes(q) || dateStr.toLowerCase().includes(q);
+      });
+      if (!filtered.length) { el.innerHTML = emptyState('🔍', `No workouts match "${q}".`); return; }
+      el.innerHTML = filtered.slice(0, 60).map(w => {
+        const dateStr = new Date(w.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        const isA = cmpSlotA && cmpSlotA.id === w.id, isB = cmpSlotB && cmpSlotB.id === w.id;
+        return `<div class="ex-list-item" onclick="cmpSelectWorkout(${w.id})" style="${isA || isB ? 'background:var(--surface2);' : ''}">
+      <div class="ex-list-icon">${isA ? 'A' : isB ? 'B' : '🏋️'}</div>
+      <div style="flex:1"><div class="ex-list-name">${w.name}</div><div class="ex-list-muscle">${dateStr} · ${Math.round(w.volume)}kg · ${w.duration}m</div></div>
+    </div>`;
+      }).join('');
+    }
+
+    function cmpSelectWorkout(id) {
+      const w = state.workouts.find(x => x.id === id);
+      if (!w) return;
+      if (cmpActiveSlot === 'a') { cmpSlotA = w; if (cmpSlotB && cmpSlotB.id === id) cmpSlotB = null; cmpActiveSlot = 'b'; }
+      else { cmpSlotB = w; if (cmpSlotA && cmpSlotA.id === id) cmpSlotA = null; }
+      updateCmpSlotButtons();
+      renderComparePickerList();
+    }
+
+    function goToCompare() {
+      if (!cmpSlotA || !cmpSlotB || cmpSlotA.id === cmpSlotB.id) return;
+      const a = cmpSlotA.id, b = cmpSlotB.id;
+      closeComparePicker();
+      navigate('compare', null);
+      renderCompareScreen(a, b);
+    }
+
+    function computeWorkoutIntensity(w) {
+      const workSets = w.exercises.reduce((s, e) => s + (e.sets || []).filter(x => !x.warmup).length, 0);
+      let intensity = Math.min(10, Math.round((workSets / 15) * 4 + (w.duration / 60) * 3 + (w.sorenessRange ? w.sorenessRange[1] / 10 * 3 : 0)));
+      intensity = Math.max(1, intensity);
+      if (w.manualIntensity != null) intensity = w.manualIntensity;
+      return intensity;
+    }
+
+    // Deterministic scoring (no API call): each metric awards a point to whichever
+    // workout scores higher; intensity + PRs count double since they track quality
+    // over raw quantity.
+    function compareWorkouts(a, b) {
+      const workSets = w => w.exercises.reduce((s, e) => s + (e.sets || []).filter(x => !x.warmup).length, 0);
+      const avgW = w => { const reps = w.exercises.reduce((s, e) => s + (e.sets || []).reduce((ss, x) => ss + x.reps, 0), 0); return reps ? Math.round(w.volume / reps) : 0; };
+      const metrics = [
+        { key: 'volume', label: 'Volume', unit: 'kg', a: Math.round(a.volume), b: Math.round(b.volume), weight: 1 },
+        { key: 'duration', label: 'Duration', unit: 'm', a: a.duration || 0, b: b.duration || 0, weight: 1 },
+        { key: 'sets', label: 'Working Sets', unit: '', a: workSets(a), b: workSets(b), weight: 1 },
+        { key: 'avgWeight', label: 'Avg Weight', unit: 'kg', a: avgW(a), b: avgW(b), weight: 1 },
+        { key: 'intensity', label: 'Intensity', unit: '/10', a: computeWorkoutIntensity(a), b: computeWorkoutIntensity(b), weight: 2 },
+        { key: 'records', label: 'Records', unit: '', a: a.records || 0, b: b.records || 0, weight: 2 },
+      ];
+      let scoreA = 0, scoreB = 0;
+      metrics.forEach(m => { if (m.a > m.b) scoreA += m.weight; else if (m.b > m.a) scoreB += m.weight; });
+      let verdict;
+      if (scoreA === scoreB) verdict = 'Too close to call — similar overall effort.';
+      else {
+        const winner = scoreA > scoreB ? 'A' : 'B', winW = scoreA > scoreB ? a : b, loseW = scoreA > scoreB ? b : a;
+        const wins = metrics.filter(m => (scoreA > scoreB ? m.a > m.b : m.b > m.a)).map(m => m.label);
+        verdict = `Workout ${winner} (${winW.name}) wins on ${wins.slice(0, 3).join(', ')}.`;
+      }
+      return { metrics, scoreA, scoreB, verdict };
+    }
+
+    function renderCompareScreen(idA, idB) {
+      const a = state.workouts.find(w => w.id === idA), b = state.workouts.find(w => w.id === idB);
+      const el = document.getElementById('compare-content');
+      if (!a || !b) { el.innerHTML = emptyState('⚠️', 'One of these workouts could not be found.'); return; }
+      const { metrics, verdict } = compareWorkouts(a, b);
+      const dLabel = w => new Date(w.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+      const statRows = metrics.map(m => {
+        const aWin = m.a > m.b, bWin = m.b > m.a;
+        return `<div class="detail-set-row" style="padding:10px 0;">
+      <span style="flex:1;text-align:left;font-weight:${aWin ? 800 : 500};color:${aWin ? 'var(--green)' : 'var(--text)'};">${m.a}${m.unit}${aWin ? ' ▲' : ''}</span>
+      <span style="flex:1;text-align:center;font-size:11px;color:var(--text-muted);">${m.label}</span>
+      <span style="flex:1;text-align:right;font-weight:${bWin ? 800 : 500};color:${bWin ? 'var(--green)' : 'var(--text)'};">${bWin ? '▲ ' : ''}${m.b}${m.unit}</span>
+    </div>`;
+      }).join('');
+
+      const actA = computeMuscleActivation([a]), actB = computeMuscleActivation([b]);
+      const involvedMuscles = MUSCLE_GROUPS.filter(m => actA[m.name] || actB[m.name]);
+      const muscleRows = involvedMuscles.length ? involvedMuscles.map(m => {
+        const kgA = actA[m.name] ? actA[m.name].kg : 0, kgB = actB[m.name] ? actB[m.name].kg : 0;
+        const maxKg = Math.max(kgA, kgB, 1);
+        return `<div class="muscle-item">
+      <div class="muscle-item-icon">${m.icon}</div>
+      <div style="flex:1">
+        <div class="muscle-item-name">${m.name}</div>
+        <div class="muscle-bar" style="width:${Math.max(2, kgA / maxKg * 100)}%;background:#ef4444;"></div>
+        <div class="muscle-bar" style="width:${Math.max(2, kgB / maxKg * 100)}%;background:#3b82f6;margin-top:3px;"></div>
+      </div>
+      <div style="text-align:right;font-size:11px;color:var(--text-muted);">A ${Math.round(kgA)}kg<br>B ${Math.round(kgB)}kg</div>
+    </div>`;
+      }).join('') : emptyState('💪', 'No overlapping muscle data.');
+
+      // Exercise-level diff: exercises present in both (top-set compare) vs only in one.
+      const nameKey = ex => ex.exId || ex.name;
+      const exMapA = {}; a.exercises.forEach(ex => exMapA[nameKey(ex)] = ex);
+      const exMapB = {}; b.exercises.forEach(ex => exMapB[nameKey(ex)] = ex);
+      const topSet = ex => (ex.sets || []).filter(s => !s.warmup).reduce((best, s) => (!best || s.weight > best.weight || (s.weight === best.weight && s.reps > best.reps)) ? s : best, null);
+      const shared = [], onlyA = [], onlyB = [];
+      Object.keys(exMapA).forEach(k => { if (exMapB[k]) shared.push(k); else onlyA.push(exMapA[k].name); });
+      Object.keys(exMapB).forEach(k => { if (!exMapA[k]) onlyB.push(exMapB[k].name); });
+      const sharedHTML = shared.map(k => {
+        const tA = topSet(exMapA[k]), tB = topSet(exMapB[k]);
+        const fmt = t => t ? `${t.weight}kg × ${t.reps}` : '—';
+        const arrow = (tA && tB) ? (tB.weight > tA.weight || (tB.weight === tA.weight && tB.reps > tA.reps) ? ' ▲' : (tB.weight < tA.weight || tB.reps < tA.reps ? ' ▼' : '')) : '';
+        return `<div class="detail-set-row"><span style="flex:1;">${exMapA[k].name}</span><span style="color:var(--text-muted);font-size:12px;">${fmt(tA)} → ${fmt(tB)}${arrow}</span></div>`;
+      }).join('');
+
+      el.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:center;gap:12px;padding:4px 20px 16px;">
+      <div style="flex:1;text-align:center;"><div style="font-size:11px;color:var(--text-dim);">A</div><div style="font-weight:800;font-size:14px;">${a.name}</div><div style="font-size:11px;color:var(--text-muted);">${dLabel(a)}</div></div>
+      <div style="font-weight:800;color:var(--text-dim);">VS</div>
+      <div style="flex:1;text-align:center;"><div style="font-size:11px;color:var(--text-dim);">B</div><div style="font-weight:800;font-size:14px;">${b.name}</div><div style="font-size:11px;color:var(--text-muted);">${dLabel(b)}</div></div>
+    </div>
+    <div class="snapshot-card" style="border-left:3px solid var(--accent-blue);">
+      <div style="font-size:13px;line-height:1.5;">${verdict}</div>
+    </div>
+    <div class="section-title">Head-to-Head</div>
+    <div class="chart-container">${statRows}</div>
+    ${shared.length ? `<div class="section-title">Shared Exercises</div><div class="chart-container">${sharedHTML}</div>` : ''}
+    <div class="section-title">Muscle Coverage</div>
+    <div class="muscle-list">${muscleRows}</div>
+    <div style="padding:4px 16px 16px;">
+      <div style="text-align:center;font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:6px;">Workout A — ${a.name}</div>
+      <div style="display:flex;justify-content:center;">${buildBodySVGs('small', actA)}</div>
+      <div style="text-align:center;font-size:12px;font-weight:700;color:var(--text-muted);margin:14px 0 6px;">Workout B — ${b.name}</div>
+      <div style="display:flex;justify-content:center;">${buildBodySVGs('small', actB)}</div>
+    </div>
+    ${(onlyA.length || onlyB.length) ? `<div class="section-title">Exclusive Exercises</div>
+    <div class="chart-container">
+      ${onlyA.length ? `<div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;"><strong style="color:var(--text);">Only in A:</strong> ${onlyA.join(', ')}</div>` : ''}
+      ${onlyB.length ? `<div style="font-size:12px;color:var(--text-muted);"><strong style="color:var(--text);">Only in B:</strong> ${onlyB.join(', ')}</div>` : ''}
+    </div>` : ''}
+    <div style="margin:0 16px 24px;font-size:11px;color:var(--text-dim);line-height:1.5;">Intensity is derived from working-set count, duration, and logged soreness — not a lab measurement. Volume is total weight × reps across working sets. Use these as relative trends between sessions, not absolute truths.</div>
+  `;
+      applyCardStagger(el);
     }
 
     // ═══════════════════════════════════════════
@@ -5807,7 +6041,6 @@
       });
       if (tab === 'muscles') renderMuscleSplit();
       if (tab === 'plan') renderPeriodizationTab();
-      if (tab === 'overview' && typeof AICoach !== 'undefined') AICoach.renderWidget();
       const activeEl = document.getElementById('ptab-' + tab);
       void activeEl.offsetWidth;
       activeEl.classList.add('ptab-fade-in');
@@ -6425,7 +6658,6 @@
       renderYearFilters();
       renderChart();
       renderGoal();
-      if (typeof AICoach !== 'undefined') AICoach.renderWidget();
       renderWeeklySummary();
       renderProgressMuscleMap();
       renderExerciseHistory();
@@ -9043,8 +9275,10 @@ Only unlock a concept if the data actually supports it (plateaus, volume swings,
           }
 
           state.agent.lastAnalyzedWorkoutId = workoutId;
+          state.agent.pendingTipSeen = false;
           saveState();
-          if (document.getElementById('screen-progress').classList.contains('active')) this.renderWidget();
+          if (document.getElementById('screen-coach').classList.contains('active')) this.renderCoachScreen();
+          else { const b = document.getElementById('coach-nav-badge'); if (b) b.style.display = 'block'; }
         } catch (err) {
           console.error('AICoach: failed to parse response', err, raw);
         }
@@ -9056,41 +9290,44 @@ Only unlock a concept if the data actually supports it (plateaus, volume swings,
         document.getElementById('coach-unlock-modal').classList.add('open');
       },
 
-      /** Compact card shown at the top of Progress → Overview. */
-      renderWidget() {
-        const container = document.getElementById('ai-coach-widget-container');
+      /** Full Coach tab screen: tip card + unlocked concepts + inline chat. */
+      renderCoachScreen() {
+        const container = document.getElementById('coach-screen-content');
         if (!container) return;
+        if (state.agent) state.agent.pendingTipSeen = true;
+        const badge = document.getElementById('coach-nav-badge');
+        if (badge) badge.style.display = 'none';
         const tip = state.agent.pendingTip || 'Log your next session so I can calibrate your recovery and volume curves.';
-        const unlockCount = state.agent.unlockedConcepts.length;
-        const latest = unlockCount ? state.agent.unlockedConcepts[unlockCount - 1] : 'None yet';
+        const concepts = (state.agent.unlockedConcepts || []).map(c => typeof c === 'string' ? { title: c, explanation: '' } : c);
 
         container.innerHTML = `
-      <div class="insight-card" style="border-left:3px solid var(--accent-blue);">
+      <div class="snapshot-card" style="border-left:3px solid var(--accent-blue);">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:8px;">
-          <div style="display:flex;align-items:center;gap:6px;font-weight:700;font-size:13px;">
-            <span>🤖</span><span>AI COACH</span>
-          </div>
-          <div style="display:flex;gap:6px;align-items:center;">
-            <span style="background:var(--surface2);color:var(--text-muted);font-size:11px;padding:3px 8px;border-radius:10px;">🎓 ${unlockCount}</span>
-            <button class="variations-btn has-tags" onclick="AICoach.openInteractiveConsole()">Consult Coach →</button>
-          </div>
+          <div style="display:flex;align-items:center;gap:6px;font-weight:700;font-size:13px;"><span>🤖</span><span>YOUR AI COACH</span></div>
+          <span style="background:var(--surface2);color:var(--text-muted);font-size:11px;padding:3px 8px;border-radius:10px;">🎓 ${concepts.length} unlocked</span>
         </div>
-        <div style="font-size:13px;color:var(--text);line-height:1.5;font-style:italic;background:var(--surface2);padding:10px 12px;border-radius:8px;margin-bottom:8px;">"${tip}"</div>
-        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);">
-          <span>Latest focus: <strong style="color:var(--text);">${latest}</strong></span>
-          <span style="cursor:pointer;color:var(--accent-blue);" onclick="AICoach.viewMemory()">View memory</span>
-        </div>
+        <div style="font-size:14px;color:var(--text);line-height:1.5;font-style:italic;background:var(--surface2);padding:12px 14px;border-radius:8px;">"${tip}"</div>
+        <div style="text-align:right;margin-top:8px;"><span style="cursor:pointer;color:var(--accent-blue);font-size:12px;" onclick="AICoach.viewMemory()">🧠 View memory</span></div>
+      </div>
+      ${concepts.length ? `<div class="badge-row" style="padding:0 16px 4px;flex-wrap:wrap;">${concepts.map((c, i) => `<span class="variations-btn has-tags" style="cursor:pointer;" onclick="AICoach.viewConcept(${i})">🎓 ${c.title}</span>`).join('')}</div>` : ''}
+      <div class="section-title" style="padding-top:12px;">Ask your coach</div>
+      <div id="coach-chat-history" style="margin:0 16px 12px;min-height:200px;max-height:44vh;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding:12px;background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);"></div>
+      <div style="display:flex;gap:8px;margin:0 16px 20px;">
+        <input type="text" id="coach-user-input" class="modal-search" placeholder="Ask about plateaus, deloads, RPE…" style="flex:1;" onkeydown="if(event.key==='Enter')AICoach.handleUserMessage()">
+        <button class="btn-primary-flex" style="flex:none;padding:10px 18px;" onclick="AICoach.handleUserMessage()">Send</button>
       </div>`;
-        applyCardStagger(document.getElementById('ptab-overview'));
-      },
 
-      openInteractiveConsole() {
         const historyEl = document.getElementById('coach-chat-history');
         historyEl.innerHTML = `<div style="align-self:flex-start;background:var(--surface2);padding:8px 12px;border-radius:8px;max-width:85%;font-size:13px;">👋 I've looked over your recent sessions. What would you like to tweak about your training?</div>` +
           (state.agent.interactionHistory || []).map(m => this._bubble(m.role, m.text)).join('');
         historyEl.scrollTop = historyEl.scrollHeight;
-        document.getElementById('coach-console-modal').classList.add('open');
-        setTimeout(() => document.getElementById('coach-user-input')?.focus(), 100);
+        applyCardStagger(container);
+      },
+
+      viewConcept(i) {
+        const c = (state.agent.unlockedConcepts || []).map(x => typeof x === 'string' ? { title: x, explanation: '' } : x)[i];
+        if (!c) return;
+        showConfirmModal(c.explanation || c.title, () => {}, { title: '🎓 ' + c.title, confirmLabel: 'Close', danger: false });
       },
 
       _bubble(role, text) {
@@ -9240,6 +9477,9 @@ Only unlock a concept if the data actually supports it (plateaus, volume swings,
     loadState();
     applyTranslations();
     refreshHome();
+    if (state.agent && state.agent.pendingTip && !state.agent.pendingTipSeen) {
+      const b = document.getElementById('coach-nav-badge'); if (b) b.style.display = 'block';
+    }
   </script>
 </body>
 
