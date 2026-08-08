@@ -2896,6 +2896,11 @@
             <canvas id="mh-modal-chart" height="140"></canvas>
           </div>
           <div id="mh-modal-list"></div>
+          <div style="display:flex;gap:8px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
+            <input id="mh-add-date" type="date" style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:8px;font-family:inherit;font-size:13px;outline:none;">
+            <input id="mh-add-value" type="text" placeholder="Value" style="width:80px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:8px;font-family:inherit;font-size:13px;outline:none;">
+            <button class="btn-secondary" style="flex:none;padding:8px 14px;" onclick="addMeasurementHistoryEntry()">Add</button>
+          </div>
         </div>
       </div>
     </div>
@@ -3914,6 +3919,11 @@
         state.favoriteExercises = parsed.favoriteExercises || [];
         state.recentExerciseIds = parsed.recentExerciseIds || [];
         state.measurementHistory = parsed.measurementHistory || {};
+        MEASUREMENT_KEYS.forEach(k => {
+          if (state.profile && state.profile[k] && !(state.measurementHistory[k] && state.measurementHistory[k].length)) {
+            state.measurementHistory[k] = [{ date: new Date().toISOString(), value: state.profile[k] }];
+          }
+        });
         state.lastBwDelta = parsed.lastBwDelta || {};
         state.language = parsed.language || (navigator.language && navigator.language.toLowerCase().startsWith('pt') ? 'pt' : 'en');
         state.periodization = parsed.periodization || null;
@@ -3974,6 +3984,7 @@
     // the "current" value), so trends over time aren't lost the way a single overwritten
     // value would lose them — mirroring what the plain-text training log used to capture.
     const MEASUREMENT_KEYS = new Set(['weight', 'bodyFat', 'chest', 'waist', 'shoulders', 'lArm', 'rArm', 'lForearm', 'rForearm', 'lThigh', 'rThigh', 'lCalf', 'rCalf']);
+    const NUMERIC_PROFILE_KEYS = new Set(['height', 'weight', 'goalWeight', 'bodyFat', 'chest', 'waist', 'shoulders', 'lArm', 'rArm', 'lForearm', 'rForearm', 'lThigh', 'rThigh', 'lCalf', 'rCalf']);
 
     let profileFieldEditKey = null;
     let profileFieldEditMode = 'profile'; // 'profile' | 'name' | 'goal'
@@ -3983,7 +3994,7 @@
       profileFieldEditKey = key;
       document.getElementById('pf-modal-title').textContent = label;
       document.getElementById('pf-modal-input').value = (state.profile && state.profile[key]) || '';
-      document.getElementById('pf-modal-input').type = 'text';
+      document.getElementById('pf-modal-input').type = NUMERIC_PROFILE_KEYS.has(key) ? 'number' : 'text';
       document.getElementById('pf-modal-history-btn').style.display = MEASUREMENT_KEYS.has(key) ? 'block' : 'none';
       document.getElementById('profile-field-modal').classList.add('open');
       setTimeout(() => document.getElementById('pf-modal-input').focus(), 50);
@@ -4016,8 +4027,12 @@
       const key = profileFieldEditKey;
       if (!key) return;
       if (!state.profile) state.profile = {};
+      if (NUMERIC_PROFILE_KEYS.has(key) && raw !== '' && isNaN(parseFloat(raw))) { showToast('Enter a number'); return; }
       state.profile[key] = raw;
-      if (MEASUREMENT_KEYS.has(key) && raw !== '') logMeasurementSnapshot(key, raw);
+      if (MEASUREMENT_KEYS.has(key) && raw !== '') {
+        const r = logMeasurementSnapshot(key, raw);
+        showToast(r === 'updated' ? "Updated today's entry" : 'Logged new entry');
+      }
       saveState();
       renderProfile();
       closeProfileFieldModal();
@@ -4032,8 +4047,9 @@
       const todayStr = new Date().toDateString();
       const hist = state.measurementHistory[key];
       const todayEntry = hist.find(e => new Date(e.date).toDateString() === todayStr);
-      if (todayEntry) todayEntry.value = value;
-      else hist.push({ date: new Date().toISOString(), value });
+      if (todayEntry) { todayEntry.value = value; return 'updated'; }
+      hist.push({ date: new Date().toISOString(), value });
+      return 'new';
     }
 
     let measurementChartInstance = null;
@@ -4061,9 +4077,13 @@
             if (diff !== 0) delta = `<span style="font-size:11px;color:${diff > 0 ? 'var(--green)' : 'var(--red)'};margin-left:8px;">${diff > 0 ? '▲' : '▼'} ${Math.abs(diff)}</span>`;
           }
           const d = new Date(entry.date);
+          const origIdx = (state.measurementHistory[key] || []).indexOf(entry);
           return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;">
         <span style="color:var(--text-muted);">${d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-        <span>${entry.value}${delta}</span>
+        <span style="display:flex;align-items:center;gap:8px;">
+          <span onclick="editMeasurementEntry('${key}',${origIdx})" style="cursor:pointer;">${entry.value}${delta}</span>
+          <span onclick="deleteMeasurementEntry('${key}',${origIdx})" style="color:var(--red);cursor:pointer;font-size:14px;">✕</span>
+        </span>
       </div>`;
         }).join('');
 
@@ -4113,6 +4133,37 @@
       if (measurementChartInstance) { measurementChartInstance.destroy(); measurementChartInstance = null; }
     }
 
+    function addMeasurementHistoryEntry() {
+      const key = profileFieldEditKey;
+      if (!key) return;
+      const dateRaw = document.getElementById('mh-add-date').value;
+      const value = document.getElementById('mh-add-value').value.trim();
+      if (!dateRaw || !value) { showToast('Enter a date and value'); return; }
+      if (!state.measurementHistory[key]) state.measurementHistory[key] = [];
+      state.measurementHistory[key].push({ date: new Date(dateRaw).toISOString(), value });
+      saveState();
+      document.getElementById('mh-add-value').value = '';
+      openMeasurementHistory();
+      showToast('Entry logged');
+    }
+
+    function deleteMeasurementEntry(key, idx) {
+      if (!state.measurementHistory[key] || !state.measurementHistory[key][idx]) return;
+      state.measurementHistory[key].splice(idx, 1);
+      saveState();
+      openMeasurementHistory();
+    }
+
+    function editMeasurementEntry(key, idx) {
+      const entry = state.measurementHistory[key] && state.measurementHistory[key][idx];
+      if (!entry) return;
+      const val = prompt('Edit value', entry.value);
+      if (val === null || val.trim() === '') return;
+      entry.value = val.trim();
+      saveState();
+      openMeasurementHistory();
+    }
+
 
     function toggleProfileGroup(key) {
       profileGroupOpenState[key] = !profileGroupOpenState[key];
@@ -4125,6 +4176,7 @@
     // the History modal just to see whether it's moving.
     function profileFieldSparkline(key) {
       const hist = (state.measurementHistory && state.measurementHistory[key]) || [];
+      if (hist.length === 1) return '<span style="font-size:10px;color:var(--text-dim);">log 1 more for trend</span>';
       if (hist.length < 2) return '';
       const chrono = hist.slice().sort((a, b) => new Date(a.date) - new Date(b.date)).slice(-8);
       const vals = chrono.map(e => parseFloat(e.value)).filter(v => !isNaN(v));
@@ -4135,7 +4187,20 @@
     function renderProfile() {
       const el = document.getElementById('you-profile-list');
       if (!el) return;
-      el.innerHTML = PROFILE_GROUPS.map(g => {
+
+      const w = state.profile && parseFloat(state.profile.weight);
+      const gw = state.profile && parseFloat(state.profile.goalWeight);
+      let weightHTML = '';
+      if (!isNaN(w) && !isNaN(gw) && gw !== w) {
+        const diff = Math.round((gw - w) * 10) / 10;
+        const pct = Math.min(100, Math.max(0, Math.round((1 - Math.abs(diff) / Math.max(Math.abs(gw - w) + Math.abs(diff), 1)) * 100)));
+        weightHTML = `<div style="margin-bottom:12px;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);">
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted);margin-bottom:6px;"><span>${w}kg → ${gw}kg</span><span>${Math.abs(diff)}kg to go</span></div>
+      <div style="height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;"><div style="height:100%;width:${pct}%;background:var(--accent-blue);"></div></div>
+    </div>`;
+      }
+
+      el.innerHTML = weightHTML + PROFILE_GROUPS.map(g => {
         const fields = PROFILE_FIELDS.filter(f => f.group === g.key);
         const open = profileGroupOpenState[g.key];
         const rows = fields.map(f => {
@@ -6087,7 +6152,8 @@
     // ── Body measurements chart (metric === 'body') — reuses state.measurementHistory
     function getAvailableMeasurementFields() {
       const mh = state.measurementHistory || {};
-      return Array.from(MEASUREMENT_KEYS).filter(k => mh[k] && mh[k].length)
+      const p = state.profile || {};
+      return Array.from(MEASUREMENT_KEYS).filter(k => (mh[k] && mh[k].length) || p[k])
         .map(k => ({ key: k, label: (PROFILE_FIELDS.find(f => f.k === k) || {}).l || k }));
     }
     function populateBodyMetricSelect() {
@@ -6107,7 +6173,8 @@
       const legendRow = document.getElementById('chart-legend-row');
       if (legendRow) legendRow.style.display = 'none';
 
-      const hist = (key && state.measurementHistory && state.measurementHistory[key]) || [];
+      let hist = (key && state.measurementHistory && state.measurementHistory[key]) || [];
+      if (!hist.length && key && state.profile && state.profile[key]) hist = [{ date: new Date().toISOString(), value: state.profile[key] }];
       const cutoff = getFilterCutoff(), end = getFilterEnd();
       const allFiltered = hist.filter(e => { const d = new Date(e.date); return d >= cutoff && d < end; })
         .slice().sort((a, b) => new Date(a.date) - new Date(b.date));
@@ -8672,6 +8739,12 @@ Soreness: 6-7</div>
       recomputeImportedPRs(pendingImportWorkouts);
       state.workouts = [...pendingImportWorkouts, ...state.workouts];
       state.workouts.sort((a, b) => new Date(b.date) - new Date(a.date));
+      const bwWorkouts = pendingImportWorkouts.filter(w => w.bodyWeight).sort((a, b) => new Date(a.date) - new Date(b.date));
+      bwWorkouts.forEach(w => {
+        if (!state.measurementHistory.weight) state.measurementHistory.weight = [];
+        state.measurementHistory.weight.push({ date: w.date, value: String(w.bodyWeight) });
+      });
+      if (bwWorkouts.length) { state.profile = state.profile || {}; state.profile.weight = String(bwWorkouts[bwWorkouts.length - 1].bodyWeight); }
       saveState();
       const count = pendingImportWorkouts.length;
       pendingImportWorkouts = null;
