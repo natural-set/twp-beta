@@ -2056,6 +2056,22 @@
       }
     }
 
+    /* ── YOU PAGE: FLOATING WORKOUT HISTORY SEARCH ── */
+    #you-history-search-bar {
+      position: sticky;
+      top: 54px;
+      z-index: 9;
+      background: var(--bg);
+      padding: 8px 16px 10px;
+      margin-top: -4px;
+      border-bottom: 1px solid transparent;
+      transition: box-shadow .2s, border-color .2s;
+    }
+    #you-history-search-bar.scrolled {
+      box-shadow: 0 8px 16px -8px rgba(0, 0, 0, .5);
+      border-bottom-color: var(--border);
+    }
+
     /* ── SMALL SCREEN RESPONSIVENESS ── */
     .progress-tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; }
     .time-filters { overflow-x: auto; -webkit-overflow-scrolling: touch; }
@@ -2065,6 +2081,7 @@
       .page-header h1 { font-size: 19px; }
       .header-icons { gap: 7px; }
       .header-icons .icon-btn svg, .icon-btn svg { width: 20px; height: 20px; }
+      #you-history-search-bar { top: 44px; }
 
       .snapshot-card, .cta-card, .import-card, .feed-card, .goal-card, .chart-container,
       .insight-card, .day-card, .week-compare-card, .add-ex-btn, .ex-block, .combo-block { margin-left: 12px; margin-right: 12px; }
@@ -2721,6 +2738,15 @@
         style="font-size: 11px; color: var(--text-dim); letter-spacing: .08em; text-transform: uppercase; margin: 8px 20px;"
         data-i18n="section_workout_history">
         Workout History</div>
+      <div id="you-history-search-bar">
+        <div style="position: relative;">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="position:absolute;left:11px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:var(--text-dim);pointer-events:none;">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+          </svg>
+          <input id="you-history-search" class="modal-search" placeholder="Search workouts" oninput="handleYouHistorySearch()" style="width:100%;padding-left:32px;padding-right:30px;box-sizing:border-box;">
+          <button id="you-history-search-clear" onclick="clearYouHistorySearch()" aria-label="Clear search" style="display:none;position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-dim);font-size:15px;cursor:pointer;padding:4px 6px;">✕</button>
+        </div>
+      </div>
       <div id="you-history-list" style="margin: 0 0 16px;"></div>
 
       <div style="margin: 24px 16px 16px;padding-top:16px;border-top:1px solid var(--border);">
@@ -4703,13 +4729,48 @@
     let youHistoryShown = YOU_HISTORY_PAGE_SIZE;
     let youHistoryObserver = null;
 
+    // Matches a workout against the Workout History search box: name, note,
+    // date (several formats so "aug" or "2026" or "monday" all work), and any
+    // exercise name inside it.
+    function getFilteredHistoryWorkouts() {
+      const q = (document.getElementById('you-history-search')?.value || '').trim().toLowerCase();
+      if (!q) return state.workouts;
+      return state.workouts.filter(w => {
+        if ((w.name || '').toLowerCase().includes(q)) return true;
+        if ((w.note || '').toLowerCase().includes(q)) return true;
+        const dateStr = new Date(w.date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }).toLowerCase();
+        if (dateStr.includes(q)) return true;
+        return (w.exercises || []).some(e => (e.name || '').toLowerCase().includes(q));
+      });
+    }
+
+    // Re-filters from the top (page size reset) on every keystroke, and toggles
+    // the little "✕" clear button inside the search field.
+    function handleYouHistorySearch() {
+      const clearBtn = document.getElementById('you-history-search-clear');
+      const hasQuery = !!(document.getElementById('you-history-search')?.value || '').trim();
+      if (clearBtn) clearBtn.style.display = hasQuery ? 'block' : 'none';
+      youHistoryShown = YOU_HISTORY_PAGE_SIZE;
+      renderYouHistory();
+    }
+
+    function clearYouHistorySearch() {
+      const input = document.getElementById('you-history-search');
+      if (input) input.value = '';
+      handleYouHistorySearch();
+      if (input) input.focus();
+    }
+
     function renderYouHistory() {
       const el = document.getElementById('you-history-list');
       if (!el) return;
       if (youHistoryObserver) { youHistoryObserver.disconnect(); youHistoryObserver = null; }
       if (!state.workouts.length) { el.innerHTML = emptyState('📋', 'No workouts yet — your training history will appear here.'); return; }
-      const slice = state.workouts.slice(0, youHistoryShown);
-      const remaining = state.workouts.length - slice.length;
+      const filtered = getFilteredHistoryWorkouts();
+      const q = (document.getElementById('you-history-search')?.value || '').trim();
+      if (!filtered.length) { el.innerHTML = emptyState('🔍', `No workouts match "${q}".`); return; }
+      const slice = filtered.slice(0, youHistoryShown);
+      const remaining = filtered.length - slice.length;
       el.innerHTML = slice.map(w => renderFeedCard(w)).join('') +
         (remaining > 0
           ? `<div id="you-history-sentinel" style="display:flex;justify-content:center;padding:20px;"><div class="spinner" style="width:22px;height:22px;border-width:2px;"></div></div>`
@@ -8808,6 +8869,14 @@
     // is sticky relative to it), so we listen there rather than on window.
     document.getElementById('screen-workout')?.addEventListener('scroll', (e) => {
       const bar = document.querySelector('.workout-top-bar');
+      if (bar) bar.classList.toggle('scrolled', e.target.scrollTop > 4);
+    });
+
+    // Same idea for the You page: once the sticky Workout History search bar has
+    // scrolled up and "docked" under the page header, give it a shadow/border so
+    // it visibly floats above the workout cards scrolling underneath it.
+    document.getElementById('screen-you')?.addEventListener('scroll', (e) => {
+      const bar = document.getElementById('you-history-search-bar');
       if (bar) bar.classList.toggle('scrolled', e.target.scrollTop > 4);
     });
 
