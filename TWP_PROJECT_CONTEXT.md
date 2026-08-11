@@ -190,3 +190,18 @@ Extends the Progress-only motion system to the whole app. Still CSS-only, no lib
 
 ## Anthropic API note
 If asked to build "Claude in Claude" features inside this app, use model string `claude-sonnet-4-6`, no API key needed, standard `/v1/messages` shape. This is what `AICoach.fetchCoachResponse()` uses (see AI Coach section above).
+## SHIPPED: Coach metrics pass (all 8 items from coach-feedback request)
+- `getEffectiveGoalKey()`/`getMuscleTarget(m)` — muscle set-target ranges now scale by `profile.trainingGoal` keyword match (cut/bulk/strength/maintain) or, if blank, by weight-vs-goalWeight direction. Replaces old flat `m.target` everywhere it was read (`updateInsightsWarnPill`, `renderMuscleWarnings`, `computeCoachFlags`).
+- `computeWeightRatePerWeek()`/`weightRateTargetBand()`/`getWeightGoalDirection()` — kg/week pace from `measurementHistory.weight`, compared to a bulk/cut/maintain target band. Card in You → Profile & Measurements, above the goal-progress bar.
+- `computeLeanGainIndicator()` — waist/shoulders ratio now vs ~28 days ago; card next to weight-pace card. Needs 2+ logged entries for both fields.
+- `state.nutritionHistory.{calories,protein}` — new top-level state key (day-dedup like `measurementHistory`), local-only (not in `buildSyncPayload`/cloud sync yet). UI: `you-nutrition-card` (sparkline + today's values + quick-log inputs), between Profile&Measurements and Workout History.
+- `muscleSessionsThisWeek(name)` — distinct-workout frequency per muscle, appended inline to each row in `renderMuscleWarnings` (`Nx this wk`).
+- `computeImbalanceFlags()` — aggregates all-time L/R volume per unilateral exercise (`set.side`), flags 15%+ split (min 50kg volume logged to avoid noise). Feeds into Coach Flags; not its own screen yet.
+- `computeCoachFlags()`/`renderCoachFlags()` — single ranked list (muscle targets, PPL imbalance, plateaus, ±30% weekly volume swings, weight pace, L/R imbalance), rendered in `#coach-flags-card` at the top of Progress → Overview, above the old warn banner (which still exists separately, unconsolidated — see Known gaps).
+- `state.injuryLog[]` — `{id, date, bodyPart, severity 1-10, note}`, local-only. UI: `you-injury-card` (add form + last-10 list w/ delete), between Nutrition and Workout History.
+
+## Known gaps (new)
+- Coach Flags banner and the pre-existing `overview-warn-banner`/`insights-warn-pill` are now redundant (same underlying signals, two surfaces) — worth merging into just Coach Flags in a future pass.
+- `nutritionHistory` and `injuryLog` are local-only — not in `buildSyncPayload`, so they won't cross devices yet (same gap as `state.agent`).
+- L/R imbalance only surfaces via Coach Flags text; no dedicated visual (e.g. a per-exercise L vs R bar) yet.
+- Goal-target multipliers (`GOAL_TARGET_MULTIPLIERS`) are flat +/-15%, not calibrated per muscle or age — simple v1.

@@ -2474,6 +2474,8 @@
 
         <div id="filter-stats"></div>
 
+        <div id="coach-flags-card" style="display:none;"></div>
+
         <button id="overview-warn-banner" onclick="jumpToInsights()" style="display:none;width:calc(100% - 32px);margin:0 16px 16px;padding:10px 14px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:var(--radius-sm);color:var(--gold);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;text-align:left;align-items:center;justify-content:space-between;">
           <span id="overview-warn-banner-text"></span>
           <span>→</span>
@@ -2704,6 +2706,16 @@
         data-i18n="section_profile_measurements">
         Profile & Measurements</div>
       <div class="settings-section" style="padding-top:0;" id="you-profile-list"></div>
+
+      <div
+        style="font-size: 11px; color: var(--text-dim); letter-spacing: .08em; text-transform: uppercase; margin: 8px 20px;">
+        Nutrition</div>
+      <div id="you-nutrition-card" style="margin:0 16px 16px;"></div>
+
+      <div
+        style="font-size: 11px; color: var(--text-dim); letter-spacing: .08em; text-transform: uppercase; margin: 8px 20px;">
+        Injury / Pain Log</div>
+      <div id="you-injury-card" style="margin:0 16px 16px;"></div>
 
       <div
         style="font-size: 11px; color: var(--text-dim); letter-spacing: .08em; text-transform: uppercase; margin: 8px 20px;"
@@ -3467,6 +3479,191 @@
       { name: 'Abductors', icon: '🍑', color: 'secondary', target: [6, 12] },
     ];
 
+    // ── Goal-calibrated muscle set targets (#6) ──
+    // trainingGoal is free text, so match it against common keywords; if it doesn't
+    // say anything specific, fall back to inferring bulk/cut/maintain from the
+    // profile's current-vs-goal weight (same heuristic used by the weight-rate band).
+    const GOAL_TARGET_MULTIPLIERS = { bulk: 1.15, cut: 0.85, strength: 0.9, maintain: 1 };
+    function getEffectiveGoalKey() {
+      const txt = ((state.profile && state.profile.trainingGoal) || '').toLowerCase();
+      if (/cut|lean|lose|fat.?loss|shred/.test(txt)) return 'cut';
+      if (/bulk|gain|mass|hypertrophy/.test(txt)) return 'bulk';
+      if (/strength|powerlift/.test(txt)) return 'strength';
+      if (/maintain/.test(txt)) return 'maintain';
+      return getWeightGoalDirection();
+    }
+    function getMuscleTarget(m) {
+      const mult = GOAL_TARGET_MULTIPLIERS[getEffectiveGoalKey()] || 1;
+      const [lo, hi] = m.target || [10, 20];
+      return [Math.max(1, Math.round(lo * mult)), Math.round(hi * mult)];
+    }
+
+    // ── Weight-gain/loss pace (#1) ──
+    // bulk/cut inferred from profile.weight vs profile.goalWeight (±0.5kg deadband
+    // counts as maintain), independent of trainingGoal text so it works even if
+    // that field is blank.
+    function getWeightGoalDirection() {
+      const w = state.profile && parseFloat(state.profile.weight);
+      const gw = state.profile && parseFloat(state.profile.goalWeight);
+      if (isNaN(w) || isNaN(gw)) return 'maintain';
+      if (gw > w + 0.5) return 'bulk';
+      if (gw < w - 0.5) return 'cut';
+      return 'maintain';
+    }
+    function weightRateTargetBand(direction) {
+      if (direction === 'bulk') return [0.2, 0.4];
+      if (direction === 'cut') return [-0.7, -0.3];
+      return [-0.1, 0.1];
+    }
+    // Linear rate (kg/week) between the earliest and latest weigh-in within the
+    // trailing window (defaults 4 weeks); falls back to the last two entries ever
+    // logged if there aren't 2+ inside the window yet.
+    function computeWeightRatePerWeek(weeksBack) {
+      weeksBack = weeksBack || 4;
+      const hist = (state.measurementHistory && state.measurementHistory.weight) || [];
+      if (hist.length < 2) return null;
+      const sorted = hist.slice().sort((a, b) => new Date(a.date) - new Date(b.date));
+      const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - weeksBack * 7);
+      const inWindow = sorted.filter(e => new Date(e.date) >= cutoff);
+      const pts = inWindow.length >= 2 ? inWindow : sorted.slice(-2);
+      const first = pts[0], last = pts[pts.length - 1];
+      const days = (new Date(last.date) - new Date(first.date)) / 86400000;
+      if (days <= 0) return null;
+      const deltaKg = parseFloat(last.value) - parseFloat(first.value);
+      if (isNaN(deltaKg)) return null;
+      return { ratePerWeek: Math.round((deltaKg / days * 7) * 100) / 100, days: Math.round(days) };
+    }
+
+    // ── Composite lean-gain indicator (#2) ──
+    // waist/shoulders ratio now vs ~28 days ago: falling ratio = shoulders (muscle)
+    // outpacing waist (fat) — a decent proxy for "gaining lean" without a DEXA scan.
+    function computeLeanGainIndicator() {
+      const mh = state.measurementHistory || {};
+      const wa = mh.waist || [], sh = mh.shoulders || [];
+      if (wa.length < 2 || sh.length < 2) return null;
+      const sortAsc = arr => arr.slice().sort((a, b) => new Date(a.date) - new Date(b.date));
+      const waS = sortAsc(wa), shS = sortAsc(sh);
+      const latestW = parseFloat(waS[waS.length - 1].value), latestSh = parseFloat(shS[shS.length - 1].value);
+      if (isNaN(latestW) || isNaN(latestSh) || !latestSh) return null;
+      const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 28);
+      const pastW = parseFloat((waS.filter(e => new Date(e.date) <= cutoff).pop() || waS[0]).value);
+      const pastSh = parseFloat((shS.filter(e => new Date(e.date) <= cutoff).pop() || shS[0]).value);
+      if (isNaN(pastW) || isNaN(pastSh) || !pastSh) return null;
+      const ratioNow = latestW / latestSh, ratioPast = pastW / pastSh;
+      if (!ratioPast) return null;
+      return { ratioNow: Math.round(ratioNow * 1000) / 1000, deltaPct: Math.round(((ratioNow - ratioPast) / ratioPast) * 1000) / 10 };
+    }
+
+    // ── Per-muscle training frequency (#4) ──
+    // Distinct workouts THIS week that hit a muscle (primary or secondary) — total
+    // weekly sets can look fine while frequency is actually 1, which under-serves
+    // hypertrophy versus spreading the same sets across 2+ sessions.
+    function muscleSessionsThisWeek(muscleName) {
+      const now = new Date(); const weekStart = new Date(now); weekStart.setDate(now.getDate() - now.getDay()); weekStart.setHours(0, 0, 0, 0);
+      let count = 0;
+      state.workouts.filter(w => new Date(w.date) >= weekStart).forEach(w => {
+        const hit = w.exercises.some(ex => {
+          if (!(ex.sets || []).some(s => !s.warmup)) return false;
+          const { primary, secondary } = getExerciseMuscles(ex);
+          return primary.includes(muscleName) || secondary.includes(muscleName);
+        });
+        if (hit) count++;
+      });
+      return count;
+    }
+
+    // ── Left/Right imbalance (#5) ──
+    // Aggregates volume per side across ALL logged sets on unilateral-capable
+    // exercises; flags a lift when one side trails the other by 15%+ (and there's
+    // enough total volume logged to trust the number).
+    function computeImbalanceFlags() {
+      const stats = {};
+      state.workouts.forEach(w => w.exercises.forEach(ex => {
+        if (!exerciseSupportsUnilateral(ex.exId, ex.name)) return;
+        (ex.sets || []).filter(s => !s.warmup && s.side && s.side !== 'both').forEach(s => {
+          if (!stats[ex.exId]) stats[ex.exId] = { name: ex.name, left: 0, right: 0 };
+          stats[ex.exId][s.side === 'left' ? 'left' : 'right'] += (s.weight || 0) * (s.reps || 0);
+        });
+      }));
+      const flags = [];
+      Object.values(stats).forEach(st => {
+        const total = st.left + st.right;
+        if (total < 50) return; // not enough logged volume to trust the split
+        const diffPct = Math.round(Math.abs(st.left - st.right) / total * 100);
+        if (diffPct >= 15) {
+          const weaker = st.left < st.right ? 'Left' : 'Right';
+          flags.push({ sev: 2, icon: '🦵', text: `${st.name}: ${weaker} side ${diffPct}% behind — imbalance risk` });
+        }
+      });
+      return flags;
+    }
+
+    // ── Coach Flags feed (#7) ──
+    // Pulls together every warning signal already computed elsewhere (muscle
+    // targets, PPL balance, plateaus, training-load swings, weight pace, L/R
+    // imbalance) into one ranked list instead of three separate places.
+    function computeCoachFlags() {
+      const flags = [];
+      const now = new Date(); const weekStart = new Date(now); weekStart.setDate(now.getDate() - now.getDay()); weekStart.setHours(0, 0, 0, 0);
+      const weekWorkouts = state.workouts.filter(w => new Date(w.date) >= weekStart);
+      const sets = weeklyMuscleSets(weekWorkouts);
+      MUSCLE_GROUPS.forEach(m => {
+        const n = sets[m.name] || 0; const [lo, hi] = getMuscleTarget(m);
+        if (n > 0 && n < lo) flags.push({ sev: 2, icon: '📉', text: `${m.name} under target: ${Math.round(n * 10) / 10}/${lo}-${hi} sets this week` });
+        else if (n > hi) flags.push({ sev: 1, icon: '📈', text: `${m.name} over target: ${Math.round(n * 10) / 10}/${lo}-${hi} sets this week` });
+      });
+      const allSets = weeklyMuscleSets(state.workouts);
+      const totals = { push: 0, pull: 0, legs: 0 };
+      Object.entries(allSets).forEach(([m, v]) => { const cat = MUSCLE_CATEGORY[m]; if (cat) totals[cat] += v; });
+      const sum = totals.push + totals.pull + totals.legs;
+      if (sum) {
+        const pct = k => Math.round(totals[k] / sum * 100);
+        if (pct('legs') < 25) flags.push({ sev: 2, icon: '🦵', text: 'Legs volume low relative to upper body' });
+        if (pct('pull') < pct('push') - 15) flags.push({ sev: 2, icon: '⚖️', text: 'Pull volume trails push — watch shoulder balance' });
+      }
+      const exIds = new Set(); state.workouts.slice(0, 12).forEach(w => w.exercises.forEach(e => exIds.add(e.exId)));
+      exIds.forEach(id => {
+        if (isExercisePlateaued(id)) {
+          const match = state.workouts.find(w => w.exercises.some(e => e.exId === id));
+          const ex = match && match.exercises.find(e => e.exId === id);
+          flags.push({ sev: 3, icon: '⚠️', text: `${ex ? ex.name : id} plateaued — change load/reps/tempo` });
+        }
+      });
+      const weekVols = [];
+      for (let i = 1; i >= 0; i--) {
+        const ws = new Date(now); ws.setDate(ws.getDate() - ws.getDay() - i * 7 - 7); ws.setHours(0, 0, 0, 0);
+        const we = new Date(ws); we.setDate(we.getDate() + 7);
+        weekVols.push(state.workouts.filter(w => { const d = new Date(w.date); return d >= ws && d < we; }).reduce((s, w) => s + w.volume, 0));
+      }
+      if (weekVols[0] > 0) {
+        const pct = Math.round((weekVols[1] - weekVols[0]) / weekVols[0] * 100);
+        if (pct <= -30) flags.push({ sev: 1, icon: '📉', text: `Volume dropped ${Math.abs(pct)}% last week` });
+        else if (pct >= 30) flags.push({ sev: 2, icon: '⚠️', text: `Volume jumped ${pct}% last week — injury risk` });
+      }
+      const rate = computeWeightRatePerWeek(4);
+      if (rate) {
+        const dir = getWeightGoalDirection(); const band = weightRateTargetBand(dir);
+        if (rate.ratePerWeek < band[0]) flags.push({ sev: 2, icon: '⚖️', text: `Weight pace below target: ${rate.ratePerWeek}kg/wk (target ${band[0]}-${band[1]})` });
+        else if (rate.ratePerWeek > band[1]) flags.push({ sev: 1, icon: '⚖️', text: `Weight pace above target: ${rate.ratePerWeek}kg/wk (target ${band[0]}-${band[1]})` });
+      }
+      flags.push(...computeImbalanceFlags());
+      return flags.sort((a, b) => b.sev - a.sev).slice(0, 8);
+    }
+
+    function renderCoachFlags() {
+      const el = document.getElementById('coach-flags-card');
+      if (!el) return;
+      const flags = computeCoachFlags();
+      if (!flags.length) { el.style.display = 'none'; return; }
+      el.style.display = 'block';
+      const sevColor = s => s >= 3 ? 'var(--red)' : s === 2 ? 'var(--gold)' : 'var(--accent-blue)';
+      el.innerHTML = `<div class="insight-card" style="margin:0 16px 16px;">
+      <h3>🚩 Coach Flags <span style="color:var(--text-dim);font-weight:500;">(${flags.length})</span></h3>
+      ${flags.map(f => `<div class="warn-row"><span>${f.icon} ${f.text}</span><span style="width:6px;height:6px;border-radius:50%;background:${sevColor(f.sev)};flex-shrink:0;"></span></div>`).join('')}
+    </div>`;
+    }
+
+
     // Built-ins + user-added exercises, minus anything hidden. Every picker in
     // the app (workout logging, exercise swap) should read from this instead
     // of EXERCISES_DB directly, so custom exercises show up everywhere and
@@ -3829,6 +4026,8 @@
       activeRestRow: null, // the one <tr> whose rest clock is currently ticking, across all exercises
       periodization: null, // { goalDate, athleteLevel, model, mesocycles: [...], generatedAt }
       notifications: [], // { id, type, title, body, date, read, actionLabel, actionPrompt }
+      injuryLog: [], // { id, date, bodyPart, severity(1-10), note }
+      nutritionHistory: { calories: [], protein: [] }, // dated snapshots, same shape as measurementHistory
       agent: {
         memory: "New athlete profile initialized. Monitoring baseline volume, exercise preferences, and RPE accuracy.",
         unlockedConcepts: [],        // e.g. ['Progressive Overload', 'RIR Calibration']
@@ -3986,6 +4185,8 @@
         state.language = parsed.language || (navigator.language && navigator.language.toLowerCase().startsWith('pt') ? 'pt' : 'en');
         state.periodization = parsed.periodization || null;
         state.notifications = parsed.notifications || [];
+        state.injuryLog = parsed.injuryLog || [];
+        state.nutritionHistory = parsed.nutritionHistory || { calories: [], protein: [] };
         // Defensive merge so existing users (saved state predates the AI Coach)
         // don't lose the field entirely, but also don't get a blank object if a
         // partial one was already persisted.
@@ -4016,6 +4217,8 @@
         periodization: state.periodization,
         agent: state.agent,
         notifications: state.notifications,
+        injuryLog: state.injuryLog,
+        nutritionHistory: state.nutritionHistory,
       }));
     }
 
@@ -4344,6 +4547,32 @@
     </div>`;
       }
 
+      // #1 Weight-pace card — rate vs a goal-direction target band, so "is this
+      // working" doesn't require doing the math by hand every week.
+      const rate = computeWeightRatePerWeek(4);
+      if (rate) {
+        const dir = getWeightGoalDirection(); const [lo, hi] = weightRateTargetBand(dir);
+        let label = 'On track', color = 'var(--green)';
+        if (rate.ratePerWeek < lo) { label = dir === 'cut' ? 'Slower than target' : 'Below target pace'; color = 'var(--accent-blue)'; }
+        else if (rate.ratePerWeek > hi) { label = dir === 'cut' ? 'Faster than target' : 'Above target pace'; color = 'var(--gold)'; }
+        weightHTML += `<div style="margin-bottom:12px;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);">
+      <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;"><span style="color:var(--text-muted);">Pace (last ${rate.days}d): <strong style="color:var(--text)">${rate.ratePerWeek > 0 ? '+' : ''}${rate.ratePerWeek}kg/wk</strong></span><span style="color:${color};font-weight:700;">${label}</span></div>
+      <div style="font-size:10px;color:var(--text-dim);margin-top:3px;">Target for ${dir}: ${lo > 0 ? '+' : ''}${lo} to ${hi > 0 ? '+' : ''}${hi}kg/wk</div>
+    </div>`;
+      }
+
+      // #2 Composite lean-gain indicator — waist/shoulders ratio trend.
+      const lean = computeLeanGainIndicator();
+      if (lean) {
+        const leaner = lean.deltaPct < -0.5, fattier = lean.deltaPct > 0.5;
+        const label = leaner ? 'Trending leaner' : fattier ? 'Waist outpacing shoulders — check diet' : 'Stable';
+        const color = leaner ? 'var(--green)' : fattier ? 'var(--gold)' : 'var(--text-muted)';
+        weightHTML += `<div style="margin-bottom:12px;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);">
+      <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;"><span style="color:var(--text-muted);">Lean-gain (waist/shoulders): <strong style="color:var(--text)">${lean.ratioNow}</strong></span><span style="color:${color};font-weight:700;">${label}</span></div>
+      <div style="font-size:10px;color:var(--text-dim);margin-top:3px;">${lean.deltaPct > 0 ? '+' : ''}${lean.deltaPct}% vs ~4 weeks ago</div>
+    </div>`;
+      }
+
       el.innerHTML = weightHTML + PROFILE_GROUPS.map(g => {
         const fields = PROFILE_FIELDS.filter(f => f.group === g.key);
         const open = profileGroupOpenState[g.key];
@@ -4370,6 +4599,99 @@
       }).join('');
     }
 
+    // ── #3 Nutrition (manual calories/protein log + trend) ──
+    function logNutritionEntry(field, value) {
+      if (!state.nutritionHistory) state.nutritionHistory = { calories: [], protein: [] };
+      if (!state.nutritionHistory[field]) state.nutritionHistory[field] = [];
+      const todayStr = new Date().toDateString();
+      const hist = state.nutritionHistory[field];
+      const todayEntry = hist.find(e => new Date(e.date).toDateString() === todayStr);
+      if (todayEntry) todayEntry.value = value; else hist.push({ date: new Date().toISOString(), value });
+      saveState();
+    }
+    function saveNutritionToday() {
+      const cal = document.getElementById('nut-cal-input').value.trim();
+      const pro = document.getElementById('nut-pro-input').value.trim();
+      if (!cal && !pro) { showToast('Enter calories or protein'); return; }
+      if (cal) logNutritionEntry('calories', cal);
+      if (pro) logNutritionEntry('protein', pro);
+      renderNutritionCard();
+      showToast('Logged today\'s nutrition 🍽️');
+    }
+    function deleteNutritionEntry(field, idx) {
+      if (!state.nutritionHistory[field] || !state.nutritionHistory[field][idx]) return;
+      state.nutritionHistory[field].splice(idx, 1);
+      saveState();
+      renderNutritionCard();
+    }
+    function renderNutritionCard() {
+      const el = document.getElementById('you-nutrition-card');
+      if (!el) return;
+      const nh = state.nutritionHistory || { calories: [], protein: [] };
+      const calHist = (nh.calories || []).slice().sort((a, b) => new Date(b.date) - new Date(a.date));
+      const proHist = (nh.protein || []).slice().sort((a, b) => new Date(b.date) - new Date(a.date));
+      const sparkFor = (hist) => {
+        const chrono = hist.slice().reverse().slice(-8);
+        const vals = chrono.map(e => parseFloat(e.value)).filter(v => !isNaN(v));
+        return vals.length >= 2 ? sparklineSVG(vals, '#f97316') : '';
+      };
+      const latest = (hist, unit) => hist.length ? `${hist[0].value}${unit}` : '<span style="color:var(--text-dim)">Not logged</span>';
+      el.innerHTML = `<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;"><span style="font-size:12px;color:var(--text-muted);">Today's Calories</span>${sparkFor(calHist)}</div>
+      <div style="font-size:15px;font-weight:700;margin-bottom:10px;">${latest(calHist, 'kcal')}</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;"><span style="font-size:12px;color:var(--text-muted);">Today's Protein</span>${sparkFor(proHist)}</div>
+      <div style="font-size:15px;font-weight:700;margin-bottom:12px;">${latest(proHist, 'g')}</div>
+      <div style="display:flex;gap:8px;">
+        <input id="nut-cal-input" type="number" placeholder="kcal" style="flex:1;min-width:0;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:9px;font-family:inherit;font-size:13px;outline:none;">
+        <input id="nut-pro-input" type="number" placeholder="protein g" style="flex:1;min-width:0;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:9px;font-family:inherit;font-size:13px;outline:none;">
+        <button class="btn-secondary" style="flex:none;padding:9px 14px;" onclick="saveNutritionToday()">Log</button>
+      </div>
+    </div>`;
+    }
+
+    // ── Structured injury/pain log ──
+    function addInjuryEntry() {
+      const bodyPart = document.getElementById('inj-part-input').value.trim();
+      const severityRaw = document.getElementById('inj-severity-input').value;
+      const note = document.getElementById('inj-note-input').value.trim();
+      const severity = parseInt(severityRaw);
+      if (!bodyPart) { showToast('Enter a body part'); return; }
+      if (isNaN(severity) || severity < 1 || severity > 10) { showToast('Severity 1-10'); return; }
+      if (!state.injuryLog) state.injuryLog = [];
+      state.injuryLog.unshift({ id: Date.now() + Math.random().toString(36).slice(2, 6), date: new Date().toISOString(), bodyPart, severity, note });
+      saveState();
+      document.getElementById('inj-part-input').value = '';
+      document.getElementById('inj-severity-input').value = '';
+      document.getElementById('inj-note-input').value = '';
+      renderInjuryCard();
+      showToast('Logged 🩹');
+    }
+    function deleteInjuryEntry(id) {
+      state.injuryLog = (state.injuryLog || []).filter(e => e.id !== id);
+      saveState();
+      renderInjuryCard();
+    }
+    function renderInjuryCard() {
+      const el = document.getElementById('you-injury-card');
+      if (!el) return;
+      const log = (state.injuryLog || []).slice().sort((a, b) => new Date(b.date) - new Date(a.date));
+      const sevColor = s => s >= 7 ? 'var(--red)' : s >= 4 ? 'var(--gold)' : 'var(--text-muted)';
+      const rows = log.slice(0, 10).map(e => `<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;">
+      <div><strong style="color:${sevColor(e.severity)};">${e.severity}/10</strong> ${e.bodyPart}${e.note ? ' — ' + e.note : ''}<div style="color:var(--text-dim);font-size:10px;margin-top:2px;">${new Date(e.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div></div>
+      <span onclick="deleteInjuryEntry('${e.id}')" style="color:var(--red);cursor:pointer;flex-shrink:0;">✕</span>
+    </div>`).join('');
+      el.innerHTML = `<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;">
+      ${rows || `<div style="font-size:12px;color:var(--text-muted);padding-bottom:10px;">No entries — nothing logged is good news.</div>`}
+      <div style="display:flex;gap:6px;margin-top:${rows ? '10px' : '0'};">
+        <input id="inj-part-input" type="text" placeholder="Body part" style="flex:1.4;min-width:0;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:9px;font-family:inherit;font-size:13px;outline:none;">
+        <input id="inj-severity-input" type="number" min="1" max="10" placeholder="1-10" style="flex:0.7;min-width:0;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:9px;font-family:inherit;font-size:13px;outline:none;">
+      </div>
+      <div style="display:flex;gap:6px;margin-top:6px;">
+        <input id="inj-note-input" type="text" placeholder="Note (optional)" style="flex:1;min-width:0;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:9px;font-family:inherit;font-size:13px;outline:none;">
+        <button class="btn-secondary" style="flex:none;padding:9px 14px;" onclick="addInjuryEntry()">Add</button>
+      </div>
+    </div>`;
+    }
 
 
     // Workout history on the You page loads a page at a time instead of rendering
@@ -6011,6 +6333,9 @@
       renderCompareScreen(a, b);
     }
 
+    // "Session Load" — a fatigue PROXY from set count/duration/soreness, not a real
+    // intensity measurement. Kept for continuity but relabeled; real intensity for
+    // prescription purposes comes from avgRpe/avgRir below, which use logged RPE/RIR.
     function computeWorkoutIntensity(w) {
       const workSets = w.exercises.reduce((s, e) => s + (e.sets || []).filter(x => !x.warmup).length, 0);
       let intensity = Math.min(10, Math.round((workSets / 15) * 4 + (w.duration / 60) * 3 + (w.sorenessRange ? w.sorenessRange[1] / 10 * 3 : 0)));
@@ -6019,30 +6344,123 @@
       return intensity;
     }
 
+    function collectWorkingSets(w) {
+      const out = [];
+      w.exercises.forEach(ex => (ex.sets || []).forEach(s => { if (!s.warmup) out.push(s); }));
+      return out;
+    }
+    // Real intensity signals a coach can act on: mean logged RPE / RIR across working
+    // sets. Returns null (not 0) when nothing was logged, so it can be shown as "–"
+    // instead of a misleading zero.
+    function avgRpeFor(w) { const v = collectWorkingSets(w).filter(s => s.rpe > 0); return v.length ? v.reduce((s, x) => s + x.rpe, 0) / v.length : null; }
+    function avgRirFor(w) { const v = collectWorkingSets(w).filter(s => s.rir > 0); return v.length ? v.reduce((s, x) => s + x.rir, 0) / v.length : null; }
+    function avgRestFor(w) { const v = w.exercises.map(e => e.restSeconds).filter(x => x != null && !isNaN(x) && x >= 0); return v.length ? Math.round(v.reduce((s, x) => s + x, 0) / v.length) : null; }
+
+    // When RPE/RIR weren't logged, back them into a rough estimate from Session
+    // Load (1-10) instead of leaving the comparison blank — a coach still gets a
+    // usable number, just visibly marked "≈" so it's never mistaken for a real
+    // logged value. Athletes who log RPE/RIR every session never see the estimate;
+    // it only fills the gap for sets where nothing was entered.
+    function estimateRpeFromLoad(load) {
+      return Math.min(10, Math.max(5, Math.round((5 + load * 0.45) * 2) / 2));
+    }
+    function estimateRirFromRpe(rpe) {
+      return Math.max(0, Math.round(10 - rpe));
+    }
+    // Returns { value, estimated } — real average when logged, else a Session-Load
+    // based approximation. Never returns null: Session Load itself is always
+    // computable, so there's always at least a rough number to show.
+    function rpeWithEstimate(w) {
+      const real = avgRpeFor(w);
+      if (real !== null) return { value: real, estimated: false };
+      return { value: estimateRpeFromLoad(computeWorkoutIntensity(w)), estimated: true };
+    }
+    function rirWithEstimate(w) {
+      const real = avgRirFor(w);
+      if (real !== null) return { value: real, estimated: false };
+      return { value: estimateRirFromRpe(estimateRpeFromLoad(computeWorkoutIntensity(w))), estimated: true };
+    }
+
+    // Rep-range distribution — tells a coach whether the session actually matched
+    // a strength (1-6), hypertrophy (7-12), or endurance (13+) prescription.
+    function repRangeBuckets(w) {
+      const b = { strength: 0, hypertrophy: 0, endurance: 0 };
+      collectWorkingSets(w).forEach(s => {
+        if (!s.reps) return;
+        if (s.reps <= 6) b.strength++; else if (s.reps <= 12) b.hypertrophy++; else b.endurance++;
+      });
+      return b;
+    }
+
+    // Chronological top-working-set weight per session for one exercise — lets a
+    // shared-exercise row show a real trend line instead of just a two-point diff.
+    function getExerciseTopWeightSeries(exId, limit) {
+      limit = limit || 8;
+      const sessions = [];
+      state.workouts.forEach(w => {
+        const ex = w.exercises.find(e => e.exId === exId);
+        if (!ex) return;
+        const working = (ex.sets || []).filter(s => !s.warmup && s.reps > 0);
+        if (!working.length) return;
+        const top = working.reduce((a, b) => (b.weight > a.weight || (b.weight === a.weight && b.reps > a.reps)) ? b : a);
+        sessions.push({ date: w.date, weight: top.weight });
+      });
+      sessions.sort((x, y) => new Date(x.date) - new Date(y.date));
+      return sessions.slice(-limit).map(s => s.weight);
+    }
+
     // Deterministic scoring (no API call): each metric awards a point to whichever
-    // workout scores higher; intensity + PRs count double since they track quality
-    // over raw quantity.
+    // workout is "better" — higher for most, lower for RIR (closer to failure =
+    // more intense). Metrics with no logged data on either side are excluded from
+    // scoring and the verdict entirely, rather than silently counting as a 0-0 tie.
     function compareWorkouts(a, b) {
       const workSets = w => w.exercises.reduce((s, e) => s + (e.sets || []).filter(x => !x.warmup).length, 0);
       const avgW = w => { const reps = w.exercises.reduce((s, e) => s + (e.sets || []).reduce((ss, x) => ss + x.reps, 0), 0); return reps ? Math.round(w.volume / reps) : 0; };
+      const rpeA = rpeWithEstimate(a), rpeB = rpeWithEstimate(b);
+      const rirA = rirWithEstimate(a), rirB = rirWithEstimate(b);
+      const restA = avgRestFor(a), restB = avgRestFor(b);
+      const fmtEst = obj => (obj.estimated ? '≈' : '') + obj.value.toFixed(1);
       const metrics = [
         { key: 'volume', label: 'Volume', unit: 'kg', a: Math.round(a.volume), b: Math.round(b.volume), weight: 1 },
         { key: 'duration', label: 'Duration', unit: 'm', a: a.duration || 0, b: b.duration || 0, weight: 1 },
         { key: 'sets', label: 'Working Sets', unit: '', a: workSets(a), b: workSets(b), weight: 1 },
         { key: 'avgWeight', label: 'Avg Weight', unit: 'kg', a: avgW(a), b: avgW(b), weight: 1 },
-        { key: 'intensity', label: 'Intensity', unit: '/10', a: computeWorkoutIntensity(a), b: computeWorkoutIntensity(b), weight: 2 },
+        { key: 'sessionLoad', label: 'Session Load', unit: '/10', a: computeWorkoutIntensity(a), b: computeWorkoutIntensity(b), weight: 1 },
+        { key: 'avgRpe', label: 'Avg RPE (intensity)', unit: '', a: rpeA.value, b: rpeB.value, weight: 2, fmtA: () => fmtEst(rpeA), fmtB: () => fmtEst(rpeB) },
+        { key: 'avgRir', label: 'Avg RIR (lower = harder)', unit: '', a: rirA.value, b: rirB.value, weight: 1, fmtA: () => fmtEst(rirA), fmtB: () => fmtEst(rirB), lowerIsBetter: true },
+        { key: 'avgRest', label: 'Avg Rest', unit: 's', a: restA || 0, b: restB || 0, weight: 0, fmt: v => v ? v + 's' : '–', noData: !restA && !restB },
         { key: 'records', label: 'Records', unit: '', a: a.records || 0, b: b.records || 0, weight: 2 },
       ];
       let scoreA = 0, scoreB = 0;
-      metrics.forEach(m => { if (m.a > m.b) scoreA += m.weight; else if (m.b > m.a) scoreB += m.weight; });
+      metrics.forEach(m => {
+        if (m.noData) return;
+        const aBetter = m.lowerIsBetter ? m.a < m.b : m.a > m.b;
+        const bBetter = m.lowerIsBetter ? m.b < m.a : m.b > m.a;
+        if (aBetter) scoreA += m.weight; else if (bBetter) scoreB += m.weight;
+      });
       let verdict;
       if (scoreA === scoreB) verdict = 'Too close to call — similar overall effort.';
       else {
-        const winner = scoreA > scoreB ? 'A' : 'B', winW = scoreA > scoreB ? a : b, loseW = scoreA > scoreB ? b : a;
-        const wins = metrics.filter(m => (scoreA > scoreB ? m.a > m.b : m.b > m.a)).map(m => m.label);
+        const winner = scoreA > scoreB ? 'A' : 'B', winW = scoreA > scoreB ? a : b;
+        const wins = metrics.filter(m => !m.noData && (m.lowerIsBetter ? (scoreA > scoreB ? m.a < m.b : m.b < m.a) : (scoreA > scoreB ? m.a > m.b : m.b > m.a))).map(m => m.label);
         verdict = `Workout ${winner} (${winW.name}) wins on ${wins.slice(0, 3).join(', ')}.`;
       }
       return { metrics, scoreA, scoreB, verdict };
+    }
+
+    // Same per-exercise cell markup as the home feed's workout cards (icon, sets,
+    // volume) so a coach can eyeball each workout's full exercise selection
+    // side-by-side, not just the exercises they happen to share.
+    function buildExerciseGridForWorkout(w) {
+      const cells = w.exercises.slice(0, 9).map(ex => {
+        if (ex.isCardio) return `<div class="exercise-cell"><div class="ex-icon">${ex.icon}</div><div class="ex-name">${ex.cardioMinutes}min ${ex.name}</div></div>`;
+        if (!ex.sets || !ex.sets.length) return `<div class="exercise-cell" style="opacity:.5"><div class="ex-icon">${ex.icon}</div><div class="ex-name">${ex.name.split(' ').slice(0, 3).join(' ')}</div><div class="ex-sets">not logged</div></div>`;
+        const sets = ex.sets.filter(s => !s.warmup).length;
+        const vol = ex.sets.reduce((s, set) => s + set.weight * set.reps, 0);
+        return `<div class="exercise-cell"><div class="ex-icon">${ex.icon}</div><div class="ex-name">${sets}x ${ex.name.split(' ').slice(0, 3).join(' ')}</div><div class="ex-sets">🏋️ ${Math.round(vol)}kg</div></div>`;
+      }).join('');
+      const extra = w.exercises.length > 9 ? `<div class="exercise-cell" style="align-items:center;justify-content:center;color:var(--text-muted);font-size:12px">+${w.exercises.length - 9} more</div>` : '';
+      return cells + extra;
     }
 
     function renderCompareScreen(idA, idB) {
@@ -6053,31 +6471,59 @@
       const dLabel = w => new Date(w.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
       const statRows = metrics.map(m => {
-        const aWin = m.a > m.b, bWin = m.b > m.a;
+        if (m.noData) {
+          return `<div class="detail-set-row" style="padding:10px 0;opacity:.5;">
+      <span style="flex:1;text-align:left;">–</span>
+      <span style="flex:1;text-align:center;font-size:11px;color:var(--text-muted);">${m.label} <span style="color:var(--text-dim);">(not logged)</span></span>
+      <span style="flex:1;text-align:right;">–</span>
+    </div>`;
+        }
+        const aBetter = m.lowerIsBetter ? m.a < m.b : m.a > m.b;
+        const bBetter = m.lowerIsBetter ? m.b < m.a : m.b > m.a;
+        const fmtA = m.fmtA ? m.fmtA() : (m.fmt ? m.fmt(m.a) : `${m.a}${m.unit}`);
+        const fmtB = m.fmtB ? m.fmtB() : (m.fmt ? m.fmt(m.b) : `${m.b}${m.unit}`);
         return `<div class="detail-set-row" style="padding:10px 0;">
-      <span style="flex:1;text-align:left;font-weight:${aWin ? 800 : 500};color:${aWin ? 'var(--green)' : 'var(--text)'};">${m.a}${m.unit}${aWin ? ' ▲' : ''}</span>
+      <span style="flex:1;text-align:left;font-weight:${aBetter ? 800 : 500};color:${aBetter ? 'var(--green)' : 'var(--text)'};">${fmtA}${aBetter ? ' ▲' : ''}</span>
       <span style="flex:1;text-align:center;font-size:11px;color:var(--text-muted);">${m.label}</span>
-      <span style="flex:1;text-align:right;font-weight:${bWin ? 800 : 500};color:${bWin ? 'var(--green)' : 'var(--text)'};">${bWin ? '▲ ' : ''}${m.b}${m.unit}</span>
+      <span style="flex:1;text-align:right;font-weight:${bBetter ? 800 : 500};color:${bBetter ? 'var(--green)' : 'var(--text)'};">${bBetter ? '▲ ' : ''}${fmtB}</span>
     </div>`;
       }).join('');
 
       const actA = computeMuscleActivation([a]), actB = computeMuscleActivation([b]);
       const involvedMuscles = MUSCLE_GROUPS.filter(m => actA[m.name] || actB[m.name]);
+      // Sets (not kg) drive the bar — kg is confounded by exercise/load choice, while
+      // weekly SETS-per-muscle is what a coach actually programs against.
       const muscleRows = involvedMuscles.length ? involvedMuscles.map(m => {
+        const setsA = actA[m.name] ? actA[m.name].sets : 0, setsB = actB[m.name] ? actB[m.name].sets : 0;
         const kgA = actA[m.name] ? actA[m.name].kg : 0, kgB = actB[m.name] ? actB[m.name].kg : 0;
-        const maxKg = Math.max(kgA, kgB, 1);
+        const maxSets = Math.max(setsA, setsB, 1);
         return `<div class="muscle-item">
       <div class="muscle-item-icon">${m.icon}</div>
       <div style="flex:1">
         <div class="muscle-item-name">${m.name}</div>
-        <div class="muscle-bar" style="width:${Math.max(2, kgA / maxKg * 100)}%;background:#ef4444;"></div>
-        <div class="muscle-bar" style="width:${Math.max(2, kgB / maxKg * 100)}%;background:#3b82f6;margin-top:3px;"></div>
+        <div class="muscle-bar" style="width:${Math.max(2, setsA / maxSets * 100)}%;background:#ef4444;"></div>
+        <div class="muscle-bar" style="width:${Math.max(2, setsB / maxSets * 100)}%;background:#3b82f6;margin-top:3px;"></div>
       </div>
-      <div style="text-align:right;font-size:11px;color:var(--text-muted);">A ${Math.round(kgA)}kg<br>B ${Math.round(kgB)}kg</div>
+      <div style="text-align:right;font-size:11px;color:var(--text-muted);">A ${Math.round(setsA * 10) / 10} sets · ${Math.round(kgA)}kg<br>B ${Math.round(setsB * 10) / 10} sets · ${Math.round(kgB)}kg</div>
     </div>`;
       }).join('') : emptyState('💪', 'No overlapping muscle data.');
 
-      // Exercise-level diff: exercises present in both (top-set compare) vs only in one.
+      // Rep-range distribution — did each session actually train the rep zone it
+      // should have (strength 1-6 / hypertrophy 7-12 / endurance 13+)?
+      const repA = repRangeBuckets(a), repB = repRangeBuckets(b);
+      const repRangeRow = (label, valA, valB, color) => {
+        const totA = repA.strength + repA.hypertrophy + repA.endurance || 1;
+        const totB = repB.strength + repB.hypertrophy + repB.endurance || 1;
+        return `<div class="warn-row"><span><span class="legend-dot" style="background:${color}"></span>${label}</span><span>A ${valA} (${Math.round(valA / totA * 100)}%) &nbsp;·&nbsp; B ${valB} (${Math.round(valB / totB * 100)}%)</span></div>`;
+      };
+      const repRangeHTML = (repA.strength + repA.hypertrophy + repA.endurance + repB.strength + repB.hypertrophy + repB.endurance) > 0
+        ? repRangeRow('Strength (1-6 reps)', repA.strength, repB.strength, '#ef4444') +
+        repRangeRow('Hypertrophy (7-12 reps)', repA.hypertrophy, repB.hypertrophy, '#3b82f6') +
+        repRangeRow('Endurance (13+ reps)', repA.endurance, repB.endurance, '#22c55e')
+        : emptyState('📊', 'No working sets with reps logged.');
+
+      // Exercise-level diff: exercises present in both (top-set compare + a real
+      // trend line across all logged sessions, not just these two) vs only in one.
       const nameKey = ex => ex.exId || ex.name;
       const exMapA = {}; a.exercises.forEach(ex => exMapA[nameKey(ex)] = ex);
       const exMapB = {}; b.exercises.forEach(ex => exMapB[nameKey(ex)] = ex);
@@ -6089,7 +6535,12 @@
         const tA = topSet(exMapA[k]), tB = topSet(exMapB[k]);
         const fmt = t => t ? `${t.weight}kg × ${t.reps}` : '—';
         const arrow = (tA && tB) ? (tB.weight > tA.weight || (tB.weight === tA.weight && tB.reps > tA.reps) ? ' ▲' : (tB.weight < tA.weight || tB.reps < tA.reps ? ' ▼' : '')) : '';
-        return `<div class="detail-set-row"><span style="flex:1;">${exMapA[k].name}</span><span style="color:var(--text-muted);font-size:12px;">${fmt(tA)} → ${fmt(tB)}${arrow}</span></div>`;
+        const series = exMapA[k].exId ? getExerciseTopWeightSeries(exMapA[k].exId) : [];
+        const trendHTML = series.length >= 2 ? `<div style="margin-top:2px;display:flex;justify-content:flex-end;" title="Top-set weight, last ${series.length} sessions">${sparklineSVG(series, '#f59e0b')}</div>` : '';
+        return `<div class="detail-set-row" style="flex-direction:column;align-items:stretch;gap:2px;">
+      <div style="display:flex;justify-content:space-between;"><span style="flex:1;">${exMapA[k].name}</span><span style="color:var(--text-muted);font-size:12px;">${fmt(tA)} → ${fmt(tB)}${arrow}</span></div>
+      ${trendHTML}
+    </div>`;
       }).join('');
 
       el.innerHTML = `
@@ -6103,8 +6554,11 @@
     </div>
     <div class="section-title">Head-to-Head</div>
     <div class="chart-container">${statRows}</div>
-    ${shared.length ? `<div class="section-title">Shared Exercises</div><div class="chart-container">${sharedHTML}</div>` : ''}
-    <div class="section-title">Muscle Coverage</div>
+    ${shared.length ? `<div class="section-title">Shared Exercises</div><div class="section-sub">Top set, and full trend across all logged sessions</div><div class="chart-container">${sharedHTML}</div>` : ''}
+    <div class="section-title">Rep Range Distribution</div>
+    <div class="section-sub">What zone each session actually trained</div>
+    <div class="insight-card" style="margin:0 16px 20px;">${repRangeHTML}</div>
+    <div class="section-title">Muscle Coverage (sets)</div>
     <div class="muscle-list">${muscleRows}</div>
     <div style="padding:4px 16px 16px;">
       <div style="text-align:center;font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:6px;">Workout A — ${a.name}</div>
@@ -6112,12 +6566,22 @@
       <div style="text-align:center;font-size:12px;font-weight:700;color:var(--text-muted);margin:14px 0 6px;">Workout B — ${b.name}</div>
       <div style="display:flex;justify-content:center;">${buildBodySVGs('small', actB)}</div>
     </div>
+    <div class="section-title">Full Exercise List</div>
+    <div class="section-sub">Every exercise logged in each workout, not just the shared ones</div>
+    <div style="margin:0 16px 12px;font-size:12px;font-weight:700;color:var(--text-muted);">Workout A — ${a.name}</div>
+    <div style="margin:0 16px 20px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;">
+      <div class="exercise-grid">${buildExerciseGridForWorkout(a)}</div>
+    </div>
+    <div style="margin:0 16px 12px;font-size:12px;font-weight:700;color:var(--text-muted);">Workout B — ${b.name}</div>
+    <div style="margin:0 16px 20px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;">
+      <div class="exercise-grid">${buildExerciseGridForWorkout(b)}</div>
+    </div>
     ${(onlyA.length || onlyB.length) ? `<div class="section-title">Exclusive Exercises</div>
     <div class="chart-container">
       ${onlyA.length ? `<div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;"><strong style="color:var(--text);">Only in A:</strong> ${onlyA.join(', ')}</div>` : ''}
       ${onlyB.length ? `<div style="font-size:12px;color:var(--text-muted);"><strong style="color:var(--text);">Only in B:</strong> ${onlyB.join(', ')}</div>` : ''}
     </div>` : ''}
-    <div style="margin:0 16px 24px;font-size:11px;color:var(--text-dim);line-height:1.5;">Intensity is derived from working-set count, duration, and logged soreness — not a lab measurement. Volume is total weight × reps across working sets. Use these as relative trends between sessions, not absolute truths.</div>
+    <div style="margin:0 16px 24px;font-size:11px;color:var(--text-dim);line-height:1.5;">"Session Load" is a proxy from set count, duration, and soreness — not a lab measurement. Values marked "≈" for Avg RPE/RIR weren't logged by the athlete and are estimated from Session Load instead; a plain number means it came from real logged RPE/RIR. Volume is total weight × reps across working sets.</div>
   `;
       applyCardStagger(el);
     }
@@ -6169,7 +6633,7 @@
       let count = 0;
       MUSCLE_GROUPS.forEach(m => {
         const n = sets[m.name] || 0;
-        const [lo, hi] = m.target || [10, 20];
+        const [lo, hi] = getMuscleTarget(m);
         if (n > 0 && (n < lo || n > hi)) count++;
       });
 
@@ -6756,6 +7220,7 @@
       renderProgressMuscleMap();
       renderExerciseHistory();
       updateInsightsWarnPill();
+      renderCoachFlags();
       if (insightsOpen) renderInsights();
       applyCardStagger(document.getElementById('ptab-overview'));
     }
@@ -7061,13 +7526,15 @@
       const sets = weeklyMuscleSets(weekWorkouts);
       const rows = MUSCLE_GROUPS.filter(m => sets[m.name] > 0 || daysSinceMuscleTrained(m.name) !== null).map(m => {
         const n = Math.round(sets[m.name] * 10) / 10;
-        const [lo, hi] = m.target || [10, 20];
+        const [lo, hi] = getMuscleTarget(m);
         let pill = `<span class="warn-pill ok">✓ In range</span>`;
         if (n < lo) pill = `<span class="warn-pill low">▼ Low</span>`;
         else if (n > hi) pill = `<span class="warn-pill high">▲ High</span>`;
         const days = daysSinceMuscleTrained(m.name);
         const daysNote = (days !== null && days >= 7) ? ` · <span style="color:var(--gold)">${days}d ago</span>` : '';
-        return `<div class="warn-row"><span>${m.icon} ${m.name} — ${n}/${lo}-${hi} sets${daysNote}</span>${pill}</div>`;
+        const freq = muscleSessionsThisWeek(m.name);
+        const freqNote = freq > 0 ? ` · ${freq}x this wk` : '';
+        return `<div class="warn-row"><span>${m.icon} ${m.name} — ${n}/${lo}-${hi} sets${freqNote}${daysNote}</span>${pill}</div>`;
       });
       document.getElementById('muscle-warnings').innerHTML = rows.length
         ? rows.join('')
@@ -7758,6 +8225,8 @@
         ss + ex.sets.filter(s => s.prs && s.prs.length).length, 0), 0);
       animateNumber(document.getElementById('you-prs'), prs, '');
       renderProfile();
+      renderNutritionCard();
+      renderInjuryCard();
       renderYouHistory();
       renderBadges();
       updateSyncStatusDisplay();
