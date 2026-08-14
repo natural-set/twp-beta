@@ -2,7 +2,7 @@
   "workouts": [
     {
       "id": 1786722959915,
-      "name": "Workout",
+      "name": "Lower",
       "note": "",
       "exercises": [
         {
@@ -16301,5 +16301,5 @@
       "isUnilateral": false
     }
   },
-  "timestamp": 1786740219673
+  "timestamp": 1786740226675
 }
