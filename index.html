@@ -2056,6 +2056,17 @@
       }
     }
 
+    @keyframes typingBounce {
+      0%, 60%, 100% { transform: translateY(0); opacity: .5; }
+      30% { transform: translateY(-4px); opacity: 1; }
+    }
+    .typing-dot {
+      width: 6px; height: 6px; border-radius: 50%; background: var(--text-muted);
+      display: inline-block; animation: typingBounce 1.1s ease-in-out infinite;
+    }
+    .typing-dot:nth-child(2) { animation-delay: .15s; }
+    .typing-dot:nth-child(3) { animation-delay: .3s; }
+
     /* ── YOU PAGE: FLOATING WORKOUT HISTORY SEARCH ── */
     #you-history-search-bar {
       position: sticky;
@@ -2491,8 +2502,6 @@
 
         <div id="filter-stats"></div>
 
-        <div id="coach-flags-card" style="display:none;"></div>
-
         <button id="overview-warn-banner" onclick="jumpToInsights()" style="display:none;width:calc(100% - 32px);margin:0 16px 16px;padding:10px 14px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:var(--radius-sm);color:var(--gold);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;text-align:left;align-items:center;justify-content:space-between;">
           <span id="overview-warn-banner-text"></span>
           <span>→</span>
@@ -2612,6 +2621,7 @@
           <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"/><line x1="13" x2="19" y1="19" y2="13"/><line x1="16" x2="20" y1="16" y2="20"/><line x1="19" x2="21" y1="21" y2="19"/><polyline points="14.5 6.5 18 3 21 3 21 6 17.5 9.5"/><line x1="5" x2="9" y1="14" y2="18"/><line x1="7" x2="4" y1="17" y2="20"/><line x1="3" x2="5" y1="19" y2="21"/></svg>
         </button>
       </div>
+      <div id="coach-flags-card" style="display:none;"></div>
       <div id="coach-screen-content"></div>
     </div>
 
@@ -2935,7 +2945,7 @@
       <div class="modal-sheet" style="max-height:40vh;">
         <div style="padding:22px 20px;">
           <div style="font-size:16px;font-weight:800;margin-bottom:8px;" id="confirm-modal-title">Are you sure?</div>
-          <div style="font-size:13px;color:var(--text-muted);line-height:1.5;margin-bottom:20px;" id="confirm-modal-message"></div>
+          <div style="font-size:13px;color:var(--text-muted);line-height:1.5;margin-bottom:20px;white-space:pre-line;" id="confirm-modal-message"></div>
           <div style="display:flex;gap:10px;">
             <button class="btn-secondary" onclick="closeConfirmModal(false)">Cancel</button>
             <button class="btn-primary-flex" id="confirm-modal-confirm-btn" onclick="closeConfirmModal(true)" style="background:var(--red);color:#fff;">Confirm</button>
@@ -4056,11 +4066,14 @@
       nutritionHistory: { calories: [], protein: [] }, // dated snapshots, same shape as measurementHistory
       agent: {
         memory: "New athlete profile initialized. Monitoring baseline volume, exercise preferences, and RPE accuracy.",
+        memoryFacts: [],            // structured long-term facts: { text, date }, capped/deduped — survives beyond the prose summary
         unlockedConcepts: [],        // e.g. ['Progressive Overload', 'RIR Calibration']
         interactionHistory: [],     // { role: 'user'|'assistant', text, timestamp }
         lastAnalyzedWorkoutId: null,// prevents duplicate analysis calls for the same session
         pendingTip: null,           // latest proactive tip shown in the Coach screen
+        pendingTipPinned: false,    // when true, new tips won't overwrite the pinned one
         pendingTipSeen: true,       // false = unread tip, shows nav dot
+        lastAppliedAction: null,    // most recently applied coach action, for Undo
       },
     };
 
@@ -4691,6 +4704,10 @@
       document.getElementById('inj-note-input').value = '';
       renderInjuryCard();
       showToast('Logged 🩹');
+      // Moderate-to-severe entries get a same-session coach reaction (training
+      // adjustment suggestion) — this bypasses checkInIfIdle's 7-day gate since
+      // waiting a week to react to a fresh injury note defeats the point.
+      if (severity >= 6 && typeof AICoach !== 'undefined') AICoach.checkInOnInjury({ bodyPart, severity, note });
     }
     function deleteInjuryEntry(id) {
       state.injuryLog = (state.injuryLog || []).filter(e => e.id !== id);
@@ -4835,7 +4852,11 @@
     function goToWorkout() { navigate('workout', document.querySelectorAll('.nav-btn')[1]); startWorkout(); }
 
     function refreshCoachScreen() {
-      if (typeof AICoach !== 'undefined') AICoach.renderCoachScreen();
+      renderCoachFlags();
+      if (typeof AICoach !== 'undefined') {
+        AICoach.renderCoachScreen();
+        AICoach.checkInIfIdle();
+      }
     }
 
 
@@ -5856,6 +5877,11 @@
       setDeltaBadge('home-delta-duration', totalDuration - lastDuration, 'min');
       setDeltaBadge('home-delta-volume', Math.round(totalVolume - lastVolume), ' kg');
       renderStreakBadge();
+
+      // Opportunistic idle check-in: anyone opening the app at all should be
+      // eligible for a check-in tip, not only people who visit the Coach tab —
+      // checkInIfIdle() internally no-ops unless 7+ days have passed since the last one.
+      if (typeof AICoach !== 'undefined') AICoach.checkInIfIdle();
 
       // CTA visibility
       document.getElementById('home-cta').style.display = state.workouts.length === 0 ? 'block' : 'none';
@@ -7281,7 +7307,6 @@
       renderProgressMuscleMap();
       renderExerciseHistory();
       updateInsightsWarnPill();
-      renderCoachFlags();
       if (insightsOpen) renderInsights();
       applyCardStagger(document.getElementById('ptab-overview'));
     }
@@ -7585,7 +7610,7 @@
       const weekStart = new Date(now); weekStart.setDate(now.getDate() - now.getDay()); weekStart.setHours(0, 0, 0, 0);
       const weekWorkouts = state.workouts.filter(w => new Date(w.date) >= weekStart);
       const sets = weeklyMuscleSets(weekWorkouts);
-      const rows = MUSCLE_GROUPS.filter(m => sets[m.name] > 0 || daysSinceMuscleTrained(m.name) !== null).map(m => {
+      const rows = MUSCLE_GROUPS.filter(m => sets[m.name] > 0).map(m => {
         const n = Math.round(sets[m.name] * 10) / 10;
         const [lo, hi] = getMuscleTarget(m);
         let pill = `<span class="warn-pill ok">✓ In range</span>`;
@@ -9791,19 +9816,68 @@ Soreness: 6-7</div>
     function mdToHtml(text) {
       if (!text) return '';
       const esc = escapeHtml(text);
+      const inline = s => s
+        .replace(/`([^`]+?)`/g, '<code style="background:var(--surface3);padding:1px 5px;border-radius:4px;font-size:12px;">$1</code>')
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/(^|[^*])\*(?!\*)([^*]+?)\*(?!\*)/g, '$1<em>$2</em>');
+      const bold = inline; // kept name for callers below
       const blocks = esc.split(/\n\s*\n/);
       return blocks.map(block => {
         const lines = block.split('\n').filter(l => l.trim());
         if (!lines.length) return '';
-        if (lines.every(l => /^\s*-\s+/.test(l))) {
-          return '<ul style="margin:4px 0;padding-left:18px;">' + lines.map(l => `<li>${l.replace(/^\s*-\s+/, '').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')}</li>`).join('') + '</ul>';
+        // Any line starting with #, not just single-line blocks, renders as a header.
+        if (lines.every(l => /^#{1,3}\s+/.test(l))) {
+          return lines.map(l => `<div style="font-weight:800;font-size:13px;margin:6px 0 2px;">${bold(l.replace(/^#{1,3}\s+/, ''))}</div>`).join('');
         }
-        return `<p style="margin:0 0 6px;">${block.replace(/\n/g, '<br>').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')}</p>`;
+        if (lines.every(l => /^\s*-\s+/.test(l))) {
+          return '<ul style="margin:4px 0;padding-left:18px;">' + lines.map(l => `<li>${bold(l.replace(/^\s*-\s+/, ''))}</li>`).join('') + '</ul>';
+        }
+        if (lines.every(l => /^\s*\d+\.\s+/.test(l))) {
+          return '<ol style="margin:4px 0;padding-left:18px;">' + lines.map(l => `<li>${bold(l.replace(/^\s*\d+\.\s+/, ''))}</li>`).join('') + '</ol>';
+        }
+        return `<p style="margin:0 0 6px;">${bold(block.replace(/\n/g, '<br>'))}</p>`;
       }).join('');
     }
 
     // View-only preference (not persisted) for the Coach screen's chat panel size.
     let coachChatMaximized = false;
+
+    // Shared coach persona + domain rules + few-shot examples + TWP-specific tips,
+    // used by both evolveAndAnalyze and handleUserMessage so tone/rules never drift.
+    const COACH_PERSONA = `You are the TWP AI Coach — an elite, adaptive strength & conditioning coach embedded in the TWP app. Talk like a warm, experienced coach/friend, never like a report generator ("Based on the data provided" is banned).
+
+DOMAIN KNOWLEDGE: reason concretely about joint actions/ROM, common compensation patterns, and how volume/intensity/frequency/tempo/RIR-RPE targets differ by goal (hypertrophy, strength, power, longevity, general fitness). Calibrate to profile.trainingGoal.
+
+TWP-SPECIFIC TIPS:
+- When suggesting a bodyweight-capable exercise, phrase progression as adding/removing kg (the app's BW chip), not just "do more reps".
+- Respect periodization.phase (hypertrophy/strength/power/deload/peak) when recommending intensity — don't suggest a strength-phase heavy triple during a deload week. A rising avgRpe at flat weight during a strength/power phase is often expected overload, not automatically overtraining — only flag fatigue if it also coincides with a deload/idle gap or an injury note; during hypertrophy/maintenance phases, the same pattern is a stronger overtraining signal.
+- If rpeTrendByExercise shows avgRpe climbing while topWeight is flat across sessions, weigh that against the current periodization phase (see above) before flagging fatigue.
+- If recentInjuries has an entry for a body part, avoid recommending exercises that load that joint/muscle directly; suggest a safer substitution instead. If a deload is already scheduled soon (periodization.phase or timeline), prefer waiting for it over prescribing an ad-hoc one, unless the injury looks acute.
+- Exercises in recentWorkouts already show isUnilateral — if L/R volume looks lopsided across sessions for such an exercise, call it out and suggest single-side accessory work on the weaker side.
+- recentWorkouts exercises may share a comboId-style pairing (bi-sets/supersets) — when two exercises are always logged back-to-back, treat fatigue carryover between them as relevant (e.g. don't blame the second exercise's dip in performance purely on it being "weak").
+- Compare workout frequency (recentWorkouts count/week) against weeklyGoal-style consistency before recommending a volume increase — more sets per session is the wrong fix if the real gap is missed sessions.
+- Only suggest exercises realistic for availableEquipment; if equipment is "Not set", default to standard gym-equipment suggestions and say so briefly rather than assuming.
+- Prioritize exercise suggestions by: (1) muscles in idleMuscles/under target, (2) stalledExercises, (3) what's realistic given availableEquipment, (4) fit with trainingGoal.
+- Ground replies in specifics: cite an actual number from context (e.g. "your last 3 top sets on Bench were 60/60/62kg") rather than vague encouragement.
+
+TONE EXAMPLES (good):
+- Plateau: "Your squat's been stuck at 80kg for 3 sessions — that's a real plateau, not bad luck. Let's drop to 72kg (90%) for 2 weeks and rebuild with an extra rep each session, then retest."
+- Injury caution: "Your shoulder note from last week means I'd skip overhead pressing for now — let's swap in landmine presses, which load the same push pattern without stressing that angle."
+- Nutrition tie-in: "Protein's been under 100g most days this week while volume's climbing — that gap is probably why your last few top sets felt harder than the numbers suggest."
+- Autonomy action: "You've mentioned wanting more breathing room between sets on Deadlift — I'll bump its rest preset to 3 minutes so the timer matches. Say the word and I'll apply it."
+TONE EXAMPLE (bad, avoid): "Based on the data provided, your squat progression indicates a plateau. Consider periodization adjustments."`;
+
+    // Small retry helper: one retry with backoff for transient network failures,
+    // so a single blip doesn't skip an entire coaching cycle.
+    async function fetchWithRetry(fn, retries) {
+      retries = retries === undefined ? 1 : retries;
+      for (let attempt = 0; attempt <= retries; attempt++) {
+        const result = await fn();
+        if (result) return result;
+        if (attempt < retries) await new Promise(r => setTimeout(r, 800 * (attempt + 1)));
+      }
+      return null;
+    }
 
     const AICoach = {
       toggleChatSize() {
@@ -9863,21 +9937,68 @@ Soreness: 6-7</div>
           }).map(m => m.name)
           : [];
 
+        // 12-week volume trend (macro signal, not just last 5 sessions)
+        const now = new Date();
+        const volumeTrend12wk = [];
+        for (let i = 11; i >= 0; i--) {
+          const ws = new Date(now); ws.setDate(ws.getDate() - ws.getDay() - i * 7); ws.setHours(0, 0, 0, 0);
+          const we = new Date(ws); we.setDate(we.getDate() + 7);
+          volumeTrend12wk.push(Math.round(state.workouts.filter(w => { const d = new Date(w.date); return d >= ws && d < we; }).reduce((s, w) => s + w.volume, 0)));
+        }
+
+        // RPE trend across last 10 sessions per exercise (creeping RPE at same weight = early overtraining signal)
+        const rpeTrendByExercise = {};
+        state.workouts.slice(0, 10).forEach(w => w.exercises.forEach(ex => {
+          const rpes = (ex.sets || []).filter(s => !s.warmup && s.rpe > 0);
+          if (!rpes.length) return;
+          const avg = Math.round((rpes.reduce((a, b) => a + b.rpe, 0) / rpes.length) * 10) / 10;
+          const topW = Math.max(...rpes.map(s => s.weight || 0));
+          if (!rpeTrendByExercise[ex.name]) rpeTrendByExercise[ex.name] = [];
+          rpeTrendByExercise[ex.name].push({ date: w.date, avgRpe: avg, topWeight: topW });
+        }));
+
+        const recentInjuries = (state.injuryLog || []).slice(0, 5).map(e => ({ date: e.date, bodyPart: e.bodyPart, severity: e.severity, note: e.note }));
+        const weightHist = (state.measurementHistory && state.measurementHistory.weight) || [];
+        const weightTrend = weightHist.slice(-8).map(e => ({ date: e.date, kg: e.value }));
+        const nutrRecent = {
+          calories: ((state.nutritionHistory && state.nutritionHistory.calories) || []).slice(-5),
+          protein: ((state.nutritionHistory && state.nutritionHistory.protein) || []).slice(-5),
+        };
+        const currentPhase = (typeof getCurrentMicrocycle === 'function' && getCurrentMicrocycle()) ? getCurrentMicrocycle().phase : null;
+        // Tag each RPE-trend point with the phase it was likely logged under, so the
+        // model doesn't treat a strength-phase RPE rise the same as a hypertrophy one.
+        Object.values(rpeTrendByExercise).forEach(points => points.forEach(p => { p.likelyPhaseNow = currentPhase; }));
+
+        // Weekly consistency: actual workouts/week over the last 4 weeks vs weeklyGoal —
+        // lets the model catch "missed sessions" as the real gap instead of prescribing more volume per session.
+        const last4wkStart = new Date(); last4wkStart.setDate(last4wkStart.getDate() - 28);
+        const last4wkCount = state.workouts.filter(w => new Date(w.date) >= last4wkStart).length;
+        const consistency = { weeklyGoal: state.weeklyGoal || 3, avgWorkoutsPerWeekLast4wk: Math.round((last4wkCount / 4) * 10) / 10 };
+
+        // L/R imbalance flags for unilateral-capable exercises (reuses the app's own detector).
+        const imbalanceFlags = typeof computeImbalanceFlags === 'function' ? computeImbalanceFlags().map(f => f.text) : [];
+
         return {
           profile: {
             weight: (state.profile && state.profile.weight) || 'Not set',
             trainingGoal: (state.profile && state.profile.trainingGoal) || 'Not set (assume general Hypertrophy & Strength)',
             availableEquipment: (state.profile && state.profile.availableEquipment) || 'Not set (assume standard gym access)',
+            injuries: (state.profile && state.profile.injuries) || 'None noted',
           },
-          periodization: state.periodization ? {
-            model: state.periodization.model,
-            phase: (getCurrentMicrocycle && getCurrentMicrocycle()) ? getCurrentMicrocycle().phase : null,
-          } : null,
+          periodization: state.periodization ? { model: state.periodization.model, phase: currentPhase } : null,
           agentMemory: state.agent.memory,
+          agentMemoryFacts: (state.agent.memoryFacts || []).map(f => f.text),
           alreadyUnlockedConcepts: state.agent.unlockedConcepts,
           recentWorkouts,
           stalledExercises,
           idleMuscles,
+          volumeTrend12wk,
+          rpeTrendByExercise,
+          recentInjuries,
+          weightTrend,
+          nutritionRecent: nutrRecent,
+          consistency,
+          imbalanceFlags,
         };
       },
 
@@ -9918,64 +10039,151 @@ Soreness: 6-7</div>
         if (!workoutId || state.agent.lastAnalyzedWorkoutId === workoutId) return;
 
         const context = this.compileContext();
-        const systemPrompt = `You are an elite, adaptive strength & conditioning AI Coach embedded inside the TWP (Training With Purpose) app. You talk like an experienced, warm coach and friend — never like a report generator. Avoid robotic phrasing like "Based on the data provided".
+        const systemPrompt = `${COACH_PERSONA}
 
-DOMAIN KNOWLEDGE: reason concretely about joint actions/range of motion per exercise, common compensation patterns, and how volume/intensity/frequency/tempo/RIR-RPE targets differ across training goals (hypertrophy, strength, power, longevity/health-span, general fitness). Use the athlete's trainingGoal to calibrate advice. When suggesting an exercise, prioritize by: (1) muscles under their target range, (2) plateaued lifts, (3) what's actually in availableEquipment, (4) fit with trainingGoal.
+Study the athlete's recent training data (12-week volume trend, per-exercise RPE trend tagged with the current phase, injuries, weight trend, nutrition, weekly consistency vs weeklyGoal, and any L/R imbalance flags), then also cross-reference nutrition/weight trend against performance — e.g. a low-protein stretch or a fast weight-cut coinciding with stalled or dropping top sets is worth naming explicitly, not just reporting the numbers separately.
 
-Study the athlete's recent training data, evolve your memory of their patterns, and decide whether they're ready for a new concept.
+Evolve your memory in two parts:
+- "updatedMemory": a short 2-4 sentence PROSE SUMMARY of the athlete's overall pattern (overwrites the old summary).
+- "newFacts": an array of 0-3 short, durable, standalone facts worth remembering long-term (e.g. "Squat plateaus tend to hit after ~3 weeks of flat programming", "Responds well to deloads timed after a plateau, not before"). Only add a fact if it's a genuinely new pattern not already in agentMemoryFacts — don't restate existing facts or duplicate the prose summary.
 
-Respond ONLY with a valid JSON object, no markdown fences, no extra text:
+Respond ONLY with a valid JSON object, no markdown fences, no extra text.
+
+Example A (meaningful pattern found):
 {
-  "updatedMemory": "string, cumulative, <100 words, evolves the previous memory rather than replacing its useful context",
-  "newConceptUnlock": { "title": "string or null", "explanation": "string or null, 2-3 sentences, practical and specific to what's in TWP" },
-  "proactiveTip": "string, 1-2 short sentences, lightweight markdown OK (**bold** key numbers/exercise names)",
-  "notificationOffer": { "title": "string or null", "body": "string or null, 1 sentence" }
+  "updatedMemory": "Athlete trains 4x/week, hypertrophy focus. Pull-Up/Dips volume steady, squat plateaued at 80kg for 3 sessions. RPE creeping on bench (7->8.5) at flat weight during a hypertrophy phase — early fatigue signal, not expected phase overload.",
+  "newFacts": ["Squat plateaus have shown up twice now around the 3-session mark on flat programming"],
+  "newConceptUnlock": { "title": "Autoregulation via RPE", "explanation": "Instead of a fixed weight every session, let your RPE guide the load: if RPE 8 shows up 2 reps early, that's your cue to hold or drop weight next set." },
+  "proactiveTip": "Your **squat** has been stuck at **80kg** for 3 sessions — time for a mini-deload before pushing again.",
+  "notificationOffer": { "title": "Squat plateau detected", "body": "3 sessions with no progress on squat — want a deload plan?" }
 }
-Only unlock a concept if the data actually supports it (plateaus, volume swings, RPE/RIR patterns, muscle imbalance). Never repeat a concept already in alreadyUnlockedConcepts. Only fill notificationOffer if there's a genuinely meaningful pattern worth surfacing (real stagnation, a clear volume trend, or a neglected muscle group) — otherwise set it to null; this should not fire every workout.`;
 
-        const raw = await this.fetchCoachResponse(systemPrompt, JSON.stringify(context));
-        if (!raw) return;
+Example B (nothing new to report — quiet, uneventful week):
+{
+  "updatedMemory": "Athlete trains 3x/week, general fitness focus. Volume and RPE both steady this week, no plateaus or red flags.",
+  "newFacts": [],
+  "newConceptUnlock": null,
+  "proactiveTip": "Solid, consistent week — same plan next session, nothing to change.",
+  "notificationOffer": null
+}
 
+Only unlock a concept if the data actually supports it (plateaus, volume swings, RPE/RIR patterns, muscle imbalance, injury risk). Never repeat a concept already in alreadyUnlockedConcepts. Only fill notificationOffer if there's a genuinely meaningful pattern worth surfacing — otherwise set it to null, as in Example B.`;
+
+        const raw = await fetchWithRetry(() => this.fetchCoachResponse(systemPrompt, JSON.stringify(context)));
+        if (!raw) return; // network failure — already logged by fetchCoachResponse, nothing more to do
+
+        let result;
         try {
           const cleaned = raw.replace(/```json/i, '').replace(/```/g, '').trim();
-          const result = JSON.parse(cleaned);
-
-          if (result.updatedMemory) state.agent.memory = result.updatedMemory;
-          if (result.proactiveTip) state.agent.pendingTip = result.proactiveTip;
-
-          if (result.newConceptUnlock && result.newConceptUnlock.title) {
-            const title = result.newConceptUnlock.title;
-            if (!state.agent.unlockedConcepts.includes(title)) {
-              state.agent.unlockedConcepts.push(title);
-              this.triggerConceptUnlockModal(title, result.newConceptUnlock.explanation || '');
-            }
-          }
-
-          // Rate-limited coach-authored notification: at most once every 3.5 days,
-          // so pattern call-outs feel meaningful rather than spammy.
-          if (result.notificationOffer && result.notificationOffer.title) {
-            const last = state.agent.lastNotificationAt ? new Date(state.agent.lastNotificationAt) : null;
-            const daysSince = last ? (Date.now() - last.getTime()) / 86400000 : Infinity;
-            if (daysSince >= 3.5) {
-              addNotification({
-                type: 'coach-tip',
-                title: result.notificationOffer.title,
-                body: result.notificationOffer.body || '',
-                actionLabel: 'Ask Coach',
-                actionPrompt: result.notificationOffer.body || result.notificationOffer.title,
-              });
-              state.agent.lastNotificationAt = new Date().toISOString();
-            }
-          }
-
-          state.agent.lastAnalyzedWorkoutId = workoutId;
-          state.agent.pendingTipSeen = false;
-          saveState();
-          if (document.getElementById('screen-coach').classList.contains('active')) this.renderCoachScreen();
-          else updateCoachNavBadge();
+          result = JSON.parse(cleaned);
         } catch (err) {
-          console.error('AICoach: failed to parse response', err, raw);
+          console.error('AICoach: malformed JSON response, skipping this cycle.', err, raw);
+          return;
         }
+
+        if (result.updatedMemory) state.agent.memory = result.updatedMemory;
+        if (result.proactiveTip && !state.agent.pendingTipPinned) state.agent.pendingTip = result.proactiveTip;
+
+        // Append new structured facts (deduped, capped at 15 oldest-dropped-first) so
+        // long-term patterns persist even as the prose summary gets overwritten each cycle.
+        if (Array.isArray(result.newFacts) && result.newFacts.length) {
+          if (!state.agent.memoryFacts) state.agent.memoryFacts = [];
+          const existingTexts = new Set(state.agent.memoryFacts.map(f => f.text.toLowerCase()));
+          result.newFacts.forEach(f => {
+            if (typeof f === 'string' && f.trim() && !existingTexts.has(f.trim().toLowerCase())) {
+              state.agent.memoryFacts.push({ text: f.trim(), date: new Date().toISOString() });
+              existingTexts.add(f.trim().toLowerCase());
+            }
+          });
+          if (state.agent.memoryFacts.length > 15) state.agent.memoryFacts = state.agent.memoryFacts.slice(-15);
+        }
+
+        if (result.newConceptUnlock && result.newConceptUnlock.title) {
+          const title = result.newConceptUnlock.title;
+          if (!state.agent.unlockedConcepts.includes(title)) {
+            state.agent.unlockedConcepts.push(title);
+            this.triggerConceptUnlockModal(title, result.newConceptUnlock.explanation || '');
+          }
+        }
+
+        // Rate-limited coach-authored notification. Base cooldown is 3.5 days, but
+        // shrinks (down to 1 day) the more new signal has piled up since the last
+        // notification — several stalled exercises + fresh injuries deserve a nudge
+        // sooner than a quiet week does. Injury/pain language always bypasses it.
+        if (result.notificationOffer && result.notificationOffer.title) {
+          const last = state.agent.lastNotificationAt ? new Date(state.agent.lastNotificationAt) : null;
+          const daysSince = last ? (Date.now() - last.getTime()) / 86400000 : Infinity;
+          const signalCount = (context.stalledExercises || []).length + (context.recentInjuries || []).length + (context.imbalanceFlags || []).length;
+          const adaptiveCooldown = Math.max(1, 3.5 - Math.min(2.5, signalCount * 0.5));
+          const isUrgent = /injur|pain|hurt|swell|sharp/i.test(result.notificationOffer.title + ' ' + (result.notificationOffer.body || ''));
+          if (daysSince >= adaptiveCooldown || isUrgent) {
+            addNotification({
+              type: 'coach-tip',
+              title: result.notificationOffer.title,
+              body: result.notificationOffer.body || '',
+              actionLabel: 'Ask Coach',
+              actionPrompt: result.notificationOffer.body || result.notificationOffer.title,
+            });
+            state.agent.lastNotificationAt = new Date().toISOString();
+          }
+        }
+
+        state.agent.lastAnalyzedWorkoutId = workoutId;
+        state.agent.pendingTipSeen = false;
+        saveState();
+        if (document.getElementById('screen-coach').classList.contains('active')) this.renderCoachScreen();
+        else updateCoachNavBadge();
+      },
+
+      // Automation: periodic check-in even without a finished workout — covers
+      // nutrition/injury logging or a long gap in training that would otherwise
+      // never trigger evolveAndAnalyze (which only fires post-workout).
+      async checkInIfIdle() {
+        const last = state.agent.lastCheckInAt ? new Date(state.agent.lastCheckInAt) : null;
+        const daysSince = last ? (Date.now() - last.getTime()) / 86400000 : Infinity;
+        if (daysSince < 7) return;
+        state.agent.lastCheckInAt = new Date().toISOString();
+        saveState();
+        const context = this.compileContext();
+        const daysSinceLastWorkout = state.workouts.length ? Math.floor((Date.now() - new Date(state.workouts[0].date).getTime()) / 86400000) : null;
+        const systemPrompt = `${COACH_PERSONA}
+
+This is a periodic check-in, not tied to a finished workout — the athlete may not have trained recently. Look at daysSinceLastWorkout, nutritionRecent, recentInjuries, and weightTrend. Respond ONLY with JSON, no fences:
+{ "proactiveTip": "string, 1-2 sentences, relevant to any gap/injury/nutrition signal, or encouragement if things look fine" }`;
+        const raw = await fetchWithRetry(() => this.fetchCoachResponse(systemPrompt, JSON.stringify({ ...context, daysSinceLastWorkout })));
+        if (!raw) return;
+        try {
+          const result = JSON.parse(raw.replace(/```json/i, '').replace(/```/g, '').trim());
+          if (result.proactiveTip && !state.agent.pendingTipPinned) {
+            state.agent.pendingTip = result.proactiveTip;
+            state.agent.pendingTipSeen = false;
+            saveState();
+            updateCoachNavBadge();
+          }
+        } catch (e) { /* skip on malformed response */ }
+      },
+
+      // Automation triggered directly by a moderate/severe Injury Log entry, not
+      // by a finished workout or the weekly idle timer — reacts same-session so
+      // the next training decision can account for it immediately.
+      async checkInOnInjury(injury) {
+        const context = this.compileContext();
+        const systemPrompt = `${COACH_PERSONA}
+
+The athlete just logged a new injury/pain entry: ${JSON.stringify(injury)}. React specifically to it — what to avoid short-term and one safe substitution direction, given recentWorkouts and availableEquipment. Respond ONLY with JSON, no fences:
+{ "proactiveTip": "string, 1-3 sentences, concrete and specific to this injury" }`;
+        const raw = await fetchWithRetry(() => this.fetchCoachResponse(systemPrompt, JSON.stringify(context)));
+        if (!raw) return;
+        try {
+          const result = JSON.parse(raw.replace(/```json/i, '').replace(/```/g, '').trim());
+          if (result.proactiveTip) {
+            state.agent.pendingTip = result.proactiveTip;
+            state.agent.pendingTipSeen = false;
+            saveState();
+            updateCoachNavBadge();
+            addNotification({ type: 'coach-tip', title: `Training note: ${injury.bodyPart}`, body: result.proactiveTip, actionLabel: 'Ask Coach', actionPrompt: result.proactiveTip });
+          }
+        } catch (e) { /* skip on malformed response */ }
       },
 
       triggerConceptUnlockModal(title, explanation) {
@@ -9990,8 +10198,25 @@ Only unlock a concept if the data actually supports it (plateaus, volume swings,
         if (!container) return;
         if (state.agent) state.agent.pendingTipSeen = true;
         updateCoachNavBadge();
+        const hasTip = !!state.agent.pendingTip;
         const tip = state.agent.pendingTip || 'Log your next session so I can calibrate your recovery and volume curves.';
+        const pinned = !!state.agent.pendingTipPinned;
         const concepts = (state.agent.unlockedConcepts || []).map(c => typeof c === 'string' ? { title: c, explanation: '' } : c);
+        const tipCardHTML = `
+      <div class="snapshot-card" style="border-left:3px solid var(--accent-blue);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:8px;">
+          <div style="display:flex;align-items:center;gap:6px;font-weight:700;font-size:13px;"><span>🤖</span><span>YOUR AI COACH</span></div>
+          <span style="background:var(--surface2);color:var(--text-muted);font-size:11px;padding:3px 8px;border-radius:10px;">🎓 ${concepts.length} unlocked</span>
+        </div>
+        <div style="font-size:14px;color:var(--text);line-height:1.5;font-style:italic;background:var(--surface2);padding:12px 14px;border-radius:8px;">${mdToHtml(tip)}</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;">
+          <span style="cursor:pointer;color:var(--accent-blue);font-size:12px;" onclick="AICoach.viewMemory()">🧠 View memory</span>
+          <span style="display:flex;gap:12px;">
+            ${hasTip ? `<span style="cursor:pointer;font-size:12px;color:${pinned ? 'var(--gold)' : 'var(--text-muted)'};" onclick="AICoach.pinTip()" title="${pinned ? 'Unpin tip' : 'Pin tip so it stays'}">${pinned ? '📌 Pinned' : '📌 Pin'}</span>
+            <span style="cursor:pointer;font-size:12px;color:var(--text-muted);" onclick="AICoach.dismissTip()" title="Dismiss tip">✕ Dismiss</span>` : ''}
+          </span>
+        </div>
+      </div>`;
 
         const MAX_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>`;
         const MIN_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/></svg>`;
@@ -10012,14 +10237,7 @@ Only unlock a concept if the data actually supports it (plateaus, volume swings,
           // the bottom nav visible below it. Rest of the Coach screen (tip card,
           // concepts) is untouched underneath and reappears on minimize.
           container.innerHTML = `
-      <div class="snapshot-card" style="border-left:3px solid var(--accent-blue);">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:8px;">
-          <div style="display:flex;align-items:center;gap:6px;font-weight:700;font-size:13px;"><span>🤖</span><span>YOUR AI COACH</span></div>
-          <span style="background:var(--surface2);color:var(--text-muted);font-size:11px;padding:3px 8px;border-radius:10px;">🎓 ${concepts.length} unlocked</span>
-        </div>
-        <div style="font-size:14px;color:var(--text);line-height:1.5;font-style:italic;background:var(--surface2);padding:12px 14px;border-radius:8px;">${mdToHtml(tip)}</div>
-        <div style="text-align:right;margin-top:8px;"><span style="cursor:pointer;color:var(--accent-blue);font-size:12px;" onclick="AICoach.viewMemory()">🧠 View memory</span></div>
-      </div>
+${tipCardHTML}
       ${concepts.length ? `<div class="badge-row" style="padding:0 16px 4px;flex-wrap:wrap;">${concepts.map((c, i) => `<span class="variations-btn has-tags" style="cursor:pointer;" onclick="AICoach.viewConcept(${i})">🎓 ${c.title}</span>`).join('')}</div>` : ''}
       <div id="coach-chat-panel" style="position:fixed;top:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;height:calc(100vh - var(--nav-h));background:var(--bg);z-index:150;display:flex;flex-direction:column;">
         ${chatHeader}
@@ -10028,14 +10246,7 @@ Only unlock a concept if the data actually supports it (plateaus, volume swings,
       </div>`;
         } else {
           container.innerHTML = `
-      <div class="snapshot-card" style="border-left:3px solid var(--accent-blue);">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:8px;">
-          <div style="display:flex;align-items:center;gap:6px;font-weight:700;font-size:13px;"><span>🤖</span><span>YOUR AI COACH</span></div>
-          <span style="background:var(--surface2);color:var(--text-muted);font-size:11px;padding:3px 8px;border-radius:10px;">🎓 ${concepts.length} unlocked</span>
-        </div>
-        <div style="font-size:14px;color:var(--text);line-height:1.5;font-style:italic;background:var(--surface2);padding:12px 14px;border-radius:8px;">${mdToHtml(tip)}</div>
-        <div style="text-align:right;margin-top:8px;"><span style="cursor:pointer;color:var(--accent-blue);font-size:12px;" onclick="AICoach.viewMemory()">🧠 View memory</span></div>
-      </div>
+${tipCardHTML}
       ${concepts.length ? `<div class="badge-row" style="padding:0 16px 4px;flex-wrap:wrap;">${concepts.map((c, i) => `<span class="variations-btn has-tags" style="cursor:pointer;" onclick="AICoach.viewConcept(${i})">🎓 ${c.title}</span>`).join('')}</div>` : ''}
       ${chatHeader}
       <div id="coach-chat-history" style="margin:8px 16px 12px;min-height:200px;max-height:44vh;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding:12px;background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);"></div>
@@ -10044,9 +10255,28 @@ Only unlock a concept if the data actually supports it (plateaus, volume swings,
 
         const historyEl = document.getElementById('coach-chat-history');
         historyEl.innerHTML = `<div class="row-fade-in" style="align-self:flex-start;background:var(--surface2);padding:8px 12px;border-radius:8px;max-width:85%;font-size:13px;">👋 I've looked over your recent sessions. What would you like to tweak about your training?</div>` +
-          (state.agent.interactionHistory || []).map(m => this._bubble(m.role, m.text)).join('');
+          (state.agent.interactionHistory || []).map((m, i, arr) => {
+            const nextIsSameRole = arr[i + 1] && arr[i + 1].role === m.role;
+            return this._bubble(m.role, m.text, m.action, m.timestamp, !nextIsSameRole);
+          }).join('');
         historyEl.scrollTop = historyEl.scrollHeight;
         applyCardStagger(container);
+      },
+
+      pinTip() {
+        state.agent.pendingTipPinned = !state.agent.pendingTipPinned;
+        saveState();
+        this.renderCoachScreen();
+        showToast(state.agent.pendingTipPinned ? 'Tip pinned 📌' : 'Tip unpinned');
+      },
+
+      dismissTip() {
+        state.agent.pendingTip = null;
+        state.agent.pendingTipPinned = false;
+        state.agent.pendingTipSeen = true;
+        saveState();
+        updateCoachNavBadge();
+        this.renderCoachScreen();
       },
 
       viewConcept(i) {
@@ -10055,9 +10285,17 @@ Only unlock a concept if the data actually supports it (plateaus, volume swings,
         showConfirmModal(c.explanation || c.title, () => {}, { title: '🎓 ' + c.title, confirmLabel: 'Close', danger: false });
       },
 
-      _bubble(role, text) {
+      _bubble(role, text, action, timestamp, showTime) {
         const isUser = role === 'user';
-        return `<div class="row-fade-in" style="align-self:${isUser ? 'flex-end' : 'flex-start'};background:${isUser ? 'var(--accent-blue)' : 'var(--surface2)'};color:${isUser ? '#fff' : 'var(--text)'};padding:8px 12px;border-radius:8px;max-width:85%;font-size:13px;line-height:1.5;">${isUser ? escapeHtml(text) : mdToHtml(text)}</div>`;
+        const btn = (!isUser && action) ? `<div style="margin-top:6px;"><button class="btn-secondary" style="padding:5px 10px;font-size:11px;" onclick='AICoach.applyCoachAction(${JSON.stringify(action)})'>✓ Apply suggestion</button></div>` : '';
+        const timeLabel = timestamp ? new Date(timestamp).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : '';
+        // Timestamp is only shown once per consecutive run of same-role messages
+        // (showTime), so the thread doesn't repeat a clock reading on every bubble.
+        const timeHTML = (timeLabel && showTime) ? `<div style="font-size:10px;color:var(--text-dim);margin:${isUser ? '2px 2px 0 0' : '2px 0 0 2px'};text-align:${isUser ? 'right' : 'left'};">${timeLabel}</div>` : '';
+        return `<div style="display:flex;flex-direction:column;align-items:${isUser ? 'flex-end' : 'flex-start'};max-width:85%;align-self:${isUser ? 'flex-end' : 'flex-start'};">
+      <div class="row-fade-in" style="background:${isUser ? 'var(--accent-blue)' : 'var(--surface2)'};color:${isUser ? '#fff' : 'var(--text)'};padding:8px 12px;border-radius:8px;font-size:13px;line-height:1.5;">${isUser ? escapeHtml(text) : mdToHtml(text)}${btn}</div>
+      ${timeHTML}
+    </div>`;
       },
 
       async handleUserMessage() {
@@ -10068,36 +10306,187 @@ Only unlock a concept if the data actually supports it (plateaus, volume swings,
         inputEl.value = '';
 
         state.agent.interactionHistory.push({ role: 'user', text: userText, timestamp: Date.now() });
-        historyEl.insertAdjacentHTML('beforeend', this._bubble('user', userText));
+        const userTs = Date.now();
+        historyEl.insertAdjacentHTML('beforeend', this._bubble('user', userText, null, userTs, true));
         historyEl.scrollTop = historyEl.scrollHeight;
 
         const loadingId = 'coach-loading-' + Date.now();
-        historyEl.insertAdjacentHTML('beforeend', `<div id="${loadingId}" style="align-self:flex-start;background:var(--surface2);padding:8px 12px;border-radius:8px;font-size:13px;font-style:italic;color:var(--text-muted);">Coach is thinking…</div>`);
+        historyEl.insertAdjacentHTML('beforeend', `<div id="${loadingId}" style="align-self:flex-start;background:var(--surface2);padding:10px 14px;border-radius:8px;display:flex;gap:4px;align-items:center;"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></div>`);
         historyEl.scrollTop = historyEl.scrollHeight;
 
-        const systemPrompt = `You are the TWP AI Coach — warm, encouraging, talks like an experienced coach/friend, not a report generator. Never say things like "Based on the data provided".
+        const systemPrompt = `${COACH_PERSONA}
 
 The athlete may write with typos, shorthand, or broken grammar — interpret their intended meaning silently and never mock or point out mistakes. If a question is genuinely ambiguous, ask ONE short natural clarifying question instead of guessing wrong.
 
-DOMAIN KNOWLEDGE: reason concretely about joint actions/ROM, compensation patterns, and how volume/intensity/frequency/tempo/RIR-RPE differ by goal (hypertrophy, strength, power, longevity, general fitness) — calibrate to the athlete's trainingGoal. When suggesting exercises, prioritize muscles under target range, then plateaued lifts, then what's in availableEquipment, then fit with trainingGoal.
+Reply in under ~120 words. Use lightweight markdown: short paragraphs, "- " bullets for multi-point advice, "1. " numbered steps for sequential plans, **bold** for key numbers/exercise names.
 
-Reply in under ~120 words. Use lightweight markdown: short 2-3 sentence paragraphs, "- " bullets for multi-point advice, **bold** for key numbers/exercise names.`;
+AUTONOMY: if your advice implies a concrete, safe app change, append on its own final line (outside the reply text a human reads) ONE of:
+<<ACTION:{"type":"setRestPreset","exerciseName":"...","seconds":90}>>
+<<ACTION:{"type":"logInjury","bodyPart":"...","severity":5,"note":"..."}>>
+<<ACTION:{"type":"addCustomTag","tag":"..."}>>
+<<ACTION:{"type":"setWeightStep","exerciseName":"...","kg":2.5}>>
+<<ACTION:{"type":"setPeriodizationGoalDate","date":"YYYY-MM-DD"}>>
+Only include an ACTION line when truly warranted (max one), never fabricate one just to have it, and never include it for anything destructive. Every action requires explicit user confirmation before it's applied, so it's safe to suggest when genuinely relevant.`;
         const userPayload = `Context: ${JSON.stringify(this.compileContext())}\n\nAthlete's question: ${userText}`;
-        const reply = await this.fetchCoachResponse(systemPrompt, userPayload)
+        let reply = await fetchWithRetry(() => this.fetchCoachResponse(systemPrompt, userPayload))
           || "I'm having trouble connecting right now — let's just focus on your next set!";
 
+        let action = null;
+        const actionMatch = reply.match(/<<ACTION:(\{.*?\})>>/s);
+        if (actionMatch) {
+          try { action = JSON.parse(actionMatch[1]); } catch (e) { action = null; }
+          reply = reply.replace(actionMatch[0], '').trim();
+        }
+
         document.getElementById(loadingId)?.remove();
-        state.agent.interactionHistory.push({ role: 'assistant', text: reply, timestamp: Date.now() });
-        // Cap history so localStorage doesn't grow unbounded over a long-lived app.
+        state.agent.interactionHistory.push({ role: 'assistant', text: reply, timestamp: Date.now(), action });
         if (state.agent.interactionHistory.length > 40) state.agent.interactionHistory = state.agent.interactionHistory.slice(-40);
         saveState();
-        historyEl.insertAdjacentHTML('beforeend', this._bubble('assistant', reply));
+        historyEl.insertAdjacentHTML('beforeend', this._bubble('assistant', reply, action, Date.now(), true));
         historyEl.scrollTop = historyEl.scrollHeight;
       },
 
+      // Validates a coach-proposed action against a strict schema before it's ever
+      // shown to the user for confirmation — malformed/out-of-range values (e.g. a
+      // negative rest time, a severity outside 1-10) get rejected here instead of
+      // silently clamped via parseInt further down.
+      validateCoachAction(action) {
+        if (!action || !action.type) return 'No action.';
+        switch (action.type) {
+          case 'setRestPreset': {
+            if (!action.exerciseName) return 'Missing exercise name.';
+            const s = parseInt(action.seconds);
+            if (isNaN(s) || s < 0 || s > 900) return 'Rest time must be 0-900 seconds.';
+            return null;
+          }
+          case 'logInjury': {
+            if (!action.bodyPart) return 'Missing body part.';
+            const sev = parseInt(action.severity);
+            if (action.severity !== undefined && (isNaN(sev) || sev < 1 || sev > 10)) return 'Severity must be 1-10.';
+            return null;
+          }
+          case 'addCustomTag': {
+            if (!action.tag || typeof action.tag !== 'string' || !action.tag.trim()) return 'Missing tag text.';
+            return null;
+          }
+          case 'setWeightStep': {
+            if (!action.exerciseName) return 'Missing exercise name.';
+            const kg = parseFloat(action.kg);
+            if (isNaN(kg) || kg < 0.5 || kg > 25) return 'Weight step must be 0.5-25kg.';
+            return null;
+          }
+          case 'setPeriodizationGoalDate': {
+            if (!action.date || isNaN(new Date(action.date).getTime())) return 'Missing or invalid date.';
+            if (new Date(action.date) <= new Date()) return 'Goal date must be in the future.';
+            return null;
+          }
+          default: return 'Unknown action type.';
+        }
+      },
+
+      // Applies a coach-suggested action after explicit user confirmation. Kept to
+      // a small, safe whitelist — never destructive, never silent — and validated
+      // against a schema first. Stores enough of the prior state to support one
+      // level of Undo.
+      applyCoachAction(action) {
+        const err = this.validateCoachAction(action);
+        if (err) { showToast('Coach suggestion looked off: ' + err); return; }
+
+        if (action.type === 'setRestPreset') {
+          const ex = getAllExercises().find(e => e.name.toLowerCase() === String(action.exerciseName).toLowerCase());
+          if (!ex) { showToast('Could not find that exercise'); return; }
+          showConfirmModal(`Set rest preset for ${ex.name} to ${action.seconds}s?`, () => {
+            if (!state.exerciseRestPresets) state.exerciseRestPresets = {};
+            const prev = state.exerciseRestPresets[ex.id];
+            state.exerciseRestPresets[ex.id] = parseInt(action.seconds) || 90;
+            saveState(); pushSync();
+            this._recordUndo({ type: 'setRestPreset', exId: ex.id, prev });
+            showToast('Rest preset updated ⏱️');
+          }, { title: 'Apply Coach Suggestion', confirmLabel: 'Apply', danger: false });
+        } else if (action.type === 'logInjury') {
+          showConfirmModal(`Log injury note: ${action.bodyPart} (severity ${action.severity || '?'}/10)?`, () => {
+            if (!state.injuryLog) state.injuryLog = [];
+            const entry = { id: Date.now() + Math.random().toString(36).slice(2, 6), date: new Date().toISOString(), bodyPart: action.bodyPart, severity: parseInt(action.severity) || 5, note: action.note || '' };
+            state.injuryLog.unshift(entry);
+            saveState();
+            this._recordUndo({ type: 'logInjury', id: entry.id });
+            showToast('Logged to Injury/Pain Log 🩹');
+          }, { title: 'Apply Coach Suggestion', confirmLabel: 'Log It', danger: false });
+        } else if (action.type === 'addCustomTag') {
+          const tag = action.tag.trim().toLowerCase().replace(/\s+/g, '-');
+          showConfirmModal(`Add "${tag}" as a reusable set tag?`, () => {
+            if (!state.customTags) state.customTags = [];
+            if (!state.customTags.includes(tag)) {
+              state.customTags.push(tag);
+              saveState();
+              this._recordUndo({ type: 'addCustomTag', tag });
+              showToast('Tag added 🏷️');
+            } else { showToast('That tag already exists'); }
+          }, { title: 'Apply Coach Suggestion', confirmLabel: 'Add', danger: false });
+        } else if (action.type === 'setWeightStep') {
+          const ex = getAllExercises().find(e => e.name.toLowerCase() === String(action.exerciseName).toLowerCase());
+          if (!ex) { showToast('Could not find that exercise'); return; }
+          showConfirmModal(`Set the +/- weight step for ${ex.name} to ${action.kg}kg?`, () => {
+            if (!state.exerciseWeightSteps) state.exerciseWeightSteps = {};
+            const prev = state.exerciseWeightSteps[ex.id];
+            state.exerciseWeightSteps[ex.id] = parseFloat(action.kg);
+            saveState(); pushSync();
+            this._recordUndo({ type: 'setWeightStep', exId: ex.id, prev });
+            showToast('Weight step updated');
+          }, { title: 'Apply Coach Suggestion', confirmLabel: 'Apply', danger: false });
+        } else if (action.type === 'setPeriodizationGoalDate') {
+          if (!state.periodization) { showToast('No active periodization plan to update'); return; }
+          showConfirmModal(`Move your periodization goal date to ${new Date(action.date).toLocaleDateString()}? Your plan will be regenerated to fit.`, () => {
+            const prev = JSON.parse(JSON.stringify(state.periodization));
+            state.periodization = buildPeriodizationPlan(action.date, prev.athleteLevel, prev.model);
+            saveState(); pushSync();
+            this._recordUndo({ type: 'setPeriodizationGoalDate', prevPlan: prev });
+            if (document.getElementById('screen-progress').classList.contains('active')) renderPeriodizationTab();
+            showToast('Plan updated 📋');
+          }, { title: 'Apply Coach Suggestion', confirmLabel: 'Update Plan', danger: false });
+        }
+      },
+
+      _recordUndo(entry) {
+        state.agent.lastAppliedAction = entry;
+        saveState();
+        const historyEl = document.getElementById('coach-chat-history');
+        if (historyEl) {
+          historyEl.insertAdjacentHTML('beforeend', `<div class="row-fade-in" style="align-self:flex-start;font-size:11px;color:var(--text-dim);">Applied. <span style="color:var(--accent-blue);cursor:pointer;" onclick="AICoach.undoLastAction()">Undo</span></div>`);
+          historyEl.scrollTop = historyEl.scrollHeight;
+        }
+      },
+
+      // Reverts whatever the most recently applied coach action changed. Single-level
+      // undo (no stack) — applying a second action clears the ability to undo the first.
+      undoLastAction() {
+        const a = state.agent.lastAppliedAction;
+        if (!a) { showToast('Nothing to undo'); return; }
+        if (a.type === 'setRestPreset') {
+          if (a.prev === undefined) delete state.exerciseRestPresets[a.exId]; else state.exerciseRestPresets[a.exId] = a.prev;
+        } else if (a.type === 'logInjury') {
+          state.injuryLog = (state.injuryLog || []).filter(e => e.id !== a.id);
+        } else if (a.type === 'addCustomTag') {
+          state.customTags = (state.customTags || []).filter(t => t !== a.tag);
+        } else if (a.type === 'setWeightStep') {
+          if (a.prev === undefined) delete state.exerciseWeightSteps[a.exId]; else state.exerciseWeightSteps[a.exId] = a.prev;
+        } else if (a.type === 'setPeriodizationGoalDate') {
+          state.periodization = a.prevPlan;
+        }
+        state.agent.lastAppliedAction = null;
+        saveState(); pushSync();
+        showToast('Undone');
+        renderInjuryCard();
+        if (document.getElementById('screen-progress').classList.contains('active')) renderPeriodizationTab();
+      },
+
       viewMemory() {
+        const facts = state.agent.memoryFacts || [];
+        const factsBlock = facts.length
+          ? '\n\nLong-term patterns:\n' + facts.map(f => `• ${f.text}`).join('\n')
+          : '';
         showConfirmModal(
-          state.agent.memory,
+          state.agent.memory + factsBlock,
           () => {},
           { title: '🧠 Coach Memory', confirmLabel: 'Close', danger: false }
         );
