@@ -640,26 +640,75 @@
       outline: none;
     }
 
-    .bw-wrap { display: flex; align-items: center; gap: 5px; flex-wrap: nowrap; }
-    .bw-chip {
-      background: var(--surface2); border: 1px solid var(--border); border-radius: 20px;
-      font-family: inherit; font-size: 10px; font-weight: 700; padding: 4px 8px; cursor: pointer;
-      white-space: nowrap; color: var(--text-muted);
+    .bw-wrap {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-wrap: nowrap;
     }
-    .bw-chip.mode-added { border-color: var(--accent-blue); color: var(--accent-blue); background: rgba(59,130,246,.12); }
-    .bw-chip.mode-assisted { border-color: var(--accent); color: var(--accent); background: rgba(249,115,22,.12); }
-    .bw-kg { font-size: 10px; color: var(--text-muted); white-space: nowrap; }
-    .bw-warn { font-size: 9px; color: var(--gold); white-space: nowrap; cursor: pointer; }
+
+    .bw-chip {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      font-family: inherit;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 4px 8px;
+      cursor: pointer;
+      white-space: nowrap;
+      color: var(--text-muted);
+    }
+
+    .bw-chip.mode-added {
+      border-color: var(--accent-blue);
+      color: var(--accent-blue);
+      background: rgba(59, 130, 246, .12);
+    }
+
+    .bw-chip.mode-assisted {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(249, 115, 22, .12);
+    }
+
+    .bw-kg {
+      font-size: 10px;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .bw-warn {
+      font-size: 9px;
+      color: var(--gold);
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
     .bw-delta-input {
-      background: var(--surface2); border: 1px solid var(--border); border-radius: 6px;
-      color: var(--text); font-size: 11px; font-family: inherit; text-align: center;
-      padding: 3px 2px; width: 34px; outline: none;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 11px;
+      font-family: inherit;
+      text-align: center;
+      padding: 3px 2px;
+      width: 34px;
+      outline: none;
     }
 
     /* ── App-wide motion (subtle, <300ms, CSS-only) ── */
     @keyframes ptabFadeIn {
-      from { opacity: 0; transform: translateY(4px); }
-      to { opacity: 1; transform: translateY(0); }
+      from {
+        opacity: 0;
+        transform: translateY(4px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     .ptab-fade-in {
@@ -667,8 +716,15 @@
     }
 
     @keyframes cardStaggerIn {
-      from { opacity: 0; transform: translateY(8px); }
-      to { opacity: 1; transform: translateY(0); }
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     .stagger-in {
@@ -676,16 +732,35 @@
     }
 
     @keyframes popIn {
-      0% { opacity: 0; transform: scale(.7); }
-      60% { opacity: 1; transform: scale(1.06); }
-      100% { transform: scale(1); }
+      0% {
+        opacity: 0;
+        transform: scale(.7);
+      }
+
+      60% {
+        opacity: 1;
+        transform: scale(1.06);
+      }
+
+      100% {
+        transform: scale(1);
+      }
     }
 
-    .warn-pill, .plateau-tag, .pr-badge, .badge-chip, .medal, .today-pill, .notif-badge-dot, .notif-unread-dot {
+    .warn-pill,
+    .plateau-tag,
+    .pr-badge,
+    .badge-chip,
+    .medal,
+    .today-pill,
+    .notif-badge-dot,
+    .notif-unread-dot {
       animation: popIn 200ms ease-out;
     }
 
-    .muscle-bar, .ppl-bar-row>div, .plan-bar-fill {
+    .muscle-bar,
+    .ppl-bar-row>div,
+    .plan-bar-fill {
       transition: width 260ms ease-out;
     }
 
@@ -694,8 +769,13 @@
     }
 
     @keyframes svgRefreshFade {
-      from { opacity: 0; }
-      to { opacity: 1; }
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
     }
 
     .svg-refresh-fade {
@@ -704,8 +784,13 @@
 
     /* table rows: opacity-only fade (transform on <tr> is unreliable across browsers) */
     @keyframes rowFadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
     }
 
     .row-fade-in {
@@ -714,8 +799,15 @@
 
     /* Screen switches (bottom nav) crossfade+lift instead of a hard display cut */
     @keyframes screenFadeIn {
-      from { opacity: 0; transform: translateY(6px); }
-      to { opacity: 1; transform: translateY(0); }
+      from {
+        opacity: 0;
+        transform: translateY(6px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     .screen.active {
@@ -724,8 +816,15 @@
 
     /* Every modal sheet slides up + fades in on open, no JS/display changes needed */
     @keyframes sheetSlideUp {
-      from { opacity: 0; transform: translateY(16px); }
-      to { opacity: 1; transform: translateY(0); }
+      from {
+        opacity: 0;
+        transform: translateY(16px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     .modal-overlay.open .modal-sheet,
@@ -735,10 +834,19 @@
     }
 
     /* Toast already animates via its existing transition; button press gives a touch of tactile feedback */
-    .btn-primary, .btn-primary-flex, .btn-secondary, .btn-finish, .goal-btn {
+    .btn-primary,
+    .btn-primary-flex,
+    .btn-secondary,
+    .btn-finish,
+    .goal-btn {
       transition: transform 120ms ease, opacity .15s;
     }
-    .btn-primary:active, .btn-primary-flex:active, .btn-secondary:active, .btn-finish:active, .goal-btn:active {
+
+    .btn-primary:active,
+    .btn-primary-flex:active,
+    .btn-secondary:active,
+    .btn-finish:active,
+    .goal-btn:active {
       transform: scale(.97);
     }
 
@@ -2057,15 +2165,36 @@
     }
 
     @keyframes typingBounce {
-      0%, 60%, 100% { transform: translateY(0); opacity: .5; }
-      30% { transform: translateY(-4px); opacity: 1; }
+
+      0%,
+      60%,
+      100% {
+        transform: translateY(0);
+        opacity: .5;
+      }
+
+      30% {
+        transform: translateY(-4px);
+        opacity: 1;
+      }
     }
+
     .typing-dot {
-      width: 6px; height: 6px; border-radius: 50%; background: var(--text-muted);
-      display: inline-block; animation: typingBounce 1.1s ease-in-out infinite;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--text-muted);
+      display: inline-block;
+      animation: typingBounce 1.1s ease-in-out infinite;
     }
-    .typing-dot:nth-child(2) { animation-delay: .15s; }
-    .typing-dot:nth-child(3) { animation-delay: .3s; }
+
+    .typing-dot:nth-child(2) {
+      animation-delay: .15s;
+    }
+
+    .typing-dot:nth-child(3) {
+      animation-delay: .3s;
+    }
 
     /* ── YOU PAGE: FLOATING WORKOUT HISTORY SEARCH ── */
     #you-history-search-bar {
@@ -2078,92 +2207,277 @@
       border-bottom: 1px solid transparent;
       transition: box-shadow .2s, border-color .2s;
     }
+
     #you-history-search-bar.scrolled {
       box-shadow: 0 8px 16px -8px rgba(0, 0, 0, .5);
       border-bottom-color: var(--border);
     }
 
     /* ── SMALL SCREEN RESPONSIVENESS ── */
-    .progress-tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-    .time-filters { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .progress-tabs {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .time-filters {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
 
     @media (max-width: 380px) {
-      .page-header { padding: 14px 14px 10px; }
-      .page-header h1 { font-size: 19px; }
-      .header-icons { gap: 7px; }
-      .header-icons .icon-btn svg, .icon-btn svg { width: 20px; height: 20px; }
-      #you-history-search-bar { top: 44px; }
+      .page-header {
+        padding: 14px 14px 10px;
+      }
 
-      .snapshot-card, .cta-card, .import-card, .feed-card, .goal-card, .chart-container,
-      .insight-card, .day-card, .week-compare-card, .add-ex-btn, .ex-block, .combo-block { margin-left: 12px; margin-right: 12px; }
+      .page-header h1 {
+        font-size: 19px;
+      }
 
-      .snapshot-card { padding: 14px; }
-      .snapshot-stats { gap: 14px; flex-wrap: wrap; row-gap: 10px; }
-      .stat-item .val { font-size: 20px; }
-      .stat-item .lbl { font-size: 10.5px; }
-      .stat-delta { font-size: 10px; padding: 2px 6px; }
+      .header-icons {
+        gap: 7px;
+      }
 
-      .cta-card { padding: 16px 14px; }
-      .cta-card h2 { font-size: 18px; }
-      .cta-card p { font-size: 12px; }
+      .header-icons .icon-btn svg,
+      .icon-btn svg {
+        width: 20px;
+        height: 20px;
+      }
 
-      .section-title { font-size: 18px; padding: 0 14px 6px; }
-      .section-sub { padding: 0 14px 12px; font-size: 12px; }
+      #you-history-search-bar {
+        top: 44px;
+      }
 
-      .exercise-grid { grid-template-columns: repeat(2, 1fr); }
+      .snapshot-card,
+      .cta-card,
+      .import-card,
+      .feed-card,
+      .goal-card,
+      .chart-container,
+      .insight-card,
+      .day-card,
+      .week-compare-card,
+      .add-ex-btn,
+      .ex-block,
+      .combo-block {
+        margin-left: 12px;
+        margin-right: 12px;
+      }
 
-      .feed-meta { gap: 14px; font-size: 12px; }
-      .feed-meta strong { font-size: 14px; }
+      .snapshot-card {
+        padding: 14px;
+      }
 
-      .detail-stat, .you-stat { padding: 11px 10px; }
-      .detail-stat .val, .you-stat .val { font-size: 17px; }
+      .snapshot-stats {
+        gap: 14px;
+        flex-wrap: wrap;
+        row-gap: 10px;
+      }
 
-      .week-compare-card { padding: 14px; }
-      .week-compare-grid { gap: 6px; }
-      .wc-item .wc-val { font-size: 17px; }
+      .stat-item .val {
+        font-size: 20px;
+      }
 
-      .sets-table th, .sets-table td { padding: 5px 6px; font-size: 12px; }
-      .set-input { width: 48px; }
-      .rir-input, .rpe-input { width: 36px; }
-      .tempo-input { width: 46px; }
-      .variations-btn { max-width: 84px; }
+      .stat-item .lbl {
+        font-size: 10.5px;
+      }
 
-      .workout-meta-row { flex-wrap: wrap; }
-      .workout-meta-row #workout-duration-input { width: calc(50% - 5px); flex: none; }
-      .workout-meta-row #workout-date { flex: 1 1 100%; }
+      .stat-delta {
+        font-size: 10px;
+        padding: 2px 6px;
+      }
 
-      .workout-name-input { font-size: 19px; }
+      .cta-card {
+        padding: 16px 14px;
+      }
 
-      .muscle-body-container svg { max-width: 42vw; height: auto; }
-      .muscle-legend { gap: 12px; font-size: 11px; }
+      .cta-card h2 {
+        font-size: 18px;
+      }
 
-      .badge-chip { min-width: 58px; padding: 8px 10px; }
-      .badge-chip .badge-emoji { font-size: 17px; }
+      .cta-card p {
+        font-size: 12px;
+      }
 
-      .time-filter { font-size: 11px; padding: 7px 4px; }
-      .progress-tab { padding: 12px 10px; font-size: 12px; }
+      .section-title {
+        font-size: 18px;
+        padding: 0 14px 6px;
+      }
 
-      .chart-value { font-size: 23px; }
-      .chart-container { padding: 14px; }
+      .section-sub {
+        padding: 0 14px 12px;
+        font-size: 12px;
+      }
 
-      .nav-btn { padding: 8px 10px; }
-      .nav-btn span { font-size: 10.5px; }
+      .exercise-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
 
-      .you-header { padding: 16px; gap: 12px; }
-      .avatar { width: 48px; height: 48px; font-size: 19px; }
+      .feed-meta {
+        gap: 14px;
+        font-size: 12px;
+      }
 
-      .modal-header { padding: 14px 16px 10px; }
-      .ex-list-item { padding: 10px 14px; gap: 10px; }
-      .ex-list-icon { width: 36px; height: 36px; }
+      .feed-meta strong {
+        font-size: 14px;
+      }
+
+      .detail-stat,
+      .you-stat {
+        padding: 11px 10px;
+      }
+
+      .detail-stat .val,
+      .you-stat .val {
+        font-size: 17px;
+      }
+
+      .week-compare-card {
+        padding: 14px;
+      }
+
+      .week-compare-grid {
+        gap: 6px;
+      }
+
+      .wc-item .wc-val {
+        font-size: 17px;
+      }
+
+      .sets-table th,
+      .sets-table td {
+        padding: 5px 6px;
+        font-size: 12px;
+      }
+
+      .set-input {
+        width: 48px;
+      }
+
+      .rir-input,
+      .rpe-input {
+        width: 36px;
+      }
+
+      .tempo-input {
+        width: 46px;
+      }
+
+      .variations-btn {
+        max-width: 84px;
+      }
+
+      .workout-meta-row {
+        flex-wrap: wrap;
+      }
+
+      .workout-meta-row #workout-duration-input {
+        width: calc(50% - 5px);
+        flex: none;
+      }
+
+      .workout-meta-row #workout-date {
+        flex: 1 1 100%;
+      }
+
+      .workout-name-input {
+        font-size: 19px;
+      }
+
+      .muscle-body-container svg {
+        max-width: 42vw;
+        height: auto;
+      }
+
+      .muscle-legend {
+        gap: 12px;
+        font-size: 11px;
+      }
+
+      .badge-chip {
+        min-width: 58px;
+        padding: 8px 10px;
+      }
+
+      .badge-chip .badge-emoji {
+        font-size: 17px;
+      }
+
+      .time-filter {
+        font-size: 11px;
+        padding: 7px 4px;
+      }
+
+      .progress-tab {
+        padding: 12px 10px;
+        font-size: 12px;
+      }
+
+      .chart-value {
+        font-size: 23px;
+      }
+
+      .chart-container {
+        padding: 14px;
+      }
+
+      .nav-btn {
+        padding: 8px 10px;
+      }
+
+      .nav-btn span {
+        font-size: 10.5px;
+      }
+
+      .you-header {
+        padding: 16px;
+        gap: 12px;
+      }
+
+      .avatar {
+        width: 48px;
+        height: 48px;
+        font-size: 19px;
+      }
+
+      .modal-header {
+        padding: 14px 16px 10px;
+      }
+
+      .ex-list-item {
+        padding: 10px 14px;
+        gap: 10px;
+      }
+
+      .ex-list-icon {
+        width: 36px;
+        height: 36px;
+      }
     }
 
     @media (max-width: 340px) {
-      .snapshot-stats { gap: 10px 16px; }
-      .header-icons { gap: 5px; }
-      .exercise-grid { grid-template-columns: repeat(2, 1fr); }
-      .detail-stats { grid-template-columns: repeat(2, 1fr); }
-      .you-stats { grid-template-columns: repeat(3, 1fr); }
-      .set-input { width: 44px; }
+      .snapshot-stats {
+        gap: 10px 16px;
+      }
+
+      .header-icons {
+        gap: 5px;
+      }
+
+      .exercise-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .detail-stats {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .you-stats {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .set-input {
+        width: 44px;
+      }
     }
   </style>
 </head>
@@ -2183,9 +2497,11 @@
               <path stroke-linecap="round" stroke-linejoin="round"
                 d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
             </svg>
-            <span id="notif-badge-dot" class="notif-badge-dot" style="display:none;position:absolute;top:2px;right:2px;width:8px;height:8px;border-radius:50%;background:var(--accent);"></span>
+            <span id="notif-badge-dot" class="notif-badge-dot"
+              style="display:none;position:absolute;top:2px;right:2px;width:8px;height:8px;border-radius:50%;background:var(--accent);"></span>
           </button>
-          <button class="icon-btn" title="Manage exercises" aria-label="Manage exercises" onclick="openExerciseManager()">
+          <button class="icon-btn" title="Manage exercises" aria-label="Manage exercises"
+            onclick="openExerciseManager()">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M14.4 14.4 9.6 9.6" />
@@ -2197,7 +2513,8 @@
                 d="M6.404 12.768a2 2 0 1 1-2.829-2.829l1.768-1.767a2 2 0 1 1-2.828-2.829l2.828-2.828a2 2 0 1 1 2.829 2.828l1.767-1.768a2 2 0 1 1 2.829 2.829z" />
             </svg>
           </button>
-          <button class="icon-btn" id="sync-btn" title="Sync with cloud" aria-label="Sync with cloud" onclick="pushSync(true)">
+          <button class="icon-btn" id="sync-btn" title="Sync with cloud" aria-label="Sync with cloud"
+            onclick="pushSync(true)">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
               class="lucide lucide-cloud-sync-icon lucide-cloud-sync">
@@ -2262,10 +2579,12 @@
         </div>
         <div class="import-text">
           <div class="title" id="import-export-title" data-i18n="import_title">Import training log</div>
-          <div class="sub" id="import-export-sub" data-i18n="import_sub">Upload a PDF, Excel, or text file to populate your data</div>
+          <div class="sub" id="import-export-sub" data-i18n="import_sub">Upload a PDF, Excel, or text file to populate
+            your data</div>
           <div id="import-format-help-link" style="margin-top:4px;">
             <a onclick="event.stopPropagation(); showImportFormatHelp();"
-              style="font-size:12px;color:var(--accent-blue);text-decoration:none;cursor:pointer;" data-i18n="see_format">See expected format →</a>
+              style="font-size:12px;color:var(--accent-blue);text-decoration:none;cursor:pointer;"
+              data-i18n="see_format">See expected format →</a>
           </div>
         </div>
       </div>
@@ -2283,11 +2602,13 @@
         </div>
         <div style="padding: 40px 20px; text-align: center;">
           <div style="font-size: 48px; margin-bottom: 16px;">💪</div>
-          <h2 style="font-size: 20px; font-weight: 800; margin-bottom: 8px;" data-i18n="no_active_workout">No active workout</h2>
-          <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 24px;" data-i18n="start_new_session">Start a new session to log your
+          <h2 style="font-size: 20px; font-weight: 800; margin-bottom: 8px;" data-i18n="no_active_workout">No active
+            workout</h2>
+          <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 24px;" data-i18n="start_new_session">Start
+            a new session to log your
             exercises.</p>
-          <button class="btn-primary" style="max-width: 280px; margin: 0 auto; display: block;"
-            onclick="startWorkout()" data-i18n="start_empty_workout">Start Empty Workout</button>
+          <button class="btn-primary" style="max-width: 280px; margin: 0 auto; display: block;" onclick="startWorkout()"
+            data-i18n="start_empty_workout">Start Empty Workout</button>
         </div>
       </div>
 
@@ -2310,8 +2631,10 @@
             style="flex: 1; background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 8px; border-radius: 6px; font-family: inherit; font-size: 13px; outline: none;">
         </div>
 
-        <input class="workout-name-input" id="workout-name" placeholder="Workout name…" data-i18n-placeholder="ph_workout_name" />
-        <textarea class="workout-note-input" id="workout-note" placeholder="Add notes…" rows="1" data-i18n-placeholder="ph_add_notes"></textarea>
+        <input class="workout-name-input" id="workout-name" placeholder="Workout name…"
+          data-i18n-placeholder="ph_workout_name" />
+        <textarea class="workout-note-input" id="workout-note" placeholder="Add notes…" rows="1"
+          data-i18n-placeholder="ph_add_notes"></textarea>
 
         <div id="exercises-container"></div>
 
@@ -2358,8 +2681,8 @@
       <div class="section-title">Exercises</div>
       <div class="section-sub">Tap an exercise to edit, or add your own</div>
       <button class="add-ex-btn" style="margin:0 16px 16px;" onclick="openExerciseForm()">+ Add Exercise</button>
-      <input id="exercise-manager-search" class="modal-search" placeholder="Search exercises…" oninput="renderExerciseManagerList()"
-        style="width:calc(100% - 32px);margin:0 16px 10px;box-sizing:border-box;">
+      <input id="exercise-manager-search" class="modal-search" placeholder="Search exercises…"
+        oninput="renderExerciseManagerList()" style="width:calc(100% - 32px);margin:0 16px 10px;box-sizing:border-box;">
       <div class="time-filters" style="margin:0 16px 12px;width:calc(100% - 32px);">
         <button class="em-sort-btn time-filter active" onclick="switchExerciseManagerSort(this,'name')">Name</button>
         <button class="em-sort-btn time-filter" onclick="switchExerciseManagerSort(this,'muscle')">Muscle</button>
@@ -2384,22 +2707,26 @@
               style="width:60px;text-align:center;font-size:20px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:8px;font-family:inherit;outline:none;">
           </div>
           <div style="margin-bottom:14px;">
-            <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:6px;">Rest preset (seconds, optional)</label>
+            <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:6px;">Rest preset (seconds,
+              optional)</label>
             <input id="ef-rest-preset" type="number" min="0" placeholder="e.g. 90"
               style="width:100px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:8px;font-family:inherit;font-size:14px;outline:none;">
           </div>
           <div style="margin-bottom:14px;">
-            <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:6px;">BW chip weight step (kg, optional)</label>
+            <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:6px;">BW chip weight step
+              (kg, optional)</label>
             <input id="ef-weight-step" type="number" min="0.5" step="0.5" placeholder="e.g. 2.5"
               style="width:100px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:8px;font-family:inherit;font-size:14px;outline:none;">
           </div>
           <div style="margin-bottom:14px;display:flex;align-items:center;gap:8px;">
             <input type="checkbox" id="ef-is-bodyweight" style="width:18px;height:18px;">
-            <label for="ef-is-bodyweight" style="font-size:12px;color:var(--text-muted);">⚖️ Bodyweight exercise (can add/remove weight)</label>
+            <label for="ef-is-bodyweight" style="font-size:12px;color:var(--text-muted);">⚖️ Bodyweight exercise (can
+              add/remove weight)</label>
           </div>
           <div style="margin-bottom:14px;display:flex;align-items:center;gap:8px;">
             <input type="checkbox" id="ef-is-unilateral" style="width:18px;height:18px;">
-            <label for="ef-is-unilateral" style="font-size:12px;color:var(--text-muted);">🦵 Unilateral (log Both/Left/Right per set)</label>
+            <label for="ef-is-unilateral" style="font-size:12px;color:var(--text-muted);">🦵 Unilateral (log
+              Both/Left/Right per set)</label>
           </div>
           <div style="margin-bottom:14px;">
             <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:6px;">Name</label>
@@ -2411,10 +2738,13 @@
             <div id="ef-primary-list" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
           </div>
           <div style="margin-bottom:20px;">
-            <label style="font-size:12px;color:var(--accent-blue);display:block;margin-bottom:6px;">Secondary muscles</label>
+            <label style="font-size:12px;color:var(--accent-blue);display:block;margin-bottom:6px;">Secondary
+              muscles</label>
             <div id="ef-secondary-list" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
           </div>
-          <div id="ef-builtin-note" style="display:none;font-size:12px;color:var(--text-dim);margin-bottom:14px;">Editing a built-in exercise saves your own version. Workouts already logged keep the muscles/name recorded at the time.</div>
+          <div id="ef-builtin-note" style="display:none;font-size:12px;color:var(--text-dim);margin-bottom:14px;">
+            Editing a built-in exercise saves your own version. Workouts already logged keep the muscles/name recorded
+            at the time.</div>
           <button class="btn-primary" id="ef-save-btn" onclick="saveExerciseForm()">Save Exercise</button>
         </div>
       </div>
@@ -2427,9 +2757,12 @@
       </div>
 
       <div class="progress-tabs">
-        <button class="progress-tab active" onclick="switchProgressTab(this,'overview')" data-i18n="tab_overview">Overview</button>
-        <button class="progress-tab" onclick="switchProgressTab(this,'exercises')" data-i18n="tab_exercises">Exercises</button>
-        <button class="progress-tab" onclick="switchProgressTab(this,'muscles')" data-i18n="tab_muscles">Muscles</button>
+        <button class="progress-tab active" onclick="switchProgressTab(this,'overview')"
+          data-i18n="tab_overview">Overview</button>
+        <button class="progress-tab" onclick="switchProgressTab(this,'exercises')"
+          data-i18n="tab_exercises">Exercises</button>
+        <button class="progress-tab" onclick="switchProgressTab(this,'muscles')"
+          data-i18n="tab_muscles">Muscles</button>
         <button class="progress-tab" onclick="switchProgressTab(this,'plan')">Plan</button>
       </div>
 
@@ -2450,22 +2783,31 @@
               <div class="chart-label" id="chart-period-label">This week</div>
               <div class="chart-value" id="chart-main-value">0min</div>
             </div>
-            <button id="chart-more-details-btn" onclick="openChartDetailModal()" style="display:none;flex-shrink:0;background:var(--surface2);border:1px solid var(--border);color:var(--accent-blue);font-family:inherit;font-size:11px;font-weight:700;padding:6px 10px;border-radius:14px;cursor:pointer;white-space:nowrap;">More details →</button>
+            <button id="chart-more-details-btn" onclick="openChartDetailModal()"
+              style="display:none;flex-shrink:0;background:var(--surface2);border:1px solid var(--border);color:var(--accent-blue);font-family:inherit;font-size:11px;font-weight:700;padding:6px 10px;border-radius:14px;cursor:pointer;white-space:nowrap;">More
+              details →</button>
           </div>
-          <div id="chart-month-nav" style="display:none;align-items:center;justify-content:space-between;margin:-4px 0 10px;">
+          <div id="chart-month-nav"
+            style="display:none;align-items:center;justify-content:space-between;margin:-4px 0 10px;">
             <button class="week-nav-btn" onclick="shiftChartMonth(-1)" aria-label="Previous month">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+              </svg>
             </button>
             <span id="chart-month-label" style="font-size:13px;font-weight:700;color:var(--text-muted);"></span>
             <button class="week-nav-btn" id="chart-month-next-btn" onclick="shiftChartMonth(1)" aria-label="Next month">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
             </button>
           </div>
-          <div id="chart-legend-row" style="display:none;gap:14px;font-size:11px;color:var(--text-muted);margin:-6px 0 8px;">
+          <div id="chart-legend-row"
+            style="display:none;gap:14px;font-size:11px;color:var(--text-muted);margin:-6px 0 8px;">
             <span>★ <span style="color:var(--gold)">PR</span></span>
             <span>┄┄ Previous period</span>
           </div>
-          <select id="body-metric-select" onchange="renderChart()" style="display:none;width:100%;margin-bottom:8px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:8px;font-family:inherit;font-size:13px;outline:none;"></select>
+          <select id="body-metric-select" onchange="renderChart()"
+            style="display:none;width:100%;margin-bottom:8px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:8px;font-family:inherit;font-size:13px;outline:none;"></select>
           <div style="position:relative;height:140px;">
             <canvas id="progress-chart" height="140"></canvas>
           </div>
@@ -2493,7 +2835,8 @@
             </button>
             <button class="metric-tab" onclick="switchMetric(this,'body')">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0" />
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0" />
               </svg>
               Body
             </button>
@@ -2502,7 +2845,8 @@
 
         <div id="filter-stats"></div>
 
-        <button id="overview-warn-banner" onclick="jumpToInsights()" style="display:none;width:calc(100% - 32px);margin:0 16px 16px;padding:10px 14px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:var(--radius-sm);color:var(--gold);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;text-align:left;align-items:center;justify-content:space-between;">
+        <button id="overview-warn-banner" onclick="jumpToInsights()"
+          style="display:none;width:calc(100% - 32px);margin:0 16px 16px;padding:10px 14px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:var(--radius-sm);color:var(--gold);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;text-align:left;align-items:center;justify-content:space-between;">
           <span id="overview-warn-banner-text"></span>
           <span>→</span>
         </button>
@@ -2528,9 +2872,12 @@
         <div class="section-sub" data-i18n="muscle_coverage">Your muscle coverage</div>
         <div id="progress-muscle-map" class="muscle-body-container"></div>
 
-        <div style="margin:8px 16px 20px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;">
-          <button onclick="toggleInsightsSection()" style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:none;border:none;color:var(--text);font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;">
-            <span>Deeper Insights <span id="insights-warn-pill" style="display:none;font-size:11px;font-weight:700;color:var(--gold);background:rgba(245,158,11,.15);padding:2px 8px;border-radius:10px;margin-left:6px;"></span></span>
+        <div
+          style="margin:8px 16px 20px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;">
+          <button onclick="toggleInsightsSection()"
+            style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:none;border:none;color:var(--text);font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;">
+            <span>Deeper Insights <span id="insights-warn-pill"
+                style="display:none;font-size:11px;font-weight:700;color:var(--gold);background:rgba(245,158,11,.15);padding:2px 8px;border-radius:10px;margin-left:6px;"></span></span>
             <span id="insights-chevron" style="transition:transform .2s;">▾</span>
           </button>
           <div id="insights-body" style="display:none;padding:0 16px 16px;">
@@ -2552,8 +2899,8 @@
       </div>
 
       <div id="ptab-exercises" style="display:none; padding: 0 16px;">
-        <input id="exercise-search" class="modal-search" placeholder="Search exercises…" oninput="renderExerciseHistory()"
-          style="width:100%;margin:12px 0 10px;box-sizing:border-box;">
+        <input id="exercise-search" class="modal-search" placeholder="Search exercises…"
+          oninput="renderExerciseHistory()" style="width:100%;margin:12px 0 10px;box-sizing:border-box;">
         <div class="time-filters" style="margin:0 0 12px;">
           <button class="ex-sort-btn time-filter active" onclick="switchExerciseSort(this,'recent')">Recent</button>
           <button class="ex-sort-btn time-filter" onclick="switchExerciseSort(this,'trained')">Most Trained</button>
@@ -2579,11 +2926,14 @@
           <div style="display:flex;flex-direction:column;gap:12px;">
             <div>
               <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">Goal date</label>
-              <input id="plan-goal-date" type="date" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:8px;font-family:inherit;font-size:13px;outline:none;">
+              <input id="plan-goal-date" type="date"
+                style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:8px;font-family:inherit;font-size:13px;outline:none;">
             </div>
             <div>
-              <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">Athlete level</label>
-              <select id="plan-level" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:8px;font-family:inherit;font-size:13px;outline:none;">
+              <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">Athlete
+                level</label>
+              <select id="plan-level"
+                style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:8px;font-family:inherit;font-size:13px;outline:none;">
                 <option value="beginner">Beginner</option>
                 <option value="intermediate" selected>Intermediate</option>
                 <option value="advanced">Advanced</option>
@@ -2591,7 +2941,8 @@
             </div>
             <div>
               <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">Model</label>
-              <select id="plan-model" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:8px;font-family:inherit;font-size:13px;outline:none;">
+              <select id="plan-model"
+                style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:8px;font-family:inherit;font-size:13px;outline:none;">
                 <option value="linear">Linear</option>
                 <option value="wave">Wave (undulating)</option>
               </select>
@@ -2618,7 +2969,17 @@
       <div class="page-header">
         <h1>Coach</h1>
         <button class="icon-btn" title="Compare workouts" aria-label="Compare workouts" onclick="openComparePicker()">
-          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"/><line x1="13" x2="19" y1="19" y2="13"/><line x1="16" x2="20" y1="16" y2="20"/><line x1="19" x2="21" y1="21" y2="19"/><polyline points="14.5 6.5 18 3 21 3 21 6 17.5 9.5"/><line x1="5" x2="9" y1="14" y2="18"/><line x1="7" x2="4" y1="17" y2="20"/><line x1="3" x2="5" y1="19" y2="21"/></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5" />
+            <line x1="13" x2="19" y1="19" y2="13" />
+            <line x1="16" x2="20" y1="16" y2="20" />
+            <line x1="19" x2="21" y1="21" y2="19" />
+            <polyline points="14.5 6.5 18 3 21 3 21 6 17.5 9.5" />
+            <line x1="5" x2="9" y1="14" y2="18" />
+            <line x1="7" x2="4" y1="17" y2="20" />
+            <line x1="3" x2="5" y1="19" y2="21" />
+          </svg>
         </button>
       </div>
       <div id="coach-flags-card" style="display:none;"></div>
@@ -2633,12 +2994,17 @@
           <button class="modal-close-btn" onclick="closeComparePicker()" aria-label="Close">✕</button>
         </div>
         <div style="padding:14px 20px 0;display:flex;gap:8px;">
-          <button class="btn-secondary" id="cmp-slot-a-btn" style="flex:1;font-size:12px;padding:10px;" onclick="cmpPickSlot('a')">Pick Workout A</button>
-          <button class="btn-secondary" id="cmp-slot-b-btn" style="flex:1;font-size:12px;padding:10px;" onclick="cmpPickSlot('b')">Pick Workout B</button>
+          <button class="btn-secondary" id="cmp-slot-a-btn" style="flex:1;font-size:12px;padding:10px;"
+            onclick="cmpPickSlot('a')">Pick Workout A</button>
+          <button class="btn-secondary" id="cmp-slot-b-btn" style="flex:1;font-size:12px;padding:10px;"
+            onclick="cmpPickSlot('b')">Pick Workout B</button>
         </div>
-        <input id="cmp-search" class="modal-search" placeholder="Search any workout by name or date…" oninput="renderComparePickerList()" style="width:calc(100% - 40px);margin:14px 20px 8px;box-sizing:border-box;">
+        <input id="cmp-search" class="modal-search" placeholder="Search any workout by name or date…"
+          oninput="renderComparePickerList()"
+          style="width:calc(100% - 40px);margin:14px 20px 8px;box-sizing:border-box;">
         <div id="cmp-picker-list" style="padding-bottom:70px;"></div>
-        <div style="position:sticky;bottom:0;padding:12px 20px;background:var(--surface);border-top:1px solid var(--border);box-shadow:0 -8px 16px -8px rgba(0,0,0,.5);">
+        <div
+          style="position:sticky;bottom:0;padding:12px 20px;background:var(--surface);border-top:1px solid var(--border);box-shadow:0 -8px 16px -8px rgba(0,0,0,.5);">
           <button class="btn-primary" id="cmp-go-btn" disabled onclick="goToCompare()">Compare →</button>
         </div>
       </div>
@@ -2663,8 +3029,11 @@
         <h1 data-i18n="header_you">You</h1>
       </div>
       <div class="you-header">
-        <div class="avatar" id="you-avatar" onclick="triggerAvatarUpload()" style="cursor:pointer;background-size:cover;background-position:center;position:relative;" title="Tap to change photo">W</div>
-        <input type="file" id="avatar-file-input" accept="image/*" style="display:none;" onchange="handleAvatarUpload(event)">
+        <div class="avatar" id="you-avatar" onclick="triggerAvatarUpload()"
+          style="cursor:pointer;background-size:cover;background-position:center;position:relative;"
+          title="Tap to change photo">W</div>
+        <input type="file" id="avatar-file-input" accept="image/*" style="display:none;"
+          onchange="handleAvatarUpload(event)">
         <div>
           <div class="you-name" id="you-name">Athlete</div>
           <div class="you-sub">Member since today</div>
@@ -2687,13 +3056,16 @@
       <div class="badge-row" id="you-badges"></div>
 
       <div class="snapshot-card" style="display:flex;align-items:center;gap:12px;">
-        <div id="sync-status-dot" style="width:10px;height:10px;border-radius:50%;background:var(--text-dim);flex-shrink:0;"></div>
+        <div id="sync-status-dot"
+          style="width:10px;height:10px;border-radius:50%;background:var(--text-dim);flex-shrink:0;"></div>
         <div style="flex:1;">
           <div style="font-size:13px;font-weight:700;">Cloud Sync</div>
           <div style="font-size:12px;color:var(--text-muted);" id="sync-status-text-2">Never synced</div>
         </div>
-        <button class="btn-secondary" style="flex:none;padding:8px 14px;font-size:12px;" onclick="pullSync().then(()=>showToast('☁️ Pulled latest'))">Pull</button>
-        <button class="btn-primary-flex" style="flex:none;padding:8px 14px;font-size:12px;" onclick="pushSync(true)">Sync now</button>
+        <button class="btn-secondary" style="flex:none;padding:8px 14px;font-size:12px;"
+          onclick="pullSync().then(()=>showToast('☁️ Pulled latest'))">Pull</button>
+        <button class="btn-primary-flex" style="flex:none;padding:8px 14px;font-size:12px;"
+          onclick="pushSync(true)">Sync now</button>
       </div>
 
       <div class="settings-section">
@@ -2750,11 +3122,16 @@
         Workout History</div>
       <div id="you-history-search-bar">
         <div style="position: relative;">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="position:absolute;left:11px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:var(--text-dim);pointer-events:none;">
-            <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+            style="position:absolute;left:11px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:var(--text-dim);pointer-events:none;">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
           </svg>
-          <input id="you-history-search" class="modal-search" placeholder="Search workouts" oninput="handleYouHistorySearch()" style="width:100%;padding-left:32px;padding-right:30px;box-sizing:border-box;">
-          <button id="you-history-search-clear" onclick="clearYouHistorySearch()" aria-label="Clear search" style="display:none;position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-dim);font-size:15px;cursor:pointer;padding:4px 6px;">✕</button>
+          <input id="you-history-search" class="modal-search" placeholder="Search workouts"
+            oninput="handleYouHistorySearch()"
+            style="width:100%;padding-left:32px;padding-right:30px;box-sizing:border-box;">
+          <button id="you-history-search-clear" onclick="clearYouHistorySearch()" aria-label="Clear search"
+            style="display:none;position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-dim);font-size:15px;cursor:pointer;padding:4px 6px;">✕</button>
         </div>
       </div>
       <div id="you-history-list" style="margin: 0 0 16px;"></div>
@@ -2762,12 +3139,15 @@
       <div style="margin: 24px 16px 16px;padding-top:16px;border-top:1px solid var(--border);">
         <button onclick="clearData()"
           style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.3);color:var(--red);padding:14px;border-radius:var(--radius-sm);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24"
+            stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
           </svg>
           <span data-i18n="clear_all_data">Clear All Data</span>
         </button>
-        <div style="font-size:11px;color:var(--text-dim);text-align:center;margin-top:8px;">This permanently deletes all local workout data and cannot be undone.</div>
+        <div style="font-size:11px;color:var(--text-dim);text-align:center;margin-top:8px;">This permanently deletes all
+          local workout data and cannot be undone.</div>
       </div>
     </div>
 
@@ -2789,10 +3169,13 @@
       </button>
       <button class="nav-btn" onclick="navigate('coach',this)" style="position:relative;">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <rect x="5" y="9" width="14" height="10" rx="2"/><circle cx="9" cy="14" r="1.2" fill="currentColor" stroke="none"/><circle cx="15" cy="14" r="1.2" fill="currentColor" stroke="none"/>
-          <path stroke-linecap="round" d="M12 9V5m0 0a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3ZM3 13h2m14 0h2"/>
+          <rect x="5" y="9" width="14" height="10" rx="2" />
+          <circle cx="9" cy="14" r="1.2" fill="currentColor" stroke="none" />
+          <circle cx="15" cy="14" r="1.2" fill="currentColor" stroke="none" />
+          <path stroke-linecap="round" d="M12 9V5m0 0a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3ZM3 13h2m14 0h2" />
         </svg>
-        <span id="coach-nav-badge" style="display:none;position:absolute;top:6px;right:22%;width:7px;height:7px;border-radius:50%;background:var(--accent);"></span>
+        <span id="coach-nav-badge"
+          style="display:none;position:absolute;top:6px;right:22%;width:7px;height:7px;border-radius:50%;background:var(--accent);"></span>
         <span data-i18n="nav_coach">Coach</span>
       </button>
       <button class="nav-btn" onclick="navigate('progress',this)">
@@ -2930,7 +3313,8 @@
           <button class="modal-close-btn" onclick="closeIntensityModal()" aria-label="Close">✕</button>
         </div>
         <div style="padding:18px 20px 22px;">
-          <div style="font-size:13px;color:var(--text-muted);margin-bottom:14px;">Override the auto-calculated intensity, or clear to go back to Auto.</div>
+          <div style="font-size:13px;color:var(--text-muted);margin-bottom:14px;">Override the auto-calculated
+            intensity, or clear to go back to Auto.</div>
           <div id="intensity-scale" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;"></div>
           <div style="display:flex;gap:10px;">
             <button class="btn-secondary" onclick="clearIntensity()">Auto</button>
@@ -2945,10 +3329,12 @@
       <div class="modal-sheet" style="max-height:40vh;">
         <div style="padding:22px 20px;">
           <div style="font-size:16px;font-weight:800;margin-bottom:8px;" id="confirm-modal-title">Are you sure?</div>
-          <div style="font-size:13px;color:var(--text-muted);line-height:1.5;margin-bottom:20px;white-space:pre-line;" id="confirm-modal-message"></div>
+          <div style="font-size:13px;color:var(--text-muted);line-height:1.5;margin-bottom:20px;white-space:pre-line;"
+            id="confirm-modal-message"></div>
           <div style="display:flex;gap:10px;">
             <button class="btn-secondary" onclick="closeConfirmModal(false)">Cancel</button>
-            <button class="btn-primary-flex" id="confirm-modal-confirm-btn" onclick="closeConfirmModal(true)" style="background:var(--red);color:#fff;">Confirm</button>
+            <button class="btn-primary-flex" id="confirm-modal-confirm-btn" onclick="closeConfirmModal(true)"
+              style="background:var(--red);color:#fff;">Confirm</button>
           </div>
         </div>
       </div>
@@ -2965,10 +3351,10 @@
           <button class="modal-close-btn" onclick="closeProfileFieldModal()" aria-label="Close">✕</button>
         </div>
         <div style="padding:18px 20px 22px;">
-          <input id="pf-modal-input" type="text"
-            onkeydown="if(event.key==='Enter')saveProfileFieldModal()"
+          <input id="pf-modal-input" type="text" onkeydown="if(event.key==='Enter')saveProfileFieldModal()"
             style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:10px;font-family:inherit;font-size:14px;outline:none;margin-bottom:14px;">
-          <button class="btn-secondary" id="pf-modal-history-btn" style="display:none;width:100%;margin-bottom:10px;" onclick="openMeasurementHistory()">📈 View History</button>
+          <button class="btn-secondary" id="pf-modal-history-btn" style="display:none;width:100%;margin-bottom:10px;"
+            onclick="openMeasurementHistory()">📈 View History</button>
           <div style="display:flex;gap:10px;">
             <button class="btn-secondary" onclick="closeProfileFieldModal()">Cancel</button>
             <button class="btn-primary-flex" onclick="saveProfileFieldModal()">Save</button>
@@ -2990,9 +3376,12 @@
           </div>
           <div id="mh-modal-list"></div>
           <div style="display:flex;gap:8px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
-            <input id="mh-add-date" type="date" style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:8px;font-family:inherit;font-size:13px;outline:none;">
-            <input id="mh-add-value" type="text" placeholder="Value" style="width:80px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:8px;font-family:inherit;font-size:13px;outline:none;">
-            <button class="btn-secondary" style="flex:none;padding:8px 14px;" onclick="addMeasurementHistoryEntry()">Add</button>
+            <input id="mh-add-date" type="date"
+              style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:8px;font-family:inherit;font-size:13px;outline:none;">
+            <input id="mh-add-value" type="text" placeholder="Value"
+              style="width:80px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:8px;font-family:inherit;font-size:13px;outline:none;">
+            <button class="btn-secondary" style="flex:none;padding:8px 14px;"
+              onclick="addMeasurementHistoryEntry()">Add</button>
           </div>
         </div>
       </div>
@@ -3003,7 +3392,9 @@
       <div class="modal-sheet" style="max-height:75vh;">
         <div class="modal-header">
           <div style="font-size:16px;font-weight:800;flex:1;">🔔 Notifications</div>
-          <button class="modal-close-btn" onclick="document.getElementById('notifications-modal').classList.remove('open')" aria-label="Close">✕</button>
+          <button class="modal-close-btn"
+            onclick="document.getElementById('notifications-modal').classList.remove('open')"
+            aria-label="Close">✕</button>
         </div>
         <div id="notifications-list" style="padding:8px 0 16px;"></div>
       </div>
@@ -3014,10 +3405,16 @@
       <div class="modal-sheet" style="max-height:60vh;">
         <div style="padding:24px 20px;text-align:center;">
           <div style="font-size:40px;margin-bottom:10px;">🎓</div>
-          <div style="font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">Concept Unlocked</div>
+          <div
+            style="font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">
+            Concept Unlocked</div>
           <div style="font-size:18px;font-weight:800;margin-bottom:12px;" id="coach-unlock-title"></div>
-          <div style="font-size:13px;color:var(--text-muted);line-height:1.6;text-align:left;background:var(--surface2);border-radius:var(--radius-sm);padding:14px;margin-bottom:18px;" id="coach-unlock-explanation"></div>
-          <button class="btn-primary" onclick="document.getElementById('coach-unlock-modal').classList.remove('open')">Add to My Training Arsenal</button>
+          <div
+            style="font-size:13px;color:var(--text-muted);line-height:1.6;text-align:left;background:var(--surface2);border-radius:var(--radius-sm);padding:14px;margin-bottom:18px;"
+            id="coach-unlock-explanation"></div>
+          <button class="btn-primary"
+            onclick="document.getElementById('coach-unlock-modal').classList.remove('open')">Add to My Training
+            Arsenal</button>
         </div>
       </div>
     </div>
@@ -3027,16 +3424,23 @@
       <div class="modal-sheet" style="max-height:82vh;">
         <div class="modal-header">
           <div style="font-size:16px;font-weight:800;flex:1;">🤖 AI Coach</div>
-          <button class="modal-close-btn" onclick="document.getElementById('coach-console-modal').classList.remove('open')" aria-label="Close">✕</button>
+          <button class="modal-close-btn"
+            onclick="document.getElementById('coach-console-modal').classList.remove('open')"
+            aria-label="Close">✕</button>
         </div>
         <div style="padding:14px 20px 20px;">
-          <div id="coach-chat-history" style="max-height:340px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;margin-bottom:12px;padding:10px;background:var(--bg);border-radius:var(--radius-sm);border:1px solid var(--border);"></div>
+          <div id="coach-chat-history"
+            style="max-height:340px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;margin-bottom:12px;padding:10px;background:var(--bg);border-radius:var(--radius-sm);border:1px solid var(--border);">
+          </div>
           <div style="display:flex;gap:8px;">
-            <input type="text" id="coach-user-input" class="modal-search" placeholder="Ask about plateaus, deloads, RPE…" style="flex:1;">
-            <button class="btn-primary-flex" style="flex:none;padding:10px 18px;" onclick="AICoach.handleUserMessage()">Send</button>
+            <input type="text" id="coach-user-input" class="modal-search"
+              placeholder="Ask about plateaus, deloads, RPE…" style="flex:1;">
+            <button class="btn-primary-flex" style="flex:none;padding:10px 18px;"
+              onclick="AICoach.handleUserMessage()">Send</button>
           </div>
           <div style="margin-top:10px;text-align:right;">
-            <span style="font-size:12px;color:var(--accent-blue);cursor:pointer;" onclick="AICoach.viewMemory()">🧠 View Coach Memory</span>
+            <span style="font-size:12px;color:var(--accent-blue);cursor:pointer;" onclick="AICoach.viewMemory()">🧠 View
+              Coach Memory</span>
           </div>
         </div>
       </div>
@@ -3053,7 +3457,8 @@
         <div style="padding:16px 20px 20px;">
           <div class="chart-label" id="cdm-period-label"></div>
           <div class="chart-value" id="cdm-value">0</div>
-          <select id="cdm-body-metric-select" onchange="renderChartDetailModal()" style="display:none;width:100%;margin-bottom:8px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:8px;font-family:inherit;font-size:13px;outline:none;"></select>
+          <select id="cdm-body-metric-select" onchange="renderChartDetailModal()"
+            style="display:none;width:100%;margin-bottom:8px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:8px;font-family:inherit;font-size:13px;outline:none;"></select>
           <div style="display:flex;">
             <div style="height:140px;flex:0 0 34px;border-right:1px solid var(--border);">
               <canvas id="cdm-chart-axis" height="140"></canvas>
@@ -3065,16 +3470,23 @@
             </div>
           </div>
           <div style="display:flex;justify-content:center;">
-            <span style="display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:600;color:var(--text-dim);background:var(--surface2);padding:4px 10px;border-radius:20px;margin-top:8px;">
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+            <span
+              style="display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:600;color:var(--text-dim);background:var(--surface2);padding:4px 10px;border-radius:20px;margin-top:8px;">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+              </svg>
               scroll for more history
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
             </span>
           </div>
           <div class="metric-tabs" style="margin-top:14px;">
-            <button class="metric-tab cdm-metric-tab" onclick="switchChartDetailMetric(this,'duration')">Duration</button>
+            <button class="metric-tab cdm-metric-tab"
+              onclick="switchChartDetailMetric(this,'duration')">Duration</button>
             <button class="metric-tab cdm-metric-tab" onclick="switchChartDetailMetric(this,'volume')">Volume</button>
-            <button class="metric-tab cdm-metric-tab" onclick="switchChartDetailMetric(this,'workouts')">Workouts</button>
+            <button class="metric-tab cdm-metric-tab"
+              onclick="switchChartDetailMetric(this,'workouts')">Workouts</button>
             <button class="metric-tab cdm-metric-tab" onclick="switchChartDetailMetric(this,'body')">Body</button>
           </div>
         </div>
@@ -3085,6 +3497,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="coach/intelligence.js"></script>
   <script>
 
     // ═══════════════════════════════════════════
@@ -3686,6 +4099,14 @@
       return flags.sort((a, b) => b.sev - a.sev).slice(0, 8);
     }
 
+    let coachFlagsOpen = true;
+    function toggleCoachFlags() {
+      coachFlagsOpen = !coachFlagsOpen;
+      const body = document.getElementById('coach-flags-body');
+      const chev = document.getElementById('coach-flags-chevron');
+      if (body) body.style.display = coachFlagsOpen ? 'block' : 'none';
+      if (chev) chev.style.transform = coachFlagsOpen ? 'rotate(180deg)' : '';
+    }
     function renderCoachFlags() {
       const el = document.getElementById('coach-flags-card');
       if (!el) return;
@@ -3693,9 +4114,14 @@
       if (!flags.length) { el.style.display = 'none'; return; }
       el.style.display = 'block';
       const sevColor = s => s >= 3 ? 'var(--red)' : s === 2 ? 'var(--gold)' : 'var(--accent-blue)';
-      el.innerHTML = `<div class="insight-card" style="margin:0 16px 16px;">
-      <h3>🚩 Coach Flags <span style="color:var(--text-dim);font-weight:500;">(${flags.length})</span></h3>
-      ${flags.map(f => `<div class="warn-row"><span>${f.icon} ${f.text}</span><span style="width:6px;height:6px;border-radius:50%;background:${sevColor(f.sev)};flex-shrink:0;"></span></div>`).join('')}
+      el.innerHTML = `<div class="insight-card" style="margin:0 16px 16px;padding:0;overflow:hidden;">
+      <button onclick="toggleCoachFlags()" style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:16px;background:none;border:none;color:var(--text);font-family:inherit;cursor:pointer;">
+        <h3 style="margin:0;">🚩 Coach Flags <span style="color:var(--text-dim);font-weight:500;">(${flags.length})</span></h3>
+        <span id="coach-flags-chevron" style="transition:transform .2s;transform:${coachFlagsOpen ? 'rotate(180deg)' : ''};">▾</span>
+      </button>
+      <div id="coach-flags-body" style="display:${coachFlagsOpen ? 'block' : 'none'};padding:0 16px 16px;">
+        ${flags.map(f => `<div class="warn-row"><span>${f.icon} ${f.text}</span><span style="width:6px;height:6px;border-radius:50%;background:${sevColor(f.sev)};flex-shrink:0;"></span></div>`).join('')}
+      </div>
     </div>`;
     }
 
@@ -8672,7 +9098,7 @@
     function cancelWorkout() {
       const hasData = document.querySelectorAll('#exercises-container .w-input, #exercises-container .r-input')
         .length > 0 && Array.from(document.querySelectorAll('#exercises-container .w-input, #exercises-container .r-input'))
-        .some(el => el.value.trim() !== '');
+          .some(el => el.value.trim() !== '');
 
       const doCancel = () => {
         clearInterval(state.timerInterval);
@@ -10008,23 +10434,32 @@ TONE EXAMPLE (bad, avoid): "Based on the data provided, your squat progression i
        * on top of TWP, never something that should block saving a workout.
        */
       async fetchCoachResponse(systemPrompt, userMessage) {
+        if (!window.LocalCoach) return null;
         try {
-          const response = await fetch('https://api.anthropic.com/v1/messages', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              model: 'claude-sonnet-4-6',
-              max_tokens: 600,
-              system: systemPrompt,
-              messages: [{ role: 'user', content: userMessage }],
-            }),
-          });
-          if (!response.ok) throw new Error(`API Error: ${response.status}`);
-          const data = await response.json();
-          const text = (data.content || []).map(b => b.text || '').join('\n').trim();
-          return text || null;
+          if (systemPrompt.includes('This is a periodic check-in')) {
+            const ctx = JSON.parse(userMessage);
+            return JSON.stringify(LocalCoach.idleCheckIn(ctx, ctx.daysSinceLastWorkout));
+          }
+          if (systemPrompt.includes('just logged a new injury')) {
+            const ctx = JSON.parse(userMessage);
+            const injMatch = systemPrompt.match(/logged a new injury\/pain entry: (\{.*?\})\./);
+            const injury = injMatch ? JSON.parse(injMatch[1]) : (ctx.recentInjuries || [])[0] || {};
+            return JSON.stringify(LocalCoach.injuryCheckIn(ctx, injury));
+          }
+          if (systemPrompt.includes('Evolve your memory in two parts')) {
+            const ctx = JSON.parse(userMessage);
+            return JSON.stringify(LocalCoach.evolve(ctx));
+          }
+          // chat mode: userMessage = `Context: {...}\n\nAthlete's question: ...`
+          const m = userMessage.match(/^Context: ([\s\S]*?)\n\nAthlete's question: ([\s\S]*)$/);
+          if (m) {
+            const ctx = JSON.parse(m[1]);
+            const { reply } = LocalCoach.chat(ctx, m[2]);
+            return reply;
+          }
+          return null;
         } catch (err) {
-          console.warn('AICoach: unavailable, skipping this cycle.', err);
+          console.warn('LocalCoach: skipping this cycle.', err);
           return null;
         }
       },
@@ -10282,7 +10717,7 @@ ${tipCardHTML}
       viewConcept(i) {
         const c = (state.agent.unlockedConcepts || []).map(x => typeof x === 'string' ? { title: x, explanation: '' } : x)[i];
         if (!c) return;
-        showConfirmModal(c.explanation || c.title, () => {}, { title: '🎓 ' + c.title, confirmLabel: 'Close', danger: false });
+        showConfirmModal(c.explanation || c.title, () => { }, { title: '🎓 ' + c.title, confirmLabel: 'Close', danger: false });
       },
 
       _bubble(role, text, action, timestamp, showTime) {
@@ -10487,7 +10922,7 @@ Only include an ACTION line when truly warranted (max one), never fabricate one 
           : '';
         showConfirmModal(
           state.agent.memory + factsBlock,
-          () => {},
+          () => { },
           { title: '🧠 Coach Memory', confirmLabel: 'Close', danger: false }
         );
       },
