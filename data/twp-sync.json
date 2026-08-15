@@ -15872,7 +15872,7 @@
   ],
   "userName": "Athlete",
   "profile": {
-    "weight": "82",
+    "weight": "82.8",
     "height": "182",
     "injuries": "LCA",
     "surgeries": "LCA surgery",
@@ -15880,12 +15880,12 @@
     "chest": "99",
     "waist": "90",
     "shoulders": "125",
-    "lArm": "31",
-    "lForearm": "28",
-    "rArm": "32",
+    "lArm": "34",
+    "lForearm": "29",
+    "rArm": "34",
     "rForearm": "29",
-    "lThigh": "55",
-    "rThigh": "59",
+    "lThigh": "57",
+    "rThigh": "62",
     "lCalf": "36",
     "rCalf": "38"
   },
@@ -16275,5 +16275,5 @@
       "isUnilateral": false
     }
   },
-  "timestamp": 1786740268199
+  "timestamp": 1786809816748
 }
