@@ -10414,6 +10414,7 @@ TONE EXAMPLE (bad, avoid): "Based on the data provided, your squat progression i
           periodization: state.periodization ? { model: state.periodization.model, phase: currentPhase } : null,
           agentMemory: state.agent.memory,
           agentMemoryFacts: (state.agent.memoryFacts || []).map(f => f.text),
+          exerciseMemory: state.agent.exerciseMemory || {},
           alreadyUnlockedConcepts: state.agent.unlockedConcepts,
           recentWorkouts,
           stalledExercises,
@@ -10425,6 +10426,7 @@ TONE EXAMPLE (bad, avoid): "Based on the data provided, your squat progression i
           nutritionRecent: nutrRecent,
           consistency,
           imbalanceFlags,
+          signalHistory: (state.agent.signalHistory || []).slice(-10),
         };
       },
 
@@ -10454,8 +10456,11 @@ TONE EXAMPLE (bad, avoid): "Based on the data provided, your squat progression i
           const m = userMessage.match(/^Context: ([\s\S]*?)\n\nAthlete's question: ([\s\S]*)$/);
           if (m) {
             const ctx = JSON.parse(m[1]);
-            const { reply } = LocalCoach.chat(ctx, m[2]);
-            return reply;
+            const { reply, action } = LocalCoach.chat(ctx, m[2]);
+            // Encode as the same <<ACTION:{...}>> tag handleUserMessage already
+            // parses from API replies, so LocalCoach-originated suggestions flow
+            // through the identical applyCoachAction/_recordUndo/undoLastAction path.
+            return action ? `${reply}\n<<ACTION:${JSON.stringify(action)}>>` : reply;
           }
           return null;
         } catch (err) {
@@ -10513,14 +10518,23 @@ Only unlock a concept if the data actually supports it (plateaus, volume swings,
           result = JSON.parse(cleaned);
         } catch (err) {
           console.error('AICoach: malformed JSON response, skipping this cycle.', err, raw);
+          if (!state.agent.pendingTipPinned) {
+            state.agent.pendingTip = "I had trouble reading your latest results — I'll take another look after your next workout.";
+            state.agent.pendingTipAction = null;
+            state.agent.pendingTipSeen = false;
+            saveState();
+            updateCoachNavBadge();
+          }
           return;
         }
 
         if (result.updatedMemory) state.agent.memory = result.updatedMemory;
-        if (result.proactiveTip && !state.agent.pendingTipPinned) state.agent.pendingTip = result.proactiveTip;
+        if (result.proactiveTip && !state.agent.pendingTipPinned) { state.agent.pendingTip = result.proactiveTip; state.agent.pendingTipAction = result.action || null; }
 
-        // Append new structured facts (deduped, capped at 15 oldest-dropped-first) so
-        // long-term patterns persist even as the prose summary gets overwritten each cycle.
+        // Append new structured facts (deduped). Cap at 15 via RELEVANCE-based
+        // eviction, not plain FIFO: a fact still "supported" by current signals
+        // (mentions a still-stalled exercise, still-idle muscle, or recent injury
+        // body part) is kept longer than a stale one that no longer applies.
         if (Array.isArray(result.newFacts) && result.newFacts.length) {
           if (!state.agent.memoryFacts) state.agent.memoryFacts = [];
           const existingTexts = new Set(state.agent.memoryFacts.map(f => f.text.toLowerCase()));
@@ -10530,7 +10544,42 @@ Only unlock a concept if the data actually supports it (plateaus, volume swings,
               existingTexts.add(f.trim().toLowerCase());
             }
           });
-          if (state.agent.memoryFacts.length > 15) state.agent.memoryFacts = state.agent.memoryFacts.slice(-15);
+          if (state.agent.memoryFacts.length > 15) {
+            const liveTerms = [...(context.stalledExercises || []), ...(context.idleMuscles || []),
+              ...((context.recentInjuries || []).map(i => i.bodyPart))].map(t => (t || '').toLowerCase()).filter(Boolean);
+            const isSupported = f => liveTerms.some(t => t && f.text.toLowerCase().includes(t));
+            const sorted = state.agent.memoryFacts.slice().sort((a, b) => {
+              const sa = isSupported(a), sb = isSupported(b);
+              if (sa !== sb) return sa ? 1 : -1; // unsupported first (evicted first)
+              return new Date(a.date) - new Date(b.date); // then oldest first
+            });
+            state.agent.memoryFacts = sorted.slice(sorted.length - 15);
+          }
+        }
+
+        // Per-exercise structured memory: track last plateau date + outcome per
+        // exercise so LocalCoach can reason over history without re-scanning
+        // all of state.workouts each cycle.
+        if (!state.agent.exerciseMemory) state.agent.exerciseMemory = {};
+        {
+          const stalledSet = new Set(context.stalledExercises || []);
+          // Resolution check: an exercise flagged stalled in a PRIOR cycle but not
+          // this one has broken its plateau — record whether our one deload-style
+          // action (a rest-preset bump) had been applied for it beforehand.
+          Object.entries(state.agent.exerciseMemory).forEach(([name, rec]) => {
+            if (rec.lastPlateauDate && !stalledSet.has(name) && rec.resolvedDate !== rec.lastPlateauDate) {
+              const ex = getAllExercises().find(e => e.name === name);
+              const hadDeloadAction = !!(ex && state.exerciseRestPresets && state.exerciseRestPresets[ex.id]);
+              rec.resolvedDate = rec.lastPlateauDate;
+              rec.bestDeloadResponse = hadDeloadAction ? 'rest-preset-increase-helped' : 'resolved-without-explicit-deload';
+            }
+          });
+          (context.stalledExercises || []).forEach(name => {
+            const rec = state.agent.exerciseMemory[name] || { plateauCount: 0 };
+            rec.plateauCount = (rec.plateauCount || 0) + 1;
+            rec.lastPlateauDate = new Date().toISOString();
+            state.agent.exerciseMemory[name] = rec;
+          });
         }
 
         if (result.newConceptUnlock && result.newConceptUnlock.title) {
@@ -10561,6 +10610,14 @@ Only unlock a concept if the data actually supports it (plateaus, volume swings,
             });
             state.agent.lastNotificationAt = new Date().toISOString();
           }
+        }
+
+        // Track which signal fired this cycle (LocalCoach.evolve returns
+        // signalKind) so future cycles can escalate repeats via ctx.signalHistory.
+        if (result.signalKind) {
+          if (!state.agent.signalHistory) state.agent.signalHistory = [];
+          state.agent.signalHistory.push({ kind: result.signalKind, date: new Date().toISOString() });
+          state.agent.signalHistory = state.agent.signalHistory.slice(-10);
         }
 
         state.agent.lastAnalyzedWorkoutId = workoutId;
@@ -10595,10 +10652,11 @@ This is a periodic check-in, not tied to a finished workout — the athlete may 
             saveState();
             updateCoachNavBadge();
           }
-        } catch (e) { /* skip on malformed response */ }
+        } catch (e) {
+          console.warn('AICoach: malformed check-in response.', e);
+          if (!state.agent.pendingTipPinned) { state.agent.pendingTip = "Couldn't finish today's check-in — I'll try again next time."; state.agent.pendingTipSeen = false; saveState(); updateCoachNavBadge(); }
+        }
       },
-
-      // Automation triggered directly by a moderate/severe Injury Log entry, not
       // by a finished workout or the weekly idle timer — reacts same-session so
       // the next training decision can account for it immediately.
       async checkInOnInjury(injury) {
@@ -10618,7 +10676,11 @@ The athlete just logged a new injury/pain entry: ${JSON.stringify(injury)}. Reac
             updateCoachNavBadge();
             addNotification({ type: 'coach-tip', title: `Training note: ${injury.bodyPart}`, body: result.proactiveTip, actionLabel: 'Ask Coach', actionPrompt: result.proactiveTip });
           }
-        } catch (e) { /* skip on malformed response */ }
+        } catch (e) {
+          console.warn('AICoach: malformed injury check-in response.', e);
+          const fallback = `Logged your ${injury.bodyPart} note — I couldn't fully analyze it this time, but it's tracked and I'll factor it in going forward.`;
+          state.agent.pendingTip = fallback; state.agent.pendingTipSeen = false; saveState(); updateCoachNavBadge();
+        }
       },
 
       triggerConceptUnlockModal(title, explanation) {
@@ -10636,6 +10698,7 @@ The athlete just logged a new injury/pain entry: ${JSON.stringify(injury)}. Reac
         const hasTip = !!state.agent.pendingTip;
         const tip = state.agent.pendingTip || 'Log your next session so I can calibrate your recovery and volume curves.';
         const pinned = !!state.agent.pendingTipPinned;
+        const tipAction = state.agent.pendingTipAction || null;
         const concepts = (state.agent.unlockedConcepts || []).map(c => typeof c === 'string' ? { title: c, explanation: '' } : c);
         const tipCardHTML = `
       <div class="snapshot-card" style="border-left:3px solid var(--accent-blue);">
@@ -10644,6 +10707,7 @@ The athlete just logged a new injury/pain entry: ${JSON.stringify(injury)}. Reac
           <span style="background:var(--surface2);color:var(--text-muted);font-size:11px;padding:3px 8px;border-radius:10px;">🎓 ${concepts.length} unlocked</span>
         </div>
         <div style="font-size:14px;color:var(--text);line-height:1.5;font-style:italic;background:var(--surface2);padding:12px 14px;border-radius:8px;">${mdToHtml(tip)}</div>
+        ${tipAction ? `<div style="margin-top:8px;"><button class="btn-secondary" style="padding:5px 10px;font-size:11px;" onclick='AICoach.applyCoachAction(${JSON.stringify(tipAction)})'>✓ Apply suggestion</button></div>` : ''}
         <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;">
           <span style="cursor:pointer;color:var(--accent-blue);font-size:12px;" onclick="AICoach.viewMemory()">🧠 View memory</span>
           <span style="display:flex;gap:12px;">
@@ -10708,6 +10772,7 @@ ${tipCardHTML}
       dismissTip() {
         state.agent.pendingTip = null;
         state.agent.pendingTipPinned = false;
+        state.agent.pendingTipAction = null;
         state.agent.pendingTipSeen = true;
         saveState();
         updateCoachNavBadge();
