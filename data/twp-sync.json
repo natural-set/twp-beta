@@ -28,7 +28,7 @@
               "rpe": 0,
               "tempo": "",
               "variations": [],
-              "restSeconds": 12,
+              "restSeconds": 150,
               "bwMode": "added",
               "extWeight": 20,
               "prs": []
@@ -41,7 +41,7 @@
               "rpe": 0,
               "tempo": "",
               "variations": [],
-              "restSeconds": 0,
+              "restSeconds": 150,
               "bwMode": "added",
               "extWeight": 30,
               "prs": []
@@ -54,7 +54,7 @@
               "rpe": 0,
               "tempo": "",
               "variations": [],
-              "restSeconds": 0,
+              "restSeconds": 150,
               "bwMode": "added",
               "extWeight": 35,
               "prs": []
@@ -67,7 +67,7 @@
               "rpe": 0,
               "tempo": "",
               "variations": [],
-              "restSeconds": 0,
+              "restSeconds": 150,
               "bwMode": "added",
               "extWeight": 40,
               "prs": []
@@ -80,12 +80,10 @@
               "rpe": 0,
               "tempo": "",
               "variations": [],
-              "restSeconds": 0,
+              "restSeconds": 150,
               "bwMode": "added",
               "extWeight": 45,
-              "prs": [
-                "Bodyweight"
-              ]
+              "prs": []
             },
             {
               "warmup": false,
@@ -95,12 +93,10 @@
               "rpe": 0,
               "tempo": "",
               "variations": [],
-              "restSeconds": 0,
+              "restSeconds": 150,
               "bwMode": "added",
               "extWeight": 45,
-              "prs": [
-                "Bodyweight"
-              ]
+              "prs": []
             },
             {
               "warmup": false,
@@ -110,15 +106,13 @@
               "rpe": 0,
               "tempo": "",
               "variations": [],
-              "restSeconds": 72,
+              "restSeconds": 150,
               "bwMode": "added",
               "extWeight": 50,
-              "prs": [
-                "Bodyweight"
-              ]
+              "prs": []
             }
           ],
-          "restSeconds": 2,
+          "restSeconds": 150,
           "linkGroup": ""
         },
         {
@@ -144,13 +138,11 @@
               "rpe": 0,
               "tempo": "",
               "variations": [],
-              "restSeconds": 1,
+              "restSeconds": 64,
               "bwMode": "bw",
               "extWeight": 0,
               "side": "both",
-              "prs": [
-                "Bodyweight"
-              ]
+              "prs": []
             },
             {
               "warmup": false,
@@ -160,7 +152,7 @@
               "rpe": 0,
               "tempo": "",
               "variations": [],
-              "restSeconds": 0,
+              "restSeconds": 62,
               "bwMode": "added",
               "extWeight": 16,
               "side": "both",
@@ -174,13 +166,11 @@
               "rpe": 0,
               "tempo": "",
               "variations": [],
-              "restSeconds": 12,
+              "restSeconds": 68,
               "bwMode": "added",
               "extWeight": 20,
               "side": "both",
-              "prs": [
-                "Bodyweight"
-              ]
+              "prs": []
             },
             {
               "warmup": false,
@@ -190,16 +180,14 @@
               "rpe": 0,
               "tempo": "",
               "variations": [],
-              "restSeconds": 64,
+              "restSeconds": 70,
               "bwMode": "added",
               "extWeight": 20,
               "side": "both",
-              "prs": [
-                "Bodyweight"
-              ]
+              "prs": []
             }
           ],
-          "restSeconds": 4,
+          "restSeconds": 65,
           "linkGroup": "combo-1786980511674ntg"
         },
         {
@@ -223,7 +211,7 @@
               "rpe": 0,
               "tempo": "",
               "variations": [],
-              "restSeconds": 0,
+              "restSeconds": null,
               "prs": []
             },
             {
@@ -234,7 +222,7 @@
               "rpe": 0,
               "tempo": "",
               "variations": [],
-              "restSeconds": 0,
+              "restSeconds": null,
               "prs": []
             },
             {
@@ -245,7 +233,7 @@
               "rpe": 0,
               "tempo": "",
               "variations": [],
-              "restSeconds": 0,
+              "restSeconds": null,
               "prs": []
             },
             {
@@ -256,11 +244,11 @@
               "rpe": 0,
               "tempo": "",
               "variations": [],
-              "restSeconds": 0,
+              "restSeconds": null,
               "prs": []
             }
           ],
-          "restSeconds": 0,
+          "restSeconds": null,
           "linkGroup": "combo-1786980511674ntg"
         },
         {
@@ -281,7 +269,7 @@
               "rpe": 0,
               "tempo": "",
               "variations": [],
-              "restSeconds": 1,
+              "restSeconds": 80,
               "bwMode": "added",
               "extWeight": 10,
               "prs": []
@@ -294,7 +282,7 @@
               "rpe": 0,
               "tempo": "",
               "variations": [],
-              "restSeconds": 0,
+              "restSeconds": 62,
               "bwMode": "added",
               "extWeight": 20,
               "prs": []
@@ -307,21 +295,21 @@
               "rpe": 0,
               "tempo": "",
               "variations": [],
-              "restSeconds": 33,
+              "restSeconds": 75,
               "bwMode": "added",
               "extWeight": 20,
               "prs": []
             }
           ],
-          "restSeconds": 1,
+          "restSeconds": 71,
           "linkGroup": ""
         }
       ],
       "volume": 25605,
       "duration": 72,
-      "date": "2026-08-17T15:30:26.731Z",
+      "date": "2026-08-17T15:30:00.000Z",
       "bodyWeight": null,
-      "records": 6
+      "records": 0
     },
     {
       "id": 1786722959915,
@@ -16614,5 +16602,5 @@
       "isUnilateral": false
     }
   },
-  "timestamp": 1786980629381
+  "timestamp": 1786980708582
 }
