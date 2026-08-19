@@ -471,7 +471,7 @@
     },
     {
       "id": 1786980626736,
-      "name": "Workout",
+      "name": "Lower",
       "note": "",
       "exercises": [
         {
@@ -499,7 +499,7 @@
               "variations": [],
               "restSeconds": 150,
               "bwMode": "added",
-              "extWeight": 20,
+              "extWeight": 19.200000000000003,
               "prs": []
             },
             {
@@ -512,7 +512,7 @@
               "variations": [],
               "restSeconds": 150,
               "bwMode": "added",
-              "extWeight": 30,
+              "extWeight": 29.200000000000003,
               "prs": []
             },
             {
@@ -525,7 +525,7 @@
               "variations": [],
               "restSeconds": 150,
               "bwMode": "added",
-              "extWeight": 35,
+              "extWeight": 34.2,
               "prs": []
             },
             {
@@ -538,7 +538,7 @@
               "variations": [],
               "restSeconds": 150,
               "bwMode": "added",
-              "extWeight": 40,
+              "extWeight": 39.2,
               "prs": []
             },
             {
@@ -551,7 +551,7 @@
               "variations": [],
               "restSeconds": 150,
               "bwMode": "added",
-              "extWeight": 45,
+              "extWeight": 44.2,
               "prs": []
             },
             {
@@ -564,7 +564,7 @@
               "variations": [],
               "restSeconds": 150,
               "bwMode": "added",
-              "extWeight": 45,
+              "extWeight": 44.2,
               "prs": []
             },
             {
@@ -577,7 +577,7 @@
               "variations": [],
               "restSeconds": 150,
               "bwMode": "added",
-              "extWeight": 50,
+              "extWeight": 49.2,
               "prs": []
             }
           ],
@@ -608,8 +608,8 @@
               "tempo": "",
               "variations": [],
               "restSeconds": 64,
-              "bwMode": "bw",
-              "extWeight": 0,
+              "bwMode": "assisted",
+              "extWeight": 0.7999999999999972,
               "side": "both",
               "prs": []
             },
@@ -623,7 +623,7 @@
               "variations": [],
               "restSeconds": 62,
               "bwMode": "added",
-              "extWeight": 16,
+              "extWeight": 15.200000000000003,
               "side": "both",
               "prs": []
             },
@@ -637,7 +637,7 @@
               "variations": [],
               "restSeconds": 68,
               "bwMode": "added",
-              "extWeight": 20,
+              "extWeight": 19.200000000000003,
               "side": "both",
               "prs": []
             },
@@ -651,7 +651,7 @@
               "variations": [],
               "restSeconds": 70,
               "bwMode": "added",
-              "extWeight": 20,
+              "extWeight": 19.200000000000003,
               "side": "both",
               "prs": []
             }
@@ -740,7 +740,7 @@
               "variations": [],
               "restSeconds": 80,
               "bwMode": "added",
-              "extWeight": 10,
+              "extWeight": 9.200000000000003,
               "prs": []
             },
             {
@@ -753,7 +753,7 @@
               "variations": [],
               "restSeconds": 62,
               "bwMode": "added",
-              "extWeight": 20,
+              "extWeight": 19.200000000000003,
               "prs": []
             },
             {
@@ -766,7 +766,7 @@
               "variations": [],
               "restSeconds": 75,
               "bwMode": "added",
-              "extWeight": 20,
+              "extWeight": 19.200000000000003,
               "prs": []
             }
           ],
@@ -17055,5 +17055,5 @@
       "isUnilateral": false
     }
   },
-  "timestamp": 1787165610863
+  "timestamp": 1787165650202
 }
