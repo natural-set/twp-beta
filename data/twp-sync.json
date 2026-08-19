@@ -491,7 +491,7 @@
           "sets": [
             {
               "warmup": true,
-              "weight": 102,
+              "weight": 102.8,
               "reps": 15,
               "rir": 0,
               "rpe": 0,
@@ -499,12 +499,12 @@
               "variations": [],
               "restSeconds": 150,
               "bwMode": "added",
-              "extWeight": 19.200000000000003,
+              "extWeight": 20,
               "prs": []
             },
             {
               "warmup": false,
-              "weight": 112,
+              "weight": 112.8,
               "reps": 15,
               "rir": 0,
               "rpe": 0,
@@ -512,12 +512,12 @@
               "variations": [],
               "restSeconds": 150,
               "bwMode": "added",
-              "extWeight": 29.200000000000003,
+              "extWeight": 30,
               "prs": []
             },
             {
               "warmup": false,
-              "weight": 117,
+              "weight": 117.8,
               "reps": 12,
               "rir": 0,
               "rpe": 0,
@@ -525,12 +525,12 @@
               "variations": [],
               "restSeconds": 150,
               "bwMode": "added",
-              "extWeight": 34.2,
+              "extWeight": 35,
               "prs": []
             },
             {
               "warmup": false,
-              "weight": 122,
+              "weight": 122.8,
               "reps": 12,
               "rir": 0,
               "rpe": 0,
@@ -538,12 +538,12 @@
               "variations": [],
               "restSeconds": 150,
               "bwMode": "added",
-              "extWeight": 39.2,
+              "extWeight": 40,
               "prs": []
             },
             {
               "warmup": false,
-              "weight": 127,
+              "weight": 127.8,
               "reps": 12,
               "rir": 0,
               "rpe": 0,
@@ -551,12 +551,12 @@
               "variations": [],
               "restSeconds": 150,
               "bwMode": "added",
-              "extWeight": 44.2,
+              "extWeight": 45,
               "prs": []
             },
             {
               "warmup": false,
-              "weight": 127,
+              "weight": 127.8,
               "reps": 12,
               "rir": 0,
               "rpe": 0,
@@ -564,12 +564,12 @@
               "variations": [],
               "restSeconds": 150,
               "bwMode": "added",
-              "extWeight": 44.2,
+              "extWeight": 45,
               "prs": []
             },
             {
               "warmup": false,
-              "weight": 132,
+              "weight": 132.8,
               "reps": 12,
               "rir": 0,
               "rpe": 0,
@@ -577,8 +577,10 @@
               "variations": [],
               "restSeconds": 150,
               "bwMode": "added",
-              "extWeight": 49.2,
-              "prs": []
+              "extWeight": 50,
+              "prs": [
+                "Bodyweight"
+              ]
             }
           ],
           "restSeconds": 150,
@@ -601,21 +603,23 @@
           "sets": [
             {
               "warmup": false,
-              "weight": 82,
+              "weight": 82.8,
               "reps": 15,
               "rir": 0,
               "rpe": 0,
               "tempo": "",
               "variations": [],
               "restSeconds": 64,
-              "bwMode": "assisted",
-              "extWeight": 0.7999999999999972,
+              "bwMode": "bw",
+              "extWeight": 0,
               "side": "both",
-              "prs": []
+              "prs": [
+                "Bodyweight"
+              ]
             },
             {
               "warmup": false,
-              "weight": 98,
+              "weight": 98.8,
               "reps": 15,
               "rir": 0,
               "rpe": 0,
@@ -623,13 +627,13 @@
               "variations": [],
               "restSeconds": 62,
               "bwMode": "added",
-              "extWeight": 15.200000000000003,
+              "extWeight": 16,
               "side": "both",
               "prs": []
             },
             {
               "warmup": false,
-              "weight": 102,
+              "weight": 102.8,
               "reps": 15,
               "rir": 0,
               "rpe": 0,
@@ -637,13 +641,16 @@
               "variations": [],
               "restSeconds": 68,
               "bwMode": "added",
-              "extWeight": 19.200000000000003,
+              "extWeight": 20,
               "side": "both",
-              "prs": []
+              "prs": [
+                "1RM",
+                "Bodyweight"
+              ]
             },
             {
               "warmup": false,
-              "weight": 102,
+              "weight": 102.8,
               "reps": 15,
               "rir": 0,
               "rpe": 0,
@@ -651,9 +658,12 @@
               "variations": [],
               "restSeconds": 70,
               "bwMode": "added",
-              "extWeight": 19.200000000000003,
+              "extWeight": 20,
               "side": "both",
-              "prs": []
+              "prs": [
+                "1RM",
+                "Bodyweight"
+              ]
             }
           ],
           "restSeconds": 65,
@@ -732,7 +742,7 @@
           "sets": [
             {
               "warmup": false,
-              "weight": 92,
+              "weight": 92.8,
               "reps": 30,
               "rir": 0,
               "rpe": 0,
@@ -740,12 +750,12 @@
               "variations": [],
               "restSeconds": 80,
               "bwMode": "added",
-              "extWeight": 9.200000000000003,
+              "extWeight": 10,
               "prs": []
             },
             {
               "warmup": false,
-              "weight": 102,
+              "weight": 102.8,
               "reps": 30,
               "rir": 0,
               "rpe": 0,
@@ -753,12 +763,15 @@
               "variations": [],
               "restSeconds": 62,
               "bwMode": "added",
-              "extWeight": 19.200000000000003,
-              "prs": []
+              "extWeight": 20,
+              "prs": [
+                "1RM",
+                "Volume"
+              ]
             },
             {
               "warmup": false,
-              "weight": 102,
+              "weight": 102.8,
               "reps": 30,
               "rir": 0,
               "rpe": 0,
@@ -766,19 +779,22 @@
               "variations": [],
               "restSeconds": 75,
               "bwMode": "added",
-              "extWeight": 19.200000000000003,
-              "prs": []
+              "extWeight": 20,
+              "prs": [
+                "1RM",
+                "Volume"
+              ]
             }
           ],
           "restSeconds": 71,
           "linkGroup": ""
         }
       ],
-      "volume": 25605,
+      "volume": 25797,
       "duration": 72,
       "date": "2026-08-17T15:30:00.000Z",
       "bodyWeight": null,
-      "records": 0
+      "records": 6
     },
     {
       "id": 1786722959915,
@@ -17055,5 +17071,5 @@
       "isUnilateral": false
     }
   },
-  "timestamp": 1787165650202
+  "timestamp": 1787165728390
 }
