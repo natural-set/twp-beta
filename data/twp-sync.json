@@ -1,6 +1,316 @@
 {
   "workouts": [
     {
+      "id": 1787585200922,
+      "name": "Workout",
+      "note": "",
+      "exercises": [
+        {
+          "exId": "custom-zercher-squat-qo16",
+          "name": "Zercher squat",
+          "icon": "🦵",
+          "primary": [
+            "Quadriceps",
+            "Glutes"
+          ],
+          "secondary": [
+            "Upper Back",
+            "Hamstrings",
+            "Adductors"
+          ],
+          "note": "",
+          "sets": [
+            {
+              "warmup": true,
+              "weight": 102,
+              "reps": 20,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 284,
+              "bwMode": "added",
+              "extWeight": 20,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 112,
+              "reps": 15,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 218,
+              "bwMode": "added",
+              "extWeight": 30,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 112,
+              "reps": 15,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 226,
+              "bwMode": "added",
+              "extWeight": 30,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 122,
+              "reps": 15,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 330,
+              "bwMode": "added",
+              "extWeight": 40,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 122,
+              "reps": 15,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 305,
+              "bwMode": "added",
+              "extWeight": 40,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 132,
+              "reps": 15,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 251,
+              "bwMode": "added",
+              "extWeight": 50,
+              "prs": [
+                "1RM"
+              ]
+            },
+            {
+              "warmup": false,
+              "weight": 132,
+              "reps": 12,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 19,
+              "bwMode": "added",
+              "extWeight": 50,
+              "prs": []
+            }
+          ],
+          "restSeconds": 269,
+          "linkGroup": ""
+        },
+        {
+          "exId": "custom-single-leg-left-step-up-s2vx",
+          "name": "Single leg-left step up",
+          "icon": "🦵",
+          "primary": [
+            "Quadriceps",
+            "Glutes"
+          ],
+          "secondary": [
+            "Calves",
+            "Abs",
+            "Hamstrings"
+          ],
+          "note": "",
+          "sets": [
+            {
+              "warmup": true,
+              "weight": 82,
+              "reps": 15,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 333,
+              "bwMode": "bw",
+              "extWeight": 0,
+              "side": "both",
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 98,
+              "reps": 15,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 275,
+              "bwMode": "added",
+              "extWeight": 16,
+              "side": "both",
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 102,
+              "reps": 15,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 793,
+              "bwMode": "added",
+              "extWeight": 20,
+              "side": "both",
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 114,
+              "reps": 12,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 215,
+              "bwMode": "added",
+              "extWeight": 32,
+              "side": "both",
+              "prs": [
+                "1RM",
+                "Bodyweight"
+              ]
+            }
+          ],
+          "restSeconds": 467,
+          "linkGroup": "combo-17875824918246wy"
+        },
+        {
+          "exId": "custom-side-walks-banded-72ow",
+          "name": "Side walks banded",
+          "icon": "↔️",
+          "primary": [
+            "Glutes"
+          ],
+          "secondary": [
+            "Quadriceps",
+            "Calves"
+          ],
+          "note": "",
+          "sets": [
+            {
+              "warmup": false,
+              "weight": 5,
+              "reps": 16,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 0,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 5,
+              "reps": 18,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 0,
+              "prs": []
+            }
+          ],
+          "restSeconds": 0,
+          "linkGroup": "combo-17875824918246wy"
+        },
+        {
+          "exId": "calf",
+          "name": "Calf Raise",
+          "icon": "🦶",
+          "primary": [
+            "Calves"
+          ],
+          "secondary": [],
+          "note": "",
+          "sets": [
+            {
+              "warmup": false,
+              "weight": 102,
+              "reps": 20,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 12,
+              "bwMode": "added",
+              "extWeight": 20,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 107,
+              "reps": 25,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 325,
+              "bwMode": "added",
+              "extWeight": 25,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 107,
+              "reps": 25,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 368,
+              "bwMode": "added",
+              "extWeight": 25,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 112,
+              "reps": 25,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 6,
+              "bwMode": "added",
+              "extWeight": 30,
+              "prs": [
+                "1RM",
+                "Bodyweight"
+              ]
+            }
+          ],
+          "restSeconds": 235,
+          "linkGroup": ""
+        }
+      ],
+      "volume": 28582,
+      "duration": 84,
+      "date": "2026-08-24T15:26:40.917Z",
+      "bodyWeight": null,
+      "records": 3
+    },
+    {
       "id": 1787413671198,
       "name": "Workout",
       "note": "",
@@ -17442,5 +17752,5 @@
       "isUnilateral": false
     }
   },
-  "timestamp": 1787580178701
+  "timestamp": 1787585203111
 }
