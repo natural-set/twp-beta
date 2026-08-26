@@ -95,7 +95,7 @@
               "variations": [],
               "restSeconds": 251,
               "bwMode": "added",
-              "extWeight": 50.000000000000014,
+              "extWeight": 50,
               "prs": []
             },
             {
@@ -108,7 +108,7 @@
               "variations": [],
               "restSeconds": 19,
               "bwMode": "added",
-              "extWeight": 50.000000000000014,
+              "extWeight": 50,
               "prs": []
             }
           ],
@@ -17742,5 +17742,5 @@
       "isUnilateral": false
     }
   },
-  "timestamp": 1787752168196
+  "timestamp": 1787752189227
 }
