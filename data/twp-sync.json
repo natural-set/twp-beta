@@ -300,7 +300,11 @@
       "duration": 86,
       "date": "2026-08-24T15:26:00.000Z",
       "bodyWeight": null,
-      "records": 0
+      "records": 0,
+      "sorenessRange": [
+        7,
+        7
+      ]
     },
     {
       "id": 1787413671198,
@@ -17742,5 +17746,5 @@
       "isUnilateral": false
     }
   },
-  "timestamp": 1787752189227
+  "timestamp": 1787752198988
 }
