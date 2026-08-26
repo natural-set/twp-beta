@@ -2,7 +2,7 @@
   "workouts": [
     {
       "id": 1787585200922,
-      "name": "Workout",
+      "name": "Lower",
       "note": "",
       "exercises": [
         {
@@ -95,10 +95,8 @@
               "variations": [],
               "restSeconds": 251,
               "bwMode": "added",
-              "extWeight": 50,
-              "prs": [
-                "1RM"
-              ]
+              "extWeight": 50.000000000000014,
+              "prs": []
             },
             {
               "warmup": false,
@@ -110,7 +108,7 @@
               "variations": [],
               "restSeconds": 19,
               "bwMode": "added",
-              "extWeight": 50,
+              "extWeight": 50.000000000000014,
               "prs": []
             }
           ],
@@ -186,9 +184,7 @@
               "bwMode": "added",
               "extWeight": 32,
               "side": "both",
-              "prs": [
-                "1RM"
-              ]
+              "prs": []
             }
           ],
           "restSeconds": 467,
@@ -293,9 +289,7 @@
               "restSeconds": 6,
               "bwMode": "added",
               "extWeight": 30,
-              "prs": [
-                "1RM"
-              ]
+              "prs": []
             }
           ],
           "restSeconds": 235,
@@ -303,10 +297,10 @@
         }
       ],
       "volume": 28789.199999999997,
-      "duration": 84,
+      "duration": 86,
       "date": "2026-08-24T15:26:00.000Z",
       "bodyWeight": null,
-      "records": 3
+      "records": 0
     },
     {
       "id": 1787413671198,
@@ -17748,5 +17742,5 @@
       "isUnilateral": false
     }
   },
-  "timestamp": 1787752111159
+  "timestamp": 1787752168196
 }
