@@ -1118,7 +1118,7 @@
     },
     {
       "id": 1787154630214,
-      "name": "Workout",
+      "name": "Upper",
       "note": "",
       "exercises": [
         {
@@ -1152,8 +1152,8 @@
                 }
               ],
               "restSeconds": 194,
-              "bwMode": "bw",
-              "extWeight": 0,
+              "bwMode": "assisted",
+              "extWeight": 0.7999999999999972,
               "prs": []
             },
             {
@@ -1165,8 +1165,8 @@
               "tempo": "",
               "variations": [],
               "restSeconds": 45,
-              "bwMode": "bw",
-              "extWeight": 0,
+              "bwMode": "assisted",
+              "extWeight": 0.7999999999999972,
               "prs": []
             },
             {
@@ -1178,8 +1178,8 @@
               "tempo": "",
               "variations": [],
               "restSeconds": 68,
-              "bwMode": "bw",
-              "extWeight": 0,
+              "bwMode": "assisted",
+              "extWeight": 0.7999999999999972,
               "prs": []
             },
             {
@@ -1191,8 +1191,8 @@
               "tempo": "",
               "variations": [],
               "restSeconds": 57,
-              "bwMode": "bw",
-              "extWeight": 0,
+              "bwMode": "assisted",
+              "extWeight": 0.7999999999999972,
               "prs": []
             },
             {
@@ -1204,8 +1204,8 @@
               "tempo": "",
               "variations": [],
               "restSeconds": 63,
-              "bwMode": "bw",
-              "extWeight": 0,
+              "bwMode": "assisted",
+              "extWeight": 0.7999999999999972,
               "prs": []
             },
             {
@@ -1217,8 +1217,8 @@
               "tempo": "",
               "variations": [],
               "restSeconds": 84,
-              "bwMode": "bw",
-              "extWeight": 0,
+              "bwMode": "assisted",
+              "extWeight": 0.7999999999999972,
               "prs": []
             },
             {
@@ -1230,8 +1230,8 @@
               "tempo": "",
               "variations": [],
               "restSeconds": 79,
-              "bwMode": "bw",
-              "extWeight": 0,
+              "bwMode": "assisted",
+              "extWeight": 0.7999999999999972,
               "prs": []
             },
             {
@@ -1243,8 +1243,8 @@
               "tempo": "",
               "variations": [],
               "restSeconds": 91,
-              "bwMode": "bw",
-              "extWeight": 0,
+              "bwMode": "assisted",
+              "extWeight": 0.7999999999999972,
               "prs": []
             },
             {
@@ -1256,8 +1256,8 @@
               "tempo": "",
               "variations": [],
               "restSeconds": 103,
-              "bwMode": "bw",
-              "extWeight": 0,
+              "bwMode": "assisted",
+              "extWeight": 0.7999999999999972,
               "prs": []
             },
             {
@@ -1269,8 +1269,8 @@
               "tempo": "",
               "variations": [],
               "restSeconds": 111,
-              "bwMode": "bw",
-              "extWeight": 0,
+              "bwMode": "assisted",
+              "extWeight": 0.7999999999999972,
               "prs": []
             },
             {
@@ -1282,8 +1282,8 @@
               "tempo": "",
               "variations": [],
               "restSeconds": 73,
-              "bwMode": "bw",
-              "extWeight": 0,
+              "bwMode": "assisted",
+              "extWeight": 0.7999999999999972,
               "prs": []
             },
             {
@@ -1295,8 +1295,8 @@
               "tempo": "",
               "variations": [],
               "restSeconds": 7,
-              "bwMode": "bw",
-              "extWeight": 0,
+              "bwMode": "assisted",
+              "extWeight": 0.7999999999999972,
               "prs": []
             }
           ],
@@ -1332,8 +1332,8 @@
                 }
               ],
               "restSeconds": 88,
-              "bwMode": "bw",
-              "extWeight": 0,
+              "bwMode": "assisted",
+              "extWeight": 0.7999999999999972,
               "prs": []
             },
             {
@@ -1345,8 +1345,8 @@
               "tempo": "",
               "variations": [],
               "restSeconds": 65,
-              "bwMode": "bw",
-              "extWeight": 0,
+              "bwMode": "assisted",
+              "extWeight": 0.7999999999999972,
               "prs": []
             },
             {
@@ -1358,8 +1358,8 @@
               "tempo": "",
               "variations": [],
               "restSeconds": 93,
-              "bwMode": "bw",
-              "extWeight": 0,
+              "bwMode": "assisted",
+              "extWeight": 0.7999999999999972,
               "prs": []
             },
             {
@@ -1371,8 +1371,8 @@
               "tempo": "",
               "variations": [],
               "restSeconds": 77,
-              "bwMode": "bw",
-              "extWeight": 0,
+              "bwMode": "assisted",
+              "extWeight": 0.7999999999999972,
               "prs": []
             },
             {
@@ -1384,8 +1384,8 @@
               "tempo": "",
               "variations": [],
               "restSeconds": 80,
-              "bwMode": "bw",
-              "extWeight": 0,
+              "bwMode": "assisted",
+              "extWeight": 0.7999999999999972,
               "prs": []
             },
             {
@@ -1397,8 +1397,8 @@
               "tempo": "",
               "variations": [],
               "restSeconds": 127,
-              "bwMode": "bw",
-              "extWeight": 0,
+              "bwMode": "assisted",
+              "extWeight": 0.7999999999999972,
               "prs": []
             },
             {
@@ -1410,8 +1410,8 @@
               "tempo": "",
               "variations": [],
               "restSeconds": 121,
-              "bwMode": "bw",
-              "extWeight": 0,
+              "bwMode": "assisted",
+              "extWeight": 0.7999999999999972,
               "prs": []
             },
             {
@@ -1423,8 +1423,8 @@
               "tempo": "",
               "variations": [],
               "restSeconds": 115,
-              "bwMode": "bw",
-              "extWeight": 0,
+              "bwMode": "assisted",
+              "extWeight": 0.7999999999999972,
               "prs": []
             },
             {
@@ -1436,8 +1436,8 @@
               "tempo": "",
               "variations": [],
               "restSeconds": 150,
-              "bwMode": "bw",
-              "extWeight": 0,
+              "bwMode": "assisted",
+              "extWeight": 0.7999999999999972,
               "prs": []
             },
             {
@@ -1449,8 +1449,8 @@
               "tempo": "",
               "variations": [],
               "restSeconds": 107,
-              "bwMode": "bw",
-              "extWeight": 0,
+              "bwMode": "assisted",
+              "extWeight": 0.7999999999999972,
               "prs": []
             },
             {
@@ -1462,8 +1462,8 @@
               "tempo": "",
               "variations": [],
               "restSeconds": 146,
-              "bwMode": "bw",
-              "extWeight": 0,
+              "bwMode": "assisted",
+              "extWeight": 0.7999999999999972,
               "prs": []
             }
           ],
@@ -1535,11 +1535,8 @@
               "rpe": 0,
               "tempo": "",
               "variations": [],
-              "restSeconds": 0,
-              "prs": [
-                "1RM",
-                "Volume"
-              ]
+              "restSeconds": null,
+              "prs": []
             },
             {
               "warmup": false,
@@ -1549,14 +1546,11 @@
               "rpe": 0,
               "tempo": "",
               "variations": [],
-              "restSeconds": 0,
-              "prs": [
-                "1RM",
-                "Volume"
-              ]
+              "restSeconds": null,
+              "prs": []
             }
           ],
-          "restSeconds": 0,
+          "restSeconds": null,
           "linkGroup": "combo-1787153618202m8f"
         },
         {
@@ -1577,7 +1571,7 @@
               "rpe": 0,
               "tempo": "",
               "variations": [],
-              "restSeconds": 0,
+              "restSeconds": null,
               "prs": []
             }
           ],
@@ -1587,9 +1581,9 @@
       ],
       "volume": 13938,
       "duration": 78,
-      "date": "2026-08-19T15:50:30.203Z",
+      "date": "2026-08-19T15:50:00.000Z",
       "bodyWeight": null,
-      "records": 2
+      "records": 0
     },
     {
       "id": 1786980626736,
@@ -18234,5 +18228,5 @@
       "isUnilateral": false
     }
   },
-  "timestamp": 1787838579994
+  "timestamp": 1787838591689
 }
