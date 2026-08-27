@@ -2,7 +2,7 @@
   "workouts": [
     {
       "id": 1787758385498,
-      "name": "Workout",
+      "name": "Upper",
       "note": "",
       "exercises": [
         {
@@ -400,12 +400,7 @@
               "restSeconds": 267,
               "bwMode": "bw",
               "extWeight": 0,
-              "prs": [
-                "1RM",
-                "Volume",
-                "Reps",
-                "Bodyweight"
-              ]
+              "prs": []
             },
             {
               "warmup": false,
@@ -418,12 +413,7 @@
               "restSeconds": 198,
               "bwMode": "bw",
               "extWeight": 0,
-              "prs": [
-                "1RM",
-                "Volume",
-                "Reps",
-                "Bodyweight"
-              ]
+              "prs": []
             },
             {
               "warmup": false,
@@ -436,12 +426,7 @@
               "restSeconds": 5,
               "bwMode": "bw",
               "extWeight": 0,
-              "prs": [
-                "1RM",
-                "Volume",
-                "Reps",
-                "Bodyweight"
-              ]
+              "prs": []
             }
           ],
           "restSeconds": 233,
@@ -472,7 +457,7 @@
               "rpe": 0,
               "tempo": "",
               "variations": [],
-              "restSeconds": 0,
+              "restSeconds": null,
               "prs": []
             },
             {
@@ -483,19 +468,19 @@
               "rpe": 0,
               "tempo": "",
               "variations": [],
-              "restSeconds": 0,
+              "restSeconds": null,
               "prs": []
             }
           ],
-          "restSeconds": 0,
+          "restSeconds": null,
           "linkGroup": "combo-17877574857508in"
         }
       ],
       "volume": 16255.999999999998,
       "duration": 80,
-      "date": "2026-08-26T15:33:05.488Z",
+      "date": "2026-08-26T15:33:00.000Z",
       "bodyWeight": null,
-      "records": 3
+      "records": 0
     },
     {
       "id": 1787585200922,
@@ -18249,5 +18234,5 @@
       "isUnilateral": false
     }
   },
-  "timestamp": 1787758387300
+  "timestamp": 1787838579994
 }
