@@ -1,6 +1,359 @@
 {
   "workouts": [
     {
+      "id": 1787932104681,
+      "name": "Lower",
+      "note": "",
+      "exercises": [
+        {
+          "exId": "custom-single-leg-rdl-2o30",
+          "name": "Single leg rdl",
+          "icon": "🦵",
+          "primary": [
+            "Glutes",
+            "Hamstrings"
+          ],
+          "secondary": [
+            "Abs"
+          ],
+          "note": "",
+          "sets": [
+            {
+              "warmup": true,
+              "weight": 8,
+              "reps": 12,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 1,
+              "side": "both",
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 10,
+              "reps": 12,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 187,
+              "side": "both",
+              "prs": [
+                "1RM",
+                "Volume",
+                "Reps"
+              ]
+            },
+            {
+              "warmup": false,
+              "weight": 10,
+              "reps": 12,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 433,
+              "side": "both",
+              "prs": [
+                "1RM",
+                "Volume",
+                "Reps"
+              ]
+            },
+            {
+              "warmup": false,
+              "weight": 10,
+              "reps": 12,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 455,
+              "side": "both",
+              "prs": [
+                "1RM",
+                "Volume",
+                "Reps"
+              ]
+            },
+            {
+              "warmup": false,
+              "weight": 10,
+              "reps": 12,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 431,
+              "side": "both",
+              "prs": [
+                "1RM",
+                "Volume",
+                "Reps"
+              ]
+            },
+            {
+              "warmup": false,
+              "weight": 10,
+              "reps": 12,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 33,
+              "side": "both",
+              "prs": [
+                "1RM",
+                "Volume",
+                "Reps"
+              ]
+            }
+          ],
+          "restSeconds": 301,
+          "linkGroup": "combo-17879278639499ui"
+        },
+        {
+          "exId": "rdl",
+          "name": "Stiff",
+          "icon": "🏹",
+          "primary": [
+            "Hamstrings"
+          ],
+          "secondary": [
+            "Glutes",
+            "Lower Back"
+          ],
+          "note": "",
+          "sets": [
+            {
+              "warmup": false,
+              "weight": 20,
+              "reps": 12,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 0,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 20,
+              "reps": 12,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 0,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 48,
+              "reps": 12,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 0,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 52,
+              "reps": 12,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 0,
+              "prs": [
+                "1RM"
+              ]
+            },
+            {
+              "warmup": false,
+              "weight": 52,
+              "reps": 12,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 0,
+              "prs": [
+                "1RM"
+              ]
+            }
+          ],
+          "restSeconds": 0,
+          "linkGroup": "combo-17879278639499ui"
+        },
+        {
+          "exId": "custom-zercher-squat-qo16",
+          "name": "Zercher squat",
+          "icon": "🦵",
+          "primary": [
+            "Quadriceps",
+            "Glutes"
+          ],
+          "secondary": [
+            "Upper Back",
+            "Hamstrings",
+            "Adductors"
+          ],
+          "note": "",
+          "sets": [
+            {
+              "warmup": true,
+              "weight": 102.8,
+              "reps": 12,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 370,
+              "bwMode": "added",
+              "extWeight": 20,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 117.8,
+              "reps": 12,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 273,
+              "bwMode": "added",
+              "extWeight": 35,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 127.8,
+              "reps": 12,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 160,
+              "bwMode": "added",
+              "extWeight": 45,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 137.8,
+              "reps": 12,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 251,
+              "bwMode": "added",
+              "extWeight": 55,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 137.8,
+              "reps": 12,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 234,
+              "bwMode": "added",
+              "extWeight": 55,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 137.8,
+              "reps": 12,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 356,
+              "bwMode": "added",
+              "extWeight": 55,
+              "prs": []
+            }
+          ],
+          "restSeconds": 258,
+          "linkGroup": ""
+        },
+        {
+          "exId": "calf",
+          "name": "Calf Raise",
+          "icon": "🦶",
+          "primary": [
+            "Calves"
+          ],
+          "secondary": [],
+          "note": "",
+          "sets": [
+            {
+              "warmup": false,
+              "weight": 97.8,
+              "reps": 30,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 211,
+              "bwMode": "added",
+              "extWeight": 15,
+              "prs": []
+            },
+            {
+              "warmup": false,
+              "weight": 112.8,
+              "reps": 30,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 285,
+              "bwMode": "added",
+              "extWeight": 30,
+              "prs": [
+                "1RM",
+                "Volume"
+              ]
+            },
+            {
+              "warmup": false,
+              "weight": 112.8,
+              "reps": 30,
+              "rir": 0,
+              "rpe": 0,
+              "tempo": "",
+              "variations": [],
+              "restSeconds": 31,
+              "bwMode": "added",
+              "extWeight": 30,
+              "prs": [
+                "1RM",
+                "Volume"
+              ]
+            }
+          ],
+          "restSeconds": 248,
+          "linkGroup": ""
+        }
+      ],
+      "volume": 21843.600000000002,
+      "duration": 85,
+      "date": "2026-08-28T15:48:24.669Z",
+      "bodyWeight": null,
+      "records": 9
+    },
+    {
       "id": 1787758385498,
       "name": "Upper",
       "note": "",
@@ -18228,5 +18581,5 @@
       "isUnilateral": false
     }
   },
-  "timestamp": 1787839361018
+  "timestamp": 1787932106758
 }
