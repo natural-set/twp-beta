@@ -18528,7 +18528,18 @@
   "userName": "Athlete",
   "profile": {
     "weight": "82.8",
-    "goalWeight": "85"
+    "goalWeight": "85",
+    "rCalf": "38",
+    "lCalf": "36",
+    "rThigh": "62",
+    "lThigh": "60",
+    "waist": "94",
+    "rForearm": "30",
+    "lForearm": "29",
+    "rArm": "34",
+    "lArm": "34",
+    "shoulders": "122",
+    "chest": "102"
   },
   "customTags": [],
   "customExercises": [
@@ -18956,5 +18967,5 @@
       "isUnilateral": false
     }
   },
-  "timestamp": 1788297440295
+  "timestamp": 1788297848675
 }
